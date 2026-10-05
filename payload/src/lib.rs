@@ -13,6 +13,7 @@
 
 use core::ffi::c_void;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 
 use windows::Win32::Foundation::{BOOL, HMODULE, HWND, LPARAM, TRUE};
 use windows::Win32::System::Com::{
@@ -29,6 +30,9 @@ use windows::Win32::UI::WindowsAndMessaging::{
 static HIDING: AtomicBool = AtomicBool::new(false);
 /// Whether the background re-apply worker has been started.
 static WORKER_STARTED: AtomicBool = AtomicBool::new(false);
+/// Serializes affinity updates so a worker pass cannot re-hide windows after
+/// `HmwUnhideAll` has already cleared the flag.
+static APPLY_LOCK: Mutex<()> = Mutex::new(());
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -79,6 +83,17 @@ fn current_pid() -> u32 {
     unsafe { windows::Win32::System::Threading::GetCurrentProcessId() }
 }
 
+/// Apply whatever `HIDING` says right now.
+///
+/// The flag is read under `APPLY_LOCK`. A worker that observed `true` before
+/// `HmwUnhideAll` stored `false` then blocks on the lock and, once it runs,
+/// writes `WDA_NONE` instead of putting the hide back.
+fn apply_hiding_flag() {
+    let _guard = APPLY_LOCK.lock().unwrap_or_else(|p| p.into_inner());
+    let hidden = HIDING.load(Ordering::SeqCst);
+    set_all_windows(hidden);
+}
+
 fn ensure_worker() {
     if WORKER_STARTED.swap(true, Ordering::SeqCst) {
         return;
@@ -87,7 +102,7 @@ fn ensure_worker() {
     // not under the loader lock.
     std::thread::spawn(|| loop {
         if HIDING.load(Ordering::SeqCst) {
-            set_all_windows(true);
+            apply_hiding_flag();
         }
         std::thread::sleep(std::time::Duration::from_millis(300));
     });
@@ -138,14 +153,14 @@ fn set_tray(hwnd_param: *mut c_void, visible: bool) {
 pub extern "system" fn HmwHideAll(_param: *mut c_void) -> u32 {
     HIDING.store(true, Ordering::SeqCst);
     ensure_worker();
-    set_all_windows(true);
+    apply_hiding_flag();
     0
 }
 
 #[no_mangle]
 pub extern "system" fn HmwUnhideAll(_param: *mut c_void) -> u32 {
     HIDING.store(false, Ordering::SeqCst);
-    set_all_windows(false);
+    apply_hiding_flag();
     0
 }
 

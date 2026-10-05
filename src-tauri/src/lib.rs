@@ -4,6 +4,7 @@
 
 mod autostart;
 
+use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -18,6 +19,8 @@ use tauri::{AppHandle, Emitter, Manager, State};
 struct AppState {
     config: Mutex<Config>,
     config_path: std::path::PathBuf,
+    /// Wakes the rule watcher so a saved config is applied immediately.
+    rules_wake: Sender<()>,
 }
 
 #[derive(Serialize, Clone)]
@@ -81,6 +84,8 @@ fn save_config(app: AppHandle, state: State<AppState>, config: Config) -> Result
     let path = state.config_path.clone();
     config.save(&path).map_err(|e| e.to_string())?;
     *state.config.lock().unwrap() = config;
+    // Unbounded channel: ignore a send only if the watcher has already exited.
+    let _ = state.rules_wake.send(());
     Ok(())
 }
 
@@ -181,13 +186,16 @@ fn apply_self_visibility(app: &AppHandle, hidden: bool) {
 // ---------------------------------------------------------------------------
 
 #[cfg(windows)]
-fn spawn_watcher(app: AppHandle) {
+fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
     std::thread::spawn(move || {
         let payload = match payload_path(&app) {
             Ok(p) => p,
             Err(_) => return,
         };
         let mut tick: u64 = 0;
+        let mut session = hmw_core::watcher::RuleSession::new();
+        // Startup applies every saved rule without waiting for the timer.
+        let mut full = true;
         loop {
             let (rules, reapply_ms, poll_ms) = {
                 let state = app.state::<AppState>();
@@ -199,23 +207,41 @@ fn spawn_watcher(app: AppHandle) {
                 )
             };
 
-            // Frequent pass: persistent rules only.
-            let errors = hmw_core::watcher::apply_rules_once(&rules, &payload, true);
-
-            // Slower discovery pass: all rules (every `poll_ms`).
-            if tick.is_multiple_of((poll_ms / reapply_ms).max(1)) {
-                let more = hmw_core::watcher::apply_rules_once(&rules, &payload, false);
-                if !more.is_empty() {
-                    let _ = app.emit("rule-errors", more);
+            if full {
+                // A save (or the first pass) releases hides that no longer match,
+                // then applies the ones the current rules ask for.
+                let errors = session.apply(&rules, &payload, false);
+                if !errors.is_empty() {
+                    let _ = app.emit("rule-errors", errors);
                 }
+                full = false;
+            } else {
+                // Frequent pass: persistent rules only. Records hides, does not release.
+                let errors = session.apply(&rules, &payload, true);
+
+                // Slower discovery pass: all rules (every `poll_ms`).
+                if tick.is_multiple_of((poll_ms / reapply_ms).max(1)) {
+                    let more = session.apply(&rules, &payload, false);
+                    if !more.is_empty() {
+                        let _ = app.emit("rule-errors", more);
+                    }
+                }
+
+                if !errors.is_empty() {
+                    let _ = app.emit("rule-errors", errors);
+                }
+
+                tick = tick.wrapping_add(1);
             }
 
-            if !errors.is_empty() {
-                let _ = app.emit("rule-errors", errors);
+            match rules_rx.recv_timeout(Duration::from_millis(reapply_ms)) {
+                Ok(()) => {
+                    while rules_rx.try_recv().is_ok() {}
+                    full = true;
+                }
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
+                Err(mpsc::RecvTimeoutError::Disconnected) => return,
             }
-
-            tick = tick.wrapping_add(1);
-            std::thread::sleep(Duration::from_millis(reapply_ms));
         }
     });
 }
@@ -264,6 +290,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
 pub fn run() {
     let config_path = Config::default_path();
     let config = Config::load(&config_path);
+    let (rules_tx, rules_rx) = mpsc::channel();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -277,6 +304,7 @@ pub fn run() {
         .manage(AppState {
             config: Mutex::new(config),
             config_path,
+            rules_wake: rules_tx,
         })
         .invoke_handler(tauri::generate_handler![
             get_config,
@@ -289,7 +317,7 @@ pub fn run() {
             hide_window,
             quick_launch,
         ])
-        .setup(|app| {
+        .setup(move |app| {
             let handle = app.handle().clone();
             build_tray(&handle)?;
 
@@ -302,7 +330,9 @@ pub fn run() {
             apply_self_visibility(&handle, hide_self);
 
             #[cfg(windows)]
-            spawn_watcher(handle.clone());
+            spawn_watcher(handle.clone(), rules_rx);
+            #[cfg(not(windows))]
+            drop(rules_rx);
 
             // Close-to-tray / minimize-to-tray behaviour.
             if let Some(window) = app.get_webview_window("main") {
