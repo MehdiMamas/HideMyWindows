@@ -27,7 +27,9 @@ pub struct Config {
     pub theme: Theme,
 
     /// Hide HideMyWindows' own window from screen capture.
-    #[serde(default = "default_true")]
+    /// Off by default so the app stays visible to remote-desktop/capture tools
+    /// (e.g. AnyDesk); it hides other apps, not itself, unless turned on.
+    #[serde(default)]
     pub hide_self: bool,
 
     /// Minimize to the system tray instead of the taskbar.
@@ -69,7 +71,7 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             theme: Theme::default(),
-            hide_self: true,
+            hide_self: false,
             minimize_to_tray: false,
             close_to_tray: true,
             start_with_windows: false,
