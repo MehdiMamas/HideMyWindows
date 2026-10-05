@@ -8,8 +8,9 @@ npm-debug.log*
 target/
 src-tauri/gen/schemas/
 
-# Built payload (produced during build / by CI, bundled as a resource)
+# Built payload and the 32-bit uninstall helper (produced during build / by CI)
 src-tauri/resources/*.dll
+src-tauri/resources/hmw-release-x86.exe
 
 # Editor / OS
 .DS_Store

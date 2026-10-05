@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
-members = ["hmw-core", "payload", "src-tauri"]
+members = ["hmw-core", "hmw-release", "payload", "src-tauri"]
 
 [workspace.package]
-version = "2.0.1"
+version = "2.0.2"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/mehdimamas/hidemywindows"

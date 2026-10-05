@@ -3,6 +3,18 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.2] — 2026-10-05
+
+### Fixed
+- **Uninstall now restores windows that were still hidden.** Capture
+  exclusion and taskbar buttons stay inside the other apps after
+  HideMyWindows is removed, because the injected helper keeps running there.
+  The uninstaller releases those hides first, including hooks left by the
+  original app (`HideMyWindows.DLL.x64.dll` and `HideMyWindows.DLL.Win32.dll`).
+  It also removes the autostart entry, saved settings, and old helper copies
+  in Temp. `hidemywindows.exe --release-all` does the same thing if the app
+  was already uninstalled.
+
 ## [2.0.1] — 2026-10-05
 
 ### Changed

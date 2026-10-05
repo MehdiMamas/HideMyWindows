@@ -9,6 +9,8 @@ pub mod config;
 pub mod model;
 
 #[cfg(windows)]
+pub mod cleanup;
+#[cfg(windows)]
 pub mod hider;
 #[cfg(windows)]
 pub mod inject;

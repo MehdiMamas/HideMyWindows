@@ -319,8 +319,37 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
 // Entry point
 // ---------------------------------------------------------------------------
 
+#[cfg(windows)]
+mod wow64_helper {
+    include!(concat!(env!("OUT_DIR"), "/wow64_helper.rs"));
+}
+
+/// Write the bundled 32-bit cleanup helper under `%TEMP%\HideMyWindows` so an
+/// x64 `--release-all` can reach WOW64 processes. Absent when this build did
+/// not embed one.
+#[cfg(windows)]
+fn materialize_wow64_helper() -> Option<std::path::PathBuf> {
+    let bytes = wow64_helper::WOW64_HELPER?;
+    let dir = std::env::temp_dir().join("HideMyWindows");
+    std::fs::create_dir_all(&dir).ok()?;
+    let path = dir.join("hmw-release-x86.exe");
+    if std::fs::write(&path, bytes).is_err() && !path.is_file() {
+        return None;
+    }
+    Some(path)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Before the single-instance plugin: uninstall must release hides even
+    // while another copy of the app is still running.
+    #[cfg(windows)]
+    if std::env::args().any(|arg| arg == "--release-all") {
+        let helper = materialize_wow64_helper();
+        let code = hmw_core::cleanup::run(hmw_core::cleanup::options_from_args(helper));
+        std::process::exit(code);
+    }
+
     let config_path = Config::default_path();
     let config = Config::load(&config_path);
     let (rules_tx, rules_rx) = mpsc::channel();

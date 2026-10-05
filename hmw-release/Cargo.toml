@@ -1,0 +1,10 @@
+[package]
+name = "hmw-release"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Release windows still hidden by HideMyWindows after it exits."
+publish = false
+
+[dependencies]
+hmw-core = { path = "../hmw-core" }
