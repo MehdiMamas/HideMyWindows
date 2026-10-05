@@ -22,8 +22,9 @@ use windows::Win32::System::Com::{
 use windows::Win32::System::LibraryLoader::DisableThreadLibraryCalls;
 use windows::Win32::UI::Shell::{ITaskbarList, TaskbarList};
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetClassNameW, GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible,
-    SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
+    EnumWindows, GetClassNameW, GetWindowDisplayAffinity, GetWindowTextW, GetWindowThreadProcessId,
+    IsWindowVisible, SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
+    WINDOW_DISPLAY_AFFINITY,
 };
 
 mod toasts;
@@ -61,12 +62,25 @@ unsafe extern "system" fn apply_cb(hwnd: HWND, lparam: LPARAM) -> BOOL {
     let mut pid = 0u32;
     GetWindowThreadProcessId(hwnd, Some(&mut pid));
     if pid == ctx.pid && IsWindowVisible(hwnd).as_bool() {
-        let _ = SetWindowDisplayAffinity(
-            hwnd,
-            windows::Win32::UI::WindowsAndMessaging::WINDOW_DISPLAY_AFFINITY(ctx.affinity),
-        );
+        set_affinity(hwnd, ctx.affinity);
     }
     TRUE
+}
+
+/// Write display affinity only when it is not already the requested value.
+///
+/// `SetWindowDisplayAffinity` notifies the desktop compositor. Calling it again
+/// with the same flag makes capture clients rebuild the redacted frame, which
+/// shows up as GPU time on the app that is streaming. A read of the current
+/// affinity does not.
+fn set_affinity(hwnd: HWND, affinity: u32) {
+    unsafe {
+        let mut current = 0u32;
+        if GetWindowDisplayAffinity(hwnd, &mut current).is_ok() && current == affinity {
+            return;
+        }
+        let _ = SetWindowDisplayAffinity(hwnd, WINDOW_DISPLAY_AFFINITY(affinity));
+    }
 }
 
 fn set_all_windows(hidden: bool) {
@@ -110,10 +124,7 @@ unsafe extern "system" fn toast_cb(hwnd: HWND, lparam: LPARAM) -> BOOL {
     let mut pid = 0u32;
     GetWindowThreadProcessId(hwnd, Some(&mut pid));
     if pid == ctx.pid && IsWindowVisible(hwnd).as_bool() && is_toast_hwnd(hwnd) {
-        let _ = SetWindowDisplayAffinity(
-            hwnd,
-            windows::Win32::UI::WindowsAndMessaging::WINDOW_DISPLAY_AFFINITY(ctx.affinity),
-        );
+        set_affinity(hwnd, ctx.affinity);
     }
     TRUE
 }
@@ -173,16 +184,14 @@ fn set_single(hwnd_param: *mut c_void, hidden: bool) {
         return;
     }
     let hwnd = HWND(hwnd_param);
-    unsafe {
-        let _ = SetWindowDisplayAffinity(
-            hwnd,
-            if hidden {
-                WDA_EXCLUDEFROMCAPTURE
-            } else {
-                WDA_NONE
-            },
-        );
-    }
+    set_affinity(
+        hwnd,
+        if hidden {
+            WDA_EXCLUDEFROMCAPTURE.0
+        } else {
+            WDA_NONE.0
+        },
+    );
 }
 
 fn set_tray(hwnd_param: *mut c_void, visible: bool) {

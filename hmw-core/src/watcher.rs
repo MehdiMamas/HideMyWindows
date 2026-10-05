@@ -4,8 +4,10 @@
 //!
 //! [`RuleSession`] remembers which hides the rules have applied. A full pass
 //! unhides anything a current rule no longer asks to hide. A persistent-only
-//! pass re-applies persistent hides and records them, but does not release,
-//! because that pass cannot see non-persistent rules.
+//! pass records new persistent hides and does not release, because that pass
+//! cannot see non-persistent rules. Process hides the payload is already
+//! keeping are not sent again; its in-process worker covers windows created
+//! later, and repeating `HmwHideAll` would rewrite capture exclusion.
 
 use crate::hider::{apply_to_process, apply_to_window};
 use crate::model::{HideAction, RuleTarget, WindowRule};
@@ -47,7 +49,8 @@ impl RuleSession {
     /// One matching pass.
     ///
     /// * `persistent_only` restricts the pass to rules flagged persistent. That
-    ///   pass records new hides and does not release.
+    ///   pass records new hides and does not release. Process hides already
+    ///   recorded are left to the payload worker.
     /// * A full pass releases hides that no longer match, then applies the
     ///   hides current rules ask for.
     ///
@@ -69,9 +72,10 @@ impl RuleSession {
         let mut errors = Vec::new();
 
         if persistent_only {
-            errors.extend(apply_hides(&desired, payload_path));
+            let outcome = apply_hides(&desired, &self.applied, payload_path);
+            errors.extend(outcome.errors);
             errors.extend(apply_unhides(&unhides, payload_path, &desired));
-            union_into(&mut self.applied, &desired);
+            union_into(&mut self.applied, &outcome.kept);
             return errors;
         }
 
@@ -85,8 +89,9 @@ impl RuleSession {
             payload_path,
         ));
         errors.extend(apply_unhides(&unhides, payload_path, &desired));
-        errors.extend(apply_hides(&desired, payload_path));
-        self.applied = desired;
+        let outcome = apply_hides(&desired, &self.applied, payload_path);
+        errors.extend(outcome.errors);
+        self.applied = outcome.kept;
         errors
     }
 }
@@ -145,6 +150,18 @@ fn evaluate(
     }
 
     (desired, unhides)
+}
+
+/// Process hides `desired` still needs that `already` has not applied.
+///
+/// The payload worker keeps those processes hidden, including windows they
+/// create later, so the host must not call `HmwHideAll` again.
+fn pids_to_hide(desired: &HideSet, already: &HideSet) -> Vec<u32> {
+    desired
+        .processes
+        .difference(&already.processes)
+        .copied()
+        .collect()
 }
 
 /// Pids a previous pass hid that the current rules do not.
@@ -220,12 +237,30 @@ fn release_stale(
     errors
 }
 
-fn apply_hides(desired: &HideSet, payload_path: &str) -> Vec<String> {
-    let mut errors = Vec::new();
+struct HideApply {
+    errors: Vec<String>,
+    /// Hides that are in effect after this call. Failed process hides are
+    /// omitted so the next pass retries them.
+    kept: HideSet,
+}
 
-    for &pid in &desired.processes {
+fn apply_hides(desired: &HideSet, already: &HideSet, payload_path: &str) -> HideApply {
+    let mut errors = Vec::new();
+    let mut kept = HideSet {
+        processes: already
+            .processes
+            .intersection(&desired.processes)
+            .copied()
+            .collect(),
+        windows: desired.windows.clone(),
+        trays: desired.trays.clone(),
+    };
+
+    for pid in pids_to_hide(desired, already) {
         if let Err(e) = apply_to_process(pid, HideAction::HideProcessWindows, payload_path) {
             errors.push(format!("Hide process {pid}: {}", e.0));
+        } else {
+            kept.processes.insert(pid);
         }
     }
 
@@ -244,7 +279,7 @@ fn apply_hides(desired: &HideSet, payload_path: &str) -> Vec<String> {
         }
     }
 
-    errors
+    HideApply { errors, kept }
 }
 
 fn apply_unhides(ops: &[UnhideOp], payload_path: &str, desired: &HideSet) -> Vec<String> {
@@ -309,6 +344,16 @@ mod tests {
         let mut stale = pids_to_release(&applied, &desired);
         stale.sort_unstable();
         assert_eq!(stale, vec![10]);
+    }
+
+    #[test]
+    fn already_applied_process_hide_is_not_sent_again() {
+        let already = set_with_process(20);
+        let mut desired = set_with_process(20);
+        desired.processes.insert(30);
+        let mut fresh = pids_to_hide(&desired, &already);
+        fresh.sort_unstable();
+        assert_eq!(fresh, vec![30]);
     }
 
     #[test]
