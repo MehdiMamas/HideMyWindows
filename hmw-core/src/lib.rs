@@ -15,6 +15,8 @@ pub mod inject;
 #[cfg(windows)]
 pub mod launch;
 #[cfg(windows)]
+pub mod notifications;
+#[cfg(windows)]
 pub mod process;
 #[cfg(windows)]
 pub mod watcher;

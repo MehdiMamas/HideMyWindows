@@ -93,6 +93,8 @@
     "language": "Limbă",
     "behavior": "Comportament",
     "hideSelf": "Ascunde HideMyWindows de la capturarea ecranului",
+    "hideNotifications": "Ascunde toate notificările de la capturarea ecranului",
+    "hideNotificationsHint": "Le vezi în continuare. Capturile, înregistrările și streamurile nu. Se aplică tuturor aplicațiilor.",
     "closeToTray": "Rămâi în zona de notificare la închidere",
     "minimizeToTray": "Minimizează în zona de notificare",
     "startWithWindows": "Pornește automat cu Windows",

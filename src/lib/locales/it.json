@@ -93,6 +93,8 @@
     "language": "Lingua",
     "behavior": "Comportamento",
     "hideSelf": "Nascondi HideMyWindows dalla cattura schermo",
+    "hideNotifications": "Nascondi tutte le notifiche dalla cattura schermo",
+    "hideNotificationsHint": "Le vedi ancora tu. Schermate, registrazioni e stream no. Vale per ogni app.",
     "closeToTray": "Continua nell'area di notifica alla chiusura",
     "minimizeToTray": "Riduci nell'area di notifica",
     "startWithWindows": "Avvia automaticamente con Windows",

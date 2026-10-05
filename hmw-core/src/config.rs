@@ -32,6 +32,12 @@ pub struct Config {
     #[serde(default)]
     pub hide_self: bool,
 
+    /// Exclude every app's notification toasts from screen capture.
+    /// The toasts stay visible on this PC. Off by default so existing configs
+    /// keep showing notifications in screenshots and recordings.
+    #[serde(default)]
+    pub hide_notification_toasts: bool,
+
     /// Minimize to the system tray instead of the taskbar.
     #[serde(default)]
     pub minimize_to_tray: bool,
@@ -72,6 +78,7 @@ impl Default for Config {
         Config {
             theme: Theme::default(),
             hide_self: false,
+            hide_notification_toasts: false,
             minimize_to_tray: false,
             close_to_tray: true,
             start_with_windows: false,
@@ -114,5 +121,17 @@ impl Config {
         let text = serde_json::to_string_pretty(self).map_err(|e| crate::Error(e.to_string()))?;
         std::fs::write(path, text)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Config;
+
+    #[test]
+    fn old_config_leaves_notification_hiding_off() {
+        let cfg: Config = serde_json::from_str(r#"{"hideSelf":true}"#).unwrap();
+        assert!(cfg.hide_self);
+        assert!(!cfg.hide_notification_toasts);
     }
 }

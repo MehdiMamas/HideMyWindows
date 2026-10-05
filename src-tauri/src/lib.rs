@@ -188,16 +188,43 @@ fn spawn_watcher(app: AppHandle) {
             Err(_) => return,
         };
         let mut tick: u64 = 0;
+        // True after a successful hide, so turning the option off restores toasts once.
+        let mut toasts_hidden = false;
+        let mut last_toast_error = String::new();
         loop {
-            let (rules, reapply_ms, poll_ms) = {
+            let (rules, reapply_ms, poll_ms, hide_toasts) = {
                 let state = app.state::<AppState>();
                 let cfg = state.config.lock().unwrap();
                 (
                     cfg.window_rules.clone(),
                     cfg.rule_reapply_interval_ms.max(200),
                     cfg.process_poll_interval_ms.max(200),
+                    cfg.hide_notification_toasts,
                 )
             };
+
+            if hide_toasts {
+                let errors = hmw_core::notifications::apply_notification_toasts(true, &payload);
+                let message = errors.first().cloned().unwrap_or_default();
+                if message != last_toast_error {
+                    last_toast_error = message.clone();
+                    if !message.is_empty() {
+                        let _ = app.emit("rule-errors", vec![message]);
+                    }
+                }
+                if errors.is_empty() {
+                    toasts_hidden = true;
+                }
+            } else if toasts_hidden {
+                let errors = hmw_core::notifications::apply_notification_toasts(false, &payload);
+                if errors.is_empty() {
+                    toasts_hidden = false;
+                    last_toast_error.clear();
+                } else if errors.first().map(String::as_str) != Some(last_toast_error.as_str()) {
+                    last_toast_error = errors[0].clone();
+                    let _ = app.emit("rule-errors", errors);
+                }
+            }
 
             // Frequent pass: persistent rules only.
             let errors = hmw_core::watcher::apply_rules_once(&rules, &payload, true);
