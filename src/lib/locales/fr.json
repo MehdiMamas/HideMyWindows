@@ -93,6 +93,8 @@
     "language": "Langue",
     "behavior": "Comportement",
     "hideSelf": "Masquer HideMyWindows de la capture d'écran",
+    "hideNotifications": "Masquer toutes les notifications de la capture d'écran",
+    "hideNotificationsHint": "Vous les voyez toujours. Les captures, enregistrements et streams ne les voient pas. Cela s'applique à toutes les applications.",
     "closeToTray": "Continuer dans la zone de notification à la fermeture",
     "minimizeToTray": "Réduire dans la zone de notification",
     "startWithWindows": "Démarrer automatiquement avec Windows",

@@ -93,6 +93,8 @@
     "language": "Język",
     "behavior": "Zachowanie",
     "hideSelf": "Ukryj HideMyWindows przed przechwytywaniem ekranu",
+    "hideNotifications": "Ukryj wszystkie powiadomienia przed przechwytywaniem ekranu",
+    "hideNotificationsHint": "Nadal je widzisz. Zrzuty, nagrania i streamy nie. Dotyczy każdej aplikacji.",
     "closeToTray": "Działaj w zasobniku po zamknięciu",
     "minimizeToTray": "Minimalizuj do zasobnika",
     "startWithWindows": "Uruchamiaj automatycznie z systemem Windows",

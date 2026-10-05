@@ -112,6 +112,8 @@ fn export_rvas(payload_path: &str) -> Result<HashMap<String, isize>> {
         "HmwUnhideWindow",
         "HmwHideTray",
         "HmwUnhideTray",
+        "HmwHideToasts",
+        "HmwUnhideToasts",
     ];
 
     let wide = to_wide(payload_path);
@@ -194,6 +196,11 @@ fn ensure_loaded(handle: &SafeHandle, pid: u32, payload_path: &str) -> Result<is
         }
         let mut exit = 0u32;
         unsafe { GetExitCodeThread(thread.0, &mut exit)? };
+        if exit == 0 {
+            return Err(Error(
+                "LoadLibraryW failed in the target process. It may be protected, a different architecture, or unable to read the payload.".into(),
+            ));
+        }
         Ok(())
     })();
 

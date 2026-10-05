@@ -94,6 +94,8 @@
     "language": "Language",
     "behavior": "Behavior",
     "hideSelf": "Hide HideMyWindows from screen capture",
+    "hideNotifications": "Hide all notifications from screen capture",
+    "hideNotificationsHint": "You still see them. Screenshots, recordings, and streams do not. This applies to every app.",
     "closeToTray": "Keep running in the tray when closed",
     "minimizeToTray": "Minimize to the tray",
     "startWithWindows": "Start automatically with Windows",

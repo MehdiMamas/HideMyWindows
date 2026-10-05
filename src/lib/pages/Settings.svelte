@@ -81,6 +81,20 @@
 
   <Card title={$t("settings.behavior")}>
     <Toggle bind:checked={$config.hideSelf} label={$t("settings.hideSelf")} onchange={persist} />
+    <label class="check-row">
+      <input
+        type="checkbox"
+        checked={$config.hideNotificationToasts}
+        onchange={(e) => {
+          $config.hideNotificationToasts = e.currentTarget.checked;
+          persist();
+        }}
+      />
+      <span class="check-text">
+        <span>{$t("settings.hideNotifications")}</span>
+        <span class="check-hint">{$t("settings.hideNotificationsHint")}</span>
+      </span>
+    </label>
     <Toggle bind:checked={$config.closeToTray} label={$t("settings.closeToTray")} onchange={persist} />
     <Toggle bind:checked={$config.minimizeToTray} label={$t("settings.minimizeToTray")} onchange={persist} />
     <Toggle bind:checked={$config.startWithWindows} label={$t("settings.startWithWindows")} onchange={persist} />
@@ -104,4 +118,20 @@
   .num-row { display: flex; gap: 14px; margin-bottom: 12px; }
   .folder-row { margin-top: 6px; }
   .hint { color: var(--text-faint); font-size: 12px; margin: 10px 0 0; }
+  .check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 4px 0;
+    cursor: pointer;
+  }
+  .check-row input {
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .check-text { display: flex; flex-direction: column; }
+  .check-hint { color: var(--text-faint); font-size: 12px; }
 </style>
