@@ -5,7 +5,7 @@ use crate::Result;
 use windows::Win32::Foundation::{BOOL, HWND, LPARAM, TRUE};
 use windows::Win32::UI::WindowsAndMessaging::{
     EnumWindows, GetClassNameW, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
-    IsWindowVisible, SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
+    IsWindow, IsWindowVisible, SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
 };
 
 /// Hide or show a single window from screen capture.
@@ -23,6 +23,15 @@ pub fn set_capture_hidden(hwnd: isize, hidden: bool) -> Result<()> {
         )?;
     }
     Ok(())
+}
+
+/// True when `hwnd` still refers to a window.
+pub fn window_is_alive(hwnd: isize) -> bool {
+    if hwnd == 0 {
+        return false;
+    }
+    let hwnd = HWND(hwnd as *mut core::ffi::c_void);
+    unsafe { IsWindow(hwnd).as_bool() }
 }
 
 /// The process id that owns a window.
