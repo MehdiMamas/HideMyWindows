@@ -4,117 +4,96 @@
 
 ![Banner](Assets/Banner.png)
 
-**HideMyWindows** is a Microsoft Windows application that allows you to **hide your desktop windows from screen capture methods** (screenshots, screen recordings, streaming software like OBS).  
-It’s designed for **privacy-minded users, streamers, and students** who want better control over what others can see when sharing their screen.
+**HideMyWindows** is a Windows app that **hides your windows from screen capture** — screenshots, screen recordings and streaming software like OBS.
+It's built for **privacy-minded users, streamers and students** who want control over what others see when they share their screen.
+
+> ℹ️ **About this version — a community continuation.**
+> The original HideMyWindows by [Cristian Gambino (@zCri)](https://github.com/zCri) was no longer being updated. This **2.0** release is a community-maintained continuation that **keeps the same name and purpose** but rebuilds the app from scratch on a lighter, more maintainable foundation. All credit for the original idea and app goes to its original author — see [Credits](#-credits).
 
 ---
 
 ## ✨ Features
 
-- 🔒 **Hide windows from screenshots & recordings**  
-- 🎯 **Target by window, process, or name** (also supports regex matching)  
-- ⚡ **Automatic window rules** – hide programs automatically when launched  
-- 🖥️ **Beautiful modern UI** using [lepoco/WPFUI](https://github.com/lepoco/wpfui)  
-- 🔄 **Background mode** – run silently in the tray  
-- 🚀 **Quick launch hide** for fast privacy protection  
-- ⚙️ Configurable options:  
-  - Hide **HideMyWindows** itself  
-  - Show/hide in taskbar  
-  - Minimize to tray  
-  - Process & window watcher methods  
+- 🔒 **Hide windows from screenshots & recordings** using the Windows `SetWindowDisplayAffinity` protection (`WDA_EXCLUDEFROMCAPTURE`).
+- 🎯 **Target by process, window, title, class or PID** — with `contains`, `starts/ends with`, `equals` and **regex** matching.
+- ⚡ **Automatic window rules** — hide apps the moment they appear, and optionally keep re-applying so new windows stay hidden.
+- 🚀 **Quick launch** — start an app already hidden, before it ever draws on screen.
+- 🖥️ **Hide the taskbar button** of any app.
+- 🪶 **Tiny & native** — a Tauri 2 (Rust) core with a Svelte UI. The installer is a few MB, not hundreds.
+- 🔄 **Runs in the tray**, optional **start with Windows**, dark / light / system themes.
+- 🌍 **Localized**: English, Français, Italiano, Română, Polski.
 
 ---
 
 ## 📥 Installation
 
-### Microsoft Store (coming soon)
-[![Get it from Microsoft](https://img.shields.io/badge/Microsoft%20Store-Download-blue?logo=microsoft&style=for-the-badge)](https://www.microsoft.com/store/apps)  
-
 ### GitHub Releases
-- Download the latest release from the [Releases page](../../releases).  
-- Run the installer or portable executable.
+Download the latest installer for your architecture from the [**Releases page**](../../releases):
 
-### Build from Source
-```bash
-git clone https://github.com/zCri/HideMyWindows.git
-cd HideMyWindows/HideMyWindows.App/
-msbuild
-# Or open the solution in Visual Studio and build
-```
+| Your PC | Download |
+| --- | --- |
+| 64-bit Intel/AMD (most PCs) | `HideMyWindows_x64-setup.exe` |
+| 32-bit Windows | `HideMyWindows_x86-setup.exe` |
+| ARM64 (e.g. Surface Pro X) | `HideMyWindows_arm64-setup.exe` |
+
+Run the installer and launch HideMyWindows. No admin rights required.
+
+> **Note on architecture:** this version hides apps that run on the **same architecture** as the build you install. On a 64-bit PC, install the x64 build (it covers the vast majority of modern apps). The x86 build exists for 32-bit Windows.
+
+### Build from source
+See [BUILDING.md](BUILDING.md).
 
 ---
 
 ## 🚀 Usage
 
-1. Launch **HideMyWindows**.  
-2. Use the **Find Window** tool or manually enter a PID / process name.  
-3. Find your process and hide it!  
-4. Apply **window rules** to auto-hide apps.  
-5. Minimize to tray and let it run in the background.  
+1. **Home** — pick a running process (or a specific window) and click **Hide all windows** / **Hide this window**.
+2. **Quick launch** — add the apps you hide most often and start them already hidden with one click.
+3. **Window rules** — create rules (e.g. *process name contains "obs"* → *hide all windows*) to auto-hide apps as they start. Turn on **Keep re-applying** for apps that open new windows over time.
+4. **Settings** — hide HideMyWindows itself, run in the tray, start with Windows, pick a theme and language.
 
-📸 **Screenshots & Demo (coming soon)**
 ![Thumbnail](Assets/Thumbnail.png)
 
-🎥 [YouTube Tutorial – Coming Soon](#)  
+---
+
+## ⚙️ How it works
+
+- HideMyWindows applies the Windows **`SetWindowDisplayAffinity`** capture-protection flag to the windows you choose. The same mechanism is used by password managers and DRM-protected apps to keep their own windows out of screen captures.
+- Its **own** windows are protected with a direct call. To protect **another** app's windows, a small helper library (`hmw_payload.dll`) is loaded into that app so the flag can be set from inside it — because Windows only lets a window's own process set this flag.
+- Automatic rules use lightweight **polling** instead of WMI, so **no administrator rights are needed**.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full picture.
 
 ---
 
-## ⚙️ Configuration
+## 🧰 Tech stack
 
-HideMyWindows requires no external setup. Settings are saved automatically inside the application.  
-
-Configurable options include:
-- Auto-hide HideMyWindows itself  
-- Run in background (tray mode)  
-- Show/Hide taskbar icon  
-- Process watcher method  
-- Window watcher method  
-
----
-
-## 👥 Audience
-
-- 🔹 **Streamers** (Twitch, YouTube, OBS users)  
-- 🔹 **Privacy-conscious users**  
-- 🔹 **Students** (avoid teachers spying on windows during remote classes)  
-- 🔹 **Anyone who shares their screen regularly**  
+| Part | Technology |
+| --- | --- |
+| Core | [Tauri 2](https://tauri.app) + Rust (`windows` crate) |
+| UI | [Svelte 5](https://svelte.dev) + Vite |
+| Installer | NSIS (per-user & per-machine), portable exe |
+| Arch support | x64, x86, ARM64 |
 
 ---
 
 ## 📜 License
 
-This project is licensed under **MIT with Commons Clause**.  
-You are free to use, modify, and share the software, but **you cannot sell it**.  
-
-See [LICENSE.txt](LICENSE) for details.
+Licensed under **MIT with the Commons Clause** — you may use, modify and share it freely, but you may not **sell** it. See [LICENSE.txt](LICENSE.txt).
 
 ---
 
 ## 🙏 Credits
 
-- Developed by [@zCri](https://github.com/zCri)  
-- Thanks to [@ad2017gd](https://github.com/ad2017gd) for development help  
-- UI powered by [lepoco/WPFUI](https://github.com/lepoco/wpfui)  
-- And all developers of the libraries used  
+- **Original app** by [Cristian Gambino (@zCri)](https://github.com/zCri) — the idea, the name and the first versions.
+- Early development help by [@ad2017gd](https://github.com/ad2017gd), and contributions from [@minhprovjp](https://github.com/minhprovjp) and others.
+- The white-box / tray-icon fixes from the original project are carried forward in spirit.
+- Rebuilt and maintained by the community on [Tauri](https://tauri.app) and [Svelte](https://svelte.dev).
+
+This project exists only because of the original author's work. Thank you. 💙
 
 ---
 
-## 🌍 Localization
+## 🤝 Contributing
 
-- 🇬🇧 English
-- 🇫🇷 Français
-- 🇮🇹 Italiano
-- 🇷🇴 Română
-- 🇵🇱 Polski
-- ... more coming soon!
-
----
-
-## ❤️ Support
-
-If you enjoy this project and want to support future development:  
-
-- 💳 Donate via **PayPal** – [Donate Here](https://paypal.me/zCri)  
-- 🛍️ Purchase the app on the **Microsoft Store** (soon)  
-
----
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).

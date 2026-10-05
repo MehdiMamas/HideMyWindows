@@ -1,0 +1,119 @@
+{
+  "app": { "name": "HideMyWindows", "tagline": "Masquez vos fenêtres de la capture d'écran" },
+  "nav": {
+    "home": "Accueil",
+    "quickLaunch": "Lancement rapide",
+    "rules": "Règles de fenêtre",
+    "settings": "Paramètres",
+    "about": "À propos"
+  },
+  "common": {
+    "refresh": "Actualiser",
+    "search": "Rechercher…",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "add": "Ajouter",
+    "remove": "Supprimer",
+    "edit": "Modifier",
+    "enable": "Activer",
+    "ok": "OK",
+    "browse": "Parcourir…",
+    "none": "Aucune sélection",
+    "noResults": "Aucun résultat"
+  },
+  "dashboard": {
+    "title": "Masquer une application en cours",
+    "subtitle": "Choisissez un processus ou une fenêtre, puis masquez-le des captures et enregistrements d'écran.",
+    "processes": "Processus",
+    "windows": "Fenêtres",
+    "pid": "PID",
+    "selected": "Sélectionné : {name}",
+    "hideProcess": "Masquer toutes les fenêtres",
+    "unhideProcess": "Afficher toutes les fenêtres",
+    "hideWindow": "Masquer cette fenêtre",
+    "unhideWindow": "Afficher cette fenêtre",
+    "hideTray": "Masquer le bouton de la barre des tâches",
+    "unhideTray": "Afficher le bouton de la barre des tâches",
+    "done": "Terminé — {name} est maintenant masqué de la capture.",
+    "undone": "{name} est de nouveau visible à la capture."
+  },
+  "quickLaunch": {
+    "title": "Lancement rapide",
+    "subtitle": "Lancez des applications déjà masquées — pratique pour celles que vous masquez souvent.",
+    "empty": "Aucune entrée pour l'instant. Ajoutez-en une pour commencer.",
+    "launch": "Lancer masqué",
+    "add": "Ajouter une entrée",
+    "edit": "Modifier l'entrée",
+    "name": "Nom (facultatif)",
+    "path": "Chemin de l'exécutable",
+    "arguments": "Arguments (facultatif)",
+    "launched": "{name} lancé masqué."
+  },
+  "rules": {
+    "title": "Règles de fenêtre",
+    "subtitle": "Masquez automatiquement les applications et fenêtres dès leur apparition.",
+    "empty": "Aucune règle. Ajoutez-en une pour masquer automatiquement les fenêtres correspondantes.",
+    "add": "Ajouter une règle",
+    "target": "Critère",
+    "comparator": "Condition",
+    "value": "Valeur",
+    "action": "Action",
+    "enabled": "Activée",
+    "persistent": "Réappliquer en continu",
+    "persistentHint": "Réapplique périodiquement pour garder les nouvelles fenêtres masquées.",
+    "targets": {
+      "windowTitle": "Titre de la fenêtre",
+      "windowClass": "Classe de la fenêtre",
+      "processName": "Nom du processus",
+      "processId": "ID du processus"
+    },
+    "comparators": {
+      "equals": "égal à",
+      "contains": "contient",
+      "startsWith": "commence par",
+      "endsWith": "se termine par",
+      "regex": "correspond au regex"
+    },
+    "actions": {
+      "hideProcessWindows": "Masquer toutes les fenêtres",
+      "hideWindow": "Masquer la fenêtre",
+      "unhideProcessWindows": "Afficher toutes les fenêtres",
+      "unhideWindow": "Afficher la fenêtre",
+      "hideTrayIcon": "Masquer le bouton de la barre des tâches",
+      "unhideTrayIcon": "Afficher le bouton de la barre des tâches"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "appearance": "Apparence",
+    "theme": "Thème",
+    "themeSystem": "Système",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "language": "Langue",
+    "behavior": "Comportement",
+    "hideSelf": "Masquer HideMyWindows de la capture d'écran",
+    "closeToTray": "Continuer dans la zone de notification à la fermeture",
+    "minimizeToTray": "Réduire dans la zone de notification",
+    "startWithWindows": "Démarrer automatiquement avec Windows",
+    "advanced": "Avancé",
+    "reapplyInterval": "Intervalle des règles persistantes (ms)",
+    "pollInterval": "Intervalle de détection des fenêtres (ms)",
+    "openConfigFolder": "Ouvrir le dossier des paramètres",
+    "saved": "Paramètres enregistrés.",
+    "restartHint": "Certaines options s'appliquent immédiatement, d'autres au prochain lancement."
+  },
+  "about": {
+    "title": "À propos de HideMyWindows",
+    "version": "Version {version}",
+    "what": "HideMyWindows vous permet de masquer n'importe quelle fenêtre des captures, enregistrements et logiciels de streaming comme OBS — idéal pour la confidentialité, les streamers et quiconque partage son écran.",
+    "continuation": "Ceci est une continuation maintenue par la communauté. Le HideMyWindows original de Cristian Gambino (@zCri) n'était plus mis à jour ; cette version le reconstruit sur une base plus légère et maintenable, en conservant le même nom et le même esprit.",
+    "credits": "Crédits",
+    "originalAuthor": "Application originale par Cristian Gambino (@zCri)",
+    "originalHelp": "Aide au développement initial par @ad2017gd",
+    "maintainer": "Reconstruit et maintenu par la communauté",
+    "license": "Sous licence MIT avec la Commons Clause.",
+    "sourceCode": "Code source",
+    "reportIssue": "Signaler un problème"
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "app": { "name": "HideMyWindows", "tagline": "Hide your windows from screen capture" },
+  "nav": {
+    "home": "Home",
+    "quickLaunch": "Quick launch",
+    "rules": "Window rules",
+    "settings": "Settings",
+    "about": "About"
+  },
+  "common": {
+    "refresh": "Refresh",
+    "search": "Search…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "add": "Add",
+    "remove": "Remove",
+    "edit": "Edit",
+    "enable": "Enable",
+    "ok": "OK",
+    "browse": "Browse…",
+    "none": "Nothing selected",
+    "noResults": "No results"
+  },
+  "dashboard": {
+    "title": "Hide a running app",
+    "subtitle": "Pick a process or a window, then hide it from screenshots and screen recordings.",
+    "processes": "Processes",
+    "windows": "Windows",
+    "pid": "PID",
+    "selected": "Selected: {name}",
+    "hideProcess": "Hide all windows",
+    "unhideProcess": "Unhide all windows",
+    "hideWindow": "Hide this window",
+    "unhideWindow": "Unhide this window",
+    "hideTray": "Hide taskbar button",
+    "unhideTray": "Show taskbar button",
+    "hidden": "Hidden from capture",
+    "done": "Done — {name} is now hidden from capture.",
+    "undone": "{name} is visible to capture again."
+  },
+  "quickLaunch": {
+    "title": "Quick launch",
+    "subtitle": "Launch apps already hidden — handy for the apps you hide most often.",
+    "empty": "No quick launch entries yet. Add one to get started.",
+    "launch": "Launch hidden",
+    "add": "Add entry",
+    "edit": "Edit entry",
+    "name": "Name (optional)",
+    "path": "Executable path",
+    "arguments": "Arguments (optional)",
+    "launched": "Launched {name} hidden."
+  },
+  "rules": {
+    "title": "Window rules",
+    "subtitle": "Automatically hide apps and windows as soon as they appear.",
+    "empty": "No rules yet. Add a rule to auto-hide matching windows.",
+    "add": "Add rule",
+    "target": "Match on",
+    "comparator": "Condition",
+    "value": "Value",
+    "action": "Action",
+    "enabled": "Enabled",
+    "persistent": "Keep re-applying",
+    "persistentHint": "Re-apply on a timer so new windows stay hidden.",
+    "targets": {
+      "windowTitle": "Window title",
+      "windowClass": "Window class",
+      "processName": "Process name",
+      "processId": "Process ID"
+    },
+    "comparators": {
+      "equals": "equals",
+      "contains": "contains",
+      "startsWith": "starts with",
+      "endsWith": "ends with",
+      "regex": "matches regex"
+    },
+    "actions": {
+      "hideProcessWindows": "Hide all windows",
+      "hideWindow": "Hide window",
+      "unhideProcessWindows": "Unhide all windows",
+      "unhideWindow": "Unhide window",
+      "hideTrayIcon": "Hide taskbar button",
+      "unhideTrayIcon": "Show taskbar button"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language",
+    "behavior": "Behavior",
+    "hideSelf": "Hide HideMyWindows from screen capture",
+    "closeToTray": "Keep running in the tray when closed",
+    "minimizeToTray": "Minimize to the tray",
+    "startWithWindows": "Start automatically with Windows",
+    "advanced": "Advanced",
+    "reapplyInterval": "Persistent rule interval (ms)",
+    "pollInterval": "Window discovery interval (ms)",
+    "openConfigFolder": "Open settings folder",
+    "saved": "Settings saved.",
+    "restartHint": "Some options apply immediately; others on the next launch."
+  },
+  "about": {
+    "title": "About HideMyWindows",
+    "version": "Version {version}",
+    "what": "HideMyWindows lets you hide any window on your PC from screenshots, screen recordings and streaming software like OBS — perfect for privacy, streamers and anyone who shares their screen.",
+    "continuation": "This is a community-maintained continuation. The original HideMyWindows by Cristian Gambino (@zCri) was no longer being updated, so this release rebuilds it on a lighter, more maintainable foundation while keeping the same name and spirit.",
+    "credits": "Credits",
+    "originalAuthor": "Original app by Cristian Gambino (@zCri)",
+    "originalHelp": "Early development help by @ad2017gd",
+    "maintainer": "Rebuilt and maintained by the community",
+    "license": "Licensed under MIT with the Commons Clause.",
+    "sourceCode": "Source code",
+    "reportIssue": "Report an issue"
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "ruleFailures": "{count} rule action(s) failed."
+  }
+}

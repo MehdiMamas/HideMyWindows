@@ -1,0 +1,3 @@
+# Local cross-compile helper (CI uses native MSVC and ignores this).
+[target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"

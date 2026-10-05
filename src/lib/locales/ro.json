@@ -1,0 +1,119 @@
+{
+  "app": { "name": "HideMyWindows", "tagline": "Ascunde-ți ferestrele de la capturarea ecranului" },
+  "nav": {
+    "home": "Acasă",
+    "quickLaunch": "Lansare rapidă",
+    "rules": "Reguli ferestre",
+    "settings": "Setări",
+    "about": "Despre"
+  },
+  "common": {
+    "refresh": "Reîmprospătează",
+    "search": "Caută…",
+    "save": "Salvează",
+    "cancel": "Anulează",
+    "add": "Adaugă",
+    "remove": "Elimină",
+    "edit": "Editează",
+    "enable": "Activează",
+    "ok": "OK",
+    "browse": "Răsfoiește…",
+    "none": "Nimic selectat",
+    "noResults": "Niciun rezultat"
+  },
+  "dashboard": {
+    "title": "Ascunde o aplicație pornită",
+    "subtitle": "Alege un proces sau o fereastră, apoi ascunde-o de capturi și înregistrări de ecran.",
+    "processes": "Procese",
+    "windows": "Ferestre",
+    "pid": "PID",
+    "selected": "Selectat: {name}",
+    "hideProcess": "Ascunde toate ferestrele",
+    "unhideProcess": "Afișează toate ferestrele",
+    "hideWindow": "Ascunde această fereastră",
+    "unhideWindow": "Afișează această fereastră",
+    "hideTray": "Ascunde butonul din bara de activități",
+    "unhideTray": "Afișează butonul din bara de activități",
+    "done": "Gata — {name} este acum ascuns de la capturare.",
+    "undone": "{name} este din nou vizibil la capturare."
+  },
+  "quickLaunch": {
+    "title": "Lansare rapidă",
+    "subtitle": "Lansează aplicații deja ascunse — util pentru cele pe care le ascunzi des.",
+    "empty": "Încă nicio intrare. Adaugă una pentru a începe.",
+    "launch": "Lansează ascuns",
+    "add": "Adaugă intrare",
+    "edit": "Editează intrarea",
+    "name": "Nume (opțional)",
+    "path": "Calea executabilului",
+    "arguments": "Argumente (opțional)",
+    "launched": "{name} lansat ascuns."
+  },
+  "rules": {
+    "title": "Reguli ferestre",
+    "subtitle": "Ascunde automat aplicații și ferestre imediat ce apar.",
+    "empty": "Încă nicio regulă. Adaugă una pentru a ascunde automat ferestrele potrivite.",
+    "add": "Adaugă regulă",
+    "target": "Criteriu",
+    "comparator": "Condiție",
+    "value": "Valoare",
+    "action": "Acțiune",
+    "enabled": "Activată",
+    "persistent": "Reaplică continuu",
+    "persistentHint": "Reaplică periodic pentru a menține ascunse ferestrele noi.",
+    "targets": {
+      "windowTitle": "Titlul ferestrei",
+      "windowClass": "Clasa ferestrei",
+      "processName": "Numele procesului",
+      "processId": "ID proces"
+    },
+    "comparators": {
+      "equals": "egal cu",
+      "contains": "conține",
+      "startsWith": "începe cu",
+      "endsWith": "se termină cu",
+      "regex": "se potrivește cu regex"
+    },
+    "actions": {
+      "hideProcessWindows": "Ascunde toate ferestrele",
+      "hideWindow": "Ascunde fereastra",
+      "unhideProcessWindows": "Afișează toate ferestrele",
+      "unhideWindow": "Afișează fereastra",
+      "hideTrayIcon": "Ascunde butonul din bara de activități",
+      "unhideTrayIcon": "Afișează butonul din bara de activități"
+    }
+  },
+  "settings": {
+    "title": "Setări",
+    "appearance": "Aspect",
+    "theme": "Temă",
+    "themeSystem": "Sistem",
+    "themeLight": "Luminos",
+    "themeDark": "Întunecat",
+    "language": "Limbă",
+    "behavior": "Comportament",
+    "hideSelf": "Ascunde HideMyWindows de la capturarea ecranului",
+    "closeToTray": "Rămâi în zona de notificare la închidere",
+    "minimizeToTray": "Minimizează în zona de notificare",
+    "startWithWindows": "Pornește automat cu Windows",
+    "advanced": "Avansate",
+    "reapplyInterval": "Intervalul regulilor persistente (ms)",
+    "pollInterval": "Intervalul de detectare a ferestrelor (ms)",
+    "openConfigFolder": "Deschide folderul cu setări",
+    "saved": "Setări salvate.",
+    "restartHint": "Unele opțiuni se aplică imediat, altele la următoarea pornire."
+  },
+  "about": {
+    "title": "Despre HideMyWindows",
+    "version": "Versiunea {version}",
+    "what": "HideMyWindows îți permite să ascunzi orice fereastră de la capturi, înregistrări și programe de streaming precum OBS — ideal pentru confidențialitate, streameri și oricine își partajează ecranul.",
+    "continuation": "Aceasta este o continuare întreținută de comunitate. HideMyWindows original, de Cristian Gambino (@zCri), nu mai era actualizat; această versiune îl reconstruiește pe o bază mai ușoară și mai ușor de întreținut, păstrând același nume și aceeași idee.",
+    "credits": "Credite",
+    "originalAuthor": "Aplicația originală de Cristian Gambino (@zCri)",
+    "originalHelp": "Ajutor la dezvoltarea inițială de la @ad2017gd",
+    "maintainer": "Reconstruit și întreținut de comunitate",
+    "license": "Licențiat sub MIT cu Commons Clause.",
+    "sourceCode": "Cod sursă",
+    "reportIssue": "Raportează o problemă"
+  }
+}

@@ -1,0 +1,50 @@
+name: Check
+
+# Fast validation on every push / PR: the frontend builds, Rust compiles and
+# clippy is clean. Full installers are produced by release.yml on tags.
+
+on:
+  push:
+    branches: ["main", "rewrite-tauri"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      - name: Install frontend deps
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build payload (x64)
+        shell: bash
+        run: |
+          cargo build -p hmw-payload --release --target x86_64-pc-windows-msvc
+          mkdir -p src-tauri/resources
+          cp target/x86_64-pc-windows-msvc/release/hmw_payload.dll src-tauri/resources/hmw_payload.dll
+
+      - name: Rust format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build app
+        run: cargo build -p hidemywindows --release

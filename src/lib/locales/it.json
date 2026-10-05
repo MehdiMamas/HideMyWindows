@@ -1,0 +1,119 @@
+{
+  "app": { "name": "HideMyWindows", "tagline": "Nascondi le tue finestre dalla cattura schermo" },
+  "nav": {
+    "home": "Home",
+    "quickLaunch": "Avvio rapido",
+    "rules": "Regole finestre",
+    "settings": "Impostazioni",
+    "about": "Informazioni"
+  },
+  "common": {
+    "refresh": "Aggiorna",
+    "search": "Cerca…",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "add": "Aggiungi",
+    "remove": "Rimuovi",
+    "edit": "Modifica",
+    "enable": "Abilita",
+    "ok": "OK",
+    "browse": "Sfoglia…",
+    "none": "Nessuna selezione",
+    "noResults": "Nessun risultato"
+  },
+  "dashboard": {
+    "title": "Nascondi un'app in esecuzione",
+    "subtitle": "Scegli un processo o una finestra, poi nascondilo da screenshot e registrazioni dello schermo.",
+    "processes": "Processi",
+    "windows": "Finestre",
+    "pid": "PID",
+    "selected": "Selezionato: {name}",
+    "hideProcess": "Nascondi tutte le finestre",
+    "unhideProcess": "Mostra tutte le finestre",
+    "hideWindow": "Nascondi questa finestra",
+    "unhideWindow": "Mostra questa finestra",
+    "hideTray": "Nascondi pulsante barra applicazioni",
+    "unhideTray": "Mostra pulsante barra applicazioni",
+    "done": "Fatto — {name} ora è nascosto dalla cattura.",
+    "undone": "{name} è di nuovo visibile alla cattura."
+  },
+  "quickLaunch": {
+    "title": "Avvio rapido",
+    "subtitle": "Avvia le app già nascoste — comodo per quelle che nascondi più spesso.",
+    "empty": "Ancora nessuna voce. Aggiungine una per iniziare.",
+    "launch": "Avvia nascosto",
+    "add": "Aggiungi voce",
+    "edit": "Modifica voce",
+    "name": "Nome (facoltativo)",
+    "path": "Percorso eseguibile",
+    "arguments": "Argomenti (facoltativo)",
+    "launched": "{name} avviato nascosto."
+  },
+  "rules": {
+    "title": "Regole finestre",
+    "subtitle": "Nascondi automaticamente app e finestre non appena compaiono.",
+    "empty": "Ancora nessuna regola. Aggiungine una per nascondere automaticamente le finestre corrispondenti.",
+    "add": "Aggiungi regola",
+    "target": "Criterio",
+    "comparator": "Condizione",
+    "value": "Valore",
+    "action": "Azione",
+    "enabled": "Abilitata",
+    "persistent": "Riapplica di continuo",
+    "persistentHint": "Riapplica periodicamente per mantenere nascoste le nuove finestre.",
+    "targets": {
+      "windowTitle": "Titolo finestra",
+      "windowClass": "Classe finestra",
+      "processName": "Nome processo",
+      "processId": "ID processo"
+    },
+    "comparators": {
+      "equals": "uguale a",
+      "contains": "contiene",
+      "startsWith": "inizia con",
+      "endsWith": "finisce con",
+      "regex": "corrisponde al regex"
+    },
+    "actions": {
+      "hideProcessWindows": "Nascondi tutte le finestre",
+      "hideWindow": "Nascondi finestra",
+      "unhideProcessWindows": "Mostra tutte le finestre",
+      "unhideWindow": "Mostra finestra",
+      "hideTrayIcon": "Nascondi pulsante barra applicazioni",
+      "unhideTrayIcon": "Mostra pulsante barra applicazioni"
+    }
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "appearance": "Aspetto",
+    "theme": "Tema",
+    "themeSystem": "Sistema",
+    "themeLight": "Chiaro",
+    "themeDark": "Scuro",
+    "language": "Lingua",
+    "behavior": "Comportamento",
+    "hideSelf": "Nascondi HideMyWindows dalla cattura schermo",
+    "closeToTray": "Continua nell'area di notifica alla chiusura",
+    "minimizeToTray": "Riduci nell'area di notifica",
+    "startWithWindows": "Avvia automaticamente con Windows",
+    "advanced": "Avanzate",
+    "reapplyInterval": "Intervallo regole persistenti (ms)",
+    "pollInterval": "Intervallo rilevamento finestre (ms)",
+    "openConfigFolder": "Apri cartella impostazioni",
+    "saved": "Impostazioni salvate.",
+    "restartHint": "Alcune opzioni si applicano subito, altre al prossimo avvio."
+  },
+  "about": {
+    "title": "Informazioni su HideMyWindows",
+    "version": "Versione {version}",
+    "what": "HideMyWindows ti permette di nascondere qualsiasi finestra da screenshot, registrazioni e software di streaming come OBS — ideale per privacy, streamer e chi condivide lo schermo.",
+    "continuation": "Questa è una continuazione mantenuta dalla community. L'HideMyWindows originale di Cristian Gambino (@zCri) non veniva più aggiornato; questa versione lo ricostruisce su basi più leggere e manutenibili, mantenendo lo stesso nome e spirito.",
+    "credits": "Crediti",
+    "originalAuthor": "App originale di Cristian Gambino (@zCri)",
+    "originalHelp": "Aiuto allo sviluppo iniziale di @ad2017gd",
+    "maintainer": "Ricostruito e mantenuto dalla community",
+    "license": "Rilasciato con licenza MIT con Commons Clause.",
+    "sourceCode": "Codice sorgente",
+    "reportIssue": "Segnala un problema"
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "app": { "name": "HideMyWindows", "tagline": "Ukryj swoje okna przed przechwytywaniem ekranu" },
+  "nav": {
+    "home": "Start",
+    "quickLaunch": "Szybkie uruchamianie",
+    "rules": "Reguły okien",
+    "settings": "Ustawienia",
+    "about": "O programie"
+  },
+  "common": {
+    "refresh": "Odśwież",
+    "search": "Szukaj…",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "add": "Dodaj",
+    "remove": "Usuń",
+    "edit": "Edytuj",
+    "enable": "Włącz",
+    "ok": "OK",
+    "browse": "Przeglądaj…",
+    "none": "Nic nie wybrano",
+    "noResults": "Brak wyników"
+  },
+  "dashboard": {
+    "title": "Ukryj działającą aplikację",
+    "subtitle": "Wybierz proces lub okno, a następnie ukryj je przed zrzutami i nagraniami ekranu.",
+    "processes": "Procesy",
+    "windows": "Okna",
+    "pid": "PID",
+    "selected": "Wybrano: {name}",
+    "hideProcess": "Ukryj wszystkie okna",
+    "unhideProcess": "Pokaż wszystkie okna",
+    "hideWindow": "Ukryj to okno",
+    "unhideWindow": "Pokaż to okno",
+    "hideTray": "Ukryj przycisk na pasku zadań",
+    "unhideTray": "Pokaż przycisk na pasku zadań",
+    "done": "Gotowe — {name} jest teraz ukryty przed przechwytywaniem.",
+    "undone": "{name} jest znów widoczny przy przechwytywaniu."
+  },
+  "quickLaunch": {
+    "title": "Szybkie uruchamianie",
+    "subtitle": "Uruchamiaj aplikacje od razu ukryte — przydatne dla tych, które ukrywasz najczęściej.",
+    "empty": "Brak wpisów. Dodaj jeden, aby zacząć.",
+    "launch": "Uruchom ukryte",
+    "add": "Dodaj wpis",
+    "edit": "Edytuj wpis",
+    "name": "Nazwa (opcjonalnie)",
+    "path": "Ścieżka pliku wykonywalnego",
+    "arguments": "Argumenty (opcjonalnie)",
+    "launched": "Uruchomiono {name} ukryte."
+  },
+  "rules": {
+    "title": "Reguły okien",
+    "subtitle": "Automatycznie ukrywaj aplikacje i okna zaraz po ich pojawieniu.",
+    "empty": "Brak reguł. Dodaj regułę, aby automatycznie ukrywać pasujące okna.",
+    "add": "Dodaj regułę",
+    "target": "Kryterium",
+    "comparator": "Warunek",
+    "value": "Wartość",
+    "action": "Akcja",
+    "enabled": "Włączona",
+    "persistent": "Stosuj ponownie",
+    "persistentHint": "Stosuje ponownie co jakiś czas, aby nowe okna pozostały ukryte.",
+    "targets": {
+      "windowTitle": "Tytuł okna",
+      "windowClass": "Klasa okna",
+      "processName": "Nazwa procesu",
+      "processId": "ID procesu"
+    },
+    "comparators": {
+      "equals": "równa się",
+      "contains": "zawiera",
+      "startsWith": "zaczyna się od",
+      "endsWith": "kończy się na",
+      "regex": "pasuje do regex"
+    },
+    "actions": {
+      "hideProcessWindows": "Ukryj wszystkie okna",
+      "hideWindow": "Ukryj okno",
+      "unhideProcessWindows": "Pokaż wszystkie okna",
+      "unhideWindow": "Pokaż okno",
+      "hideTrayIcon": "Ukryj przycisk na pasku zadań",
+      "unhideTrayIcon": "Pokaż przycisk na pasku zadań"
+    }
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "appearance": "Wygląd",
+    "theme": "Motyw",
+    "themeSystem": "Systemowy",
+    "themeLight": "Jasny",
+    "themeDark": "Ciemny",
+    "language": "Język",
+    "behavior": "Zachowanie",
+    "hideSelf": "Ukryj HideMyWindows przed przechwytywaniem ekranu",
+    "closeToTray": "Działaj w zasobniku po zamknięciu",
+    "minimizeToTray": "Minimalizuj do zasobnika",
+    "startWithWindows": "Uruchamiaj automatycznie z systemem Windows",
+    "advanced": "Zaawansowane",
+    "reapplyInterval": "Odstęp reguł trwałych (ms)",
+    "pollInterval": "Odstęp wykrywania okien (ms)",
+    "openConfigFolder": "Otwórz folder ustawień",
+    "saved": "Zapisano ustawienia.",
+    "restartHint": "Niektóre opcje działają od razu, inne po następnym uruchomieniu."
+  },
+  "about": {
+    "title": "O programie HideMyWindows",
+    "version": "Wersja {version}",
+    "what": "HideMyWindows pozwala ukryć dowolne okno przed zrzutami, nagraniami i oprogramowaniem do streamingu, takim jak OBS — idealne dla prywatności, streamerów i każdego, kto udostępnia ekran.",
+    "continuation": "To jest kontynuacja utrzymywana przez społeczność. Oryginalny HideMyWindows autorstwa Cristiana Gambino (@zCri) nie był już aktualizowany; ta wersja odbudowuje go na lżejszej, łatwiejszej w utrzymaniu podstawie, zachowując tę samą nazwę i ideę.",
+    "credits": "Podziękowania",
+    "originalAuthor": "Oryginalna aplikacja autorstwa Cristiana Gambino (@zCri)",
+    "originalHelp": "Pomoc przy wczesnym rozwoju: @ad2017gd",
+    "maintainer": "Odbudowany i utrzymywany przez społeczność",
+    "license": "Na licencji MIT z klauzulą Commons Clause.",
+    "sourceCode": "Kod źródłowy",
+    "reportIssue": "Zgłoś problem"
+  }
+}

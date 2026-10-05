@@ -4,6 +4,9 @@
 
 ![Banner](Assets/Banner.png)
 
+> ℹ️ **Informazioni su questa versione — una continuazione della community.**
+> L'HideMyWindows originale di [Cristian Gambino (@zCri)](https://github.com/zCri) non veniva più aggiornato. Questa versione **2.0** è una continuazione mantenuta dalla community: **conserva lo stesso nome e scopo**, ma ricostruisce l'app su basi più leggere e manutenibili (Tauri + Svelte). Tutto il merito dell'idea e dell'app originale va al suo autore.
+
 **HideMyWindows** è un'applicazione per Microsoft Windows che ti permette di **nascondere le finestre del desktop dai metodi di cattura schermo** (screenshot, registrazioni video, software di streaming come OBS).  
 È progettata per **utenti attenti alla privacy, streamer e studenti** che desiderano un controllo migliore su ciò che gli altri possono vedere durante la condivisione dello schermo.
 
@@ -34,12 +37,7 @@
 - Esegui l'installer o l'eseguibile portabile.
 
 ### Compila dal codice sorgente
-```bash
-git clone [https://github.com/zCri/HideMyWindows.git](https://github.com/zCri/HideMyWindows.git)
-cd HideMyWindows/HideMyWindows.App/
-msbuild
-# O apri la soluzione in Visual Studio e compila
-```
+Consulta [BUILDING.md](BUILDING.md) per compilare l'app (Tauri 2 + Svelte) su Windows.
 
 ---
 

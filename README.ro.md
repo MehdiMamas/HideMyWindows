@@ -4,6 +4,9 @@
 
 ![Banner](Assets/Banner.png)
 
+> ℹ️ **Despre această versiune — o continuare a comunității.**
+> HideMyWindows original, de [Cristian Gambino (@zCri)](https://github.com/zCri), nu mai era actualizat. Această versiune **2.0** este o continuare întreținută de comunitate: **păstrează același nume și scop**, dar reconstruiește aplicația pe o bază mai ușoară și mai ușor de întreținut (Tauri + Svelte). Tot meritul pentru idee și aplicația originală îi revine autorului.
+
 **HideMyWindows** este o aplicație Microsoft Windows care îți permite să **ascunzi ferestrele de pe desktop de metodele de captură a ecranului** (screenshot-uri, înregistrări video, software de streaming precum OBS).  
 Este concepută pentru **utilizatori preocupați de confidențialitate, streameri și studenți** care doresc un control mai bun asupra a ceea ce pot vedea alții atunci când partajează ecranul.
 
@@ -34,12 +37,7 @@ Este concepută pentru **utilizatori preocupați de confidențialitate, streamer
 - Rulează instalatorul sau executabilul portabil.
 
 ### Compilare din sursă
-```bash
-git clone [https://github.com/zCri/HideMyWindows.git](https://github.com/zCri/HideMyWindows.git)
-cd HideMyWindows/HideMyWindows.App/
-msbuild
-# Sau deschide soluția în Visual Studio și compilează
-```
+Consultă [BUILDING.md](BUILDING.md) pentru a compila aplicația (Tauri 2 + Svelte) pe Windows.
 
 ---
 

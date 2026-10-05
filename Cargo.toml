@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = ["hmw-core", "payload", "src-tauri"]
+
+[workspace.package]
+version = "2.0.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/mehdimamas/hidemywindows"
+
+[workspace.dependencies]
+windows = "0.58"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Small, fast release binaries.
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

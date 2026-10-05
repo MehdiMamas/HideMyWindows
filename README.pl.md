@@ -4,6 +4,9 @@
 
 ![Banner](Assets/Banner.png)
 
+> ℹ️ **O tej wersji — kontynuacja społeczności.**
+> Oryginalny HideMyWindows autorstwa [Cristiana Gambino (@zCri)](https://github.com/zCri) nie był już aktualizowany. Ta wersja **2.0** to kontynuacja utrzymywana przez społeczność: **zachowuje tę samą nazwę i cel**, ale odbudowuje aplikację na lżejszej i łatwiejszej w utrzymaniu podstawie (Tauri + Svelte). Całe uznanie za pomysł i oryginalną aplikację należy do jej autora.
+
 **HideMyWindows** to aplikacja dla systemu Microsoft Windows, która pozwala **ukryć okna pulpitu przed metodami przechwytywania ekranu** (zrzuty ekranu, nagrywanie wideo, oprogramowanie do streamingu takie jak OBS).  
 Została zaprojektowana dla **użytkowników dbających o prywatność, streamerów i studentów**, którzy chcą mieć lepszą kontrolę nad tym, co inni widzą podczas udostępniania ekranu.
 
@@ -33,12 +36,7 @@ Została zaprojektowana dla **użytkowników dbających o prywatność, streamer
 - Uruchom instalator lub plik wykonywalny portable.
 
 ### Kompilacja ze źródła
-```bash
-git clone [https://github.com/zCri/HideMyWindows.git](https://github.com/zCri/HideMyWindows.git)
-cd HideMyWindows/HideMyWindows.App/
-msbuild
-# Lub otwórz rozwiązanie w Visual Studio i skompiluj
-```
+Zobacz [BUILDING.md](BUILDING.md), aby zbudować aplikację (Tauri 2 + Svelte) w systemie Windows.
 
 ---
 
