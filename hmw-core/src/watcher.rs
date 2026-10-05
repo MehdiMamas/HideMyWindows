@@ -149,7 +149,11 @@ fn evaluate(
 
 /// Pids a previous pass hid that the current rules do not.
 fn pids_to_release(applied: &HideSet, desired: &HideSet) -> Vec<u32> {
-    applied.processes.difference(&desired.processes).copied().collect()
+    applied
+        .processes
+        .difference(&desired.processes)
+        .copied()
+        .collect()
 }
 
 /// Hwnds present in `applied` but not in `desired`.
@@ -255,7 +259,8 @@ fn apply_unhides(ops: &[UnhideOp], payload_path: &str, desired: &HideSet) -> Vec
                 if desired.processes.contains(&pid) || !seen_proc.insert(pid) {
                     continue;
                 }
-                if let Err(e) = apply_to_process(pid, HideAction::UnhideProcessWindows, payload_path)
+                if let Err(e) =
+                    apply_to_process(pid, HideAction::UnhideProcessWindows, payload_path)
                 {
                     errors.push(format!("Unhide process {pid}: {}", e.0));
                 }
