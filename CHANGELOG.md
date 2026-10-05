@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.1] — 2026-10-05
+
+### Changed
+- **HideMyWindows no longer hides its own window from screen capture by
+  default.** The `hideSelf` setting now defaults to off, so the app stays
+  visible to remote-desktop and capture tools (e.g. AnyDesk) while it continues
+  to hide the apps you target. Previously the default hid HMW itself, which
+  could leave its window — and the toggle to change this — invisible over a
+  remote session. Turn the setting back on in Settings if you want the old
+  behaviour.
+
 ## [2.0.0] — 2026-10-05
 
 A complete, community-maintained rewrite that **keeps the HideMyWindows name and

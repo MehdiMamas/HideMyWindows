@@ -1439,7 +1439,7 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hidemywindows"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "hmw-core",
  "serde",
@@ -1454,7 +1454,7 @@ dependencies = [
 
 [[package]]
 name = "hmw-core"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "regex",
  "serde",
@@ -1464,7 +1464,7 @@ dependencies = [
 
 [[package]]
 name = "hmw-payload"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "windows 0.58.0",
 ]
