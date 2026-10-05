@@ -86,6 +86,14 @@ pub fn process_path(pid: u32) -> Option<String> {
     }
 }
 
+/// True when `pid` still refers to a running process.
+pub fn process_is_alive(pid: u32) -> bool {
+    if pid == 0 {
+        return false;
+    }
+    unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).is_ok() }
+}
+
 /// The file name (with extension) of a process, e.g. `notepad.exe`.
 pub fn process_name(pid: u32) -> Option<String> {
     process_path(pid).map(|p| {

@@ -56,7 +56,8 @@
     persist();
   }
 
-  // Persist on blur/change via a debounce.
+  // Debounce only the free-text value so a half-typed name is not applied.
+  // Selects, toggles, and remove save immediately; the watcher then reconciles.
   let timer;
   function schedulePersist() {
     clearTimeout(timer);
@@ -78,14 +79,14 @@
     {#each $config.windowRules as rule (rule.id)}
       <div class="rule">
         <div class="line">
-          <Select bind:value={rule.target} options={targetOptions} onchange={schedulePersist} />
-          <Select bind:value={rule.comparator} options={comparatorOptions} onchange={schedulePersist} />
+          <Select bind:value={rule.target} options={targetOptions} onchange={persist} />
+          <Select bind:value={rule.comparator} options={comparatorOptions} onchange={persist} />
           <div class="val"><TextField bind:value={rule.value} placeholder={$t("rules.value")} oninput={schedulePersist} /></div>
         </div>
         <div class="line">
-          <Select bind:value={rule.action} options={actionOptions} onchange={schedulePersist} />
-          <Toggle bind:checked={rule.enabled} label={$t("rules.enabled")} onchange={schedulePersist} />
-          <Toggle bind:checked={rule.persistent} label={$t("rules.persistent")} onchange={schedulePersist} />
+          <Select bind:value={rule.action} options={actionOptions} onchange={persist} />
+          <Toggle bind:checked={rule.enabled} label={$t("rules.enabled")} onchange={persist} />
+          <Toggle bind:checked={rule.persistent} label={$t("rules.persistent")} onchange={persist} />
           <div class="spacer"></div>
           <Button variant="danger" onclick={() => removeRule(rule.id)}>{$t("common.remove")}</Button>
         </div>
