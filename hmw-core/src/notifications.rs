@@ -37,7 +37,9 @@ fn staged_payload(payload_path: &str) -> Result<String> {
     match std::fs::copy(payload_path, &dest) {
         Ok(_) => Ok(dest.to_string_lossy().into_owned()),
         Err(_) if dest.is_file() => Ok(dest.to_string_lossy().into_owned()),
-        Err(e) => Err(Error(format!("Could not stage the notification helper: {e}"))),
+        Err(e) => Err(Error(format!(
+            "Could not stage the notification helper: {e}"
+        ))),
     }
 }
 

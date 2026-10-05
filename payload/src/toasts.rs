@@ -108,11 +108,26 @@ mod tests {
 
     #[test]
     fn matches_localized_toast_titles() {
-        assert!(is_toast_window("Windows.UI.Core.CoreWindow", "New notification"));
-        assert!(is_toast_window("windows.ui.core.corewindow", "Nouvelle notification"));
-        assert!(is_toast_window("Windows.UI.Core.CoreWindow", "Nuova notifica"));
-        assert!(is_toast_window("Windows.UI.Core.CoreWindow", "Notificare nouă"));
-        assert!(is_toast_window("Windows.UI.Core.CoreWindow", "Nowe powiadomienie"));
+        assert!(is_toast_window(
+            "Windows.UI.Core.CoreWindow",
+            "New notification"
+        ));
+        assert!(is_toast_window(
+            "windows.ui.core.corewindow",
+            "Nouvelle notification"
+        ));
+        assert!(is_toast_window(
+            "Windows.UI.Core.CoreWindow",
+            "Nuova notifica"
+        ));
+        assert!(is_toast_window(
+            "Windows.UI.Core.CoreWindow",
+            "Notificare nouă"
+        ));
+        assert!(is_toast_window(
+            "Windows.UI.Core.CoreWindow",
+            "Nowe powiadomienie"
+        ));
     }
 
     #[test]
