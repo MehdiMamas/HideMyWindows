@@ -3,6 +3,7 @@
   import { listen } from "@tauri-apps/api/event";
   import { t, locale, detectLocale } from "./lib/i18n.js";
   import { config, notify, applyTheme } from "./lib/stores.js";
+  import { checkForUpdates } from "./lib/updater.js";
   import * as api from "./lib/api.js";
 
   import Dashboard from "./lib/pages/Dashboard.svelte";
@@ -31,6 +32,7 @@
       config.set(cfg);
       applyTheme(cfg.theme);
       locale.set(detectLocale(cfg.language));
+      checkForUpdates();
 
       // React to OS theme changes when following the system.
       window

@@ -72,6 +72,10 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Minisign key from `npm run tauri signer generate` (never commit the private key).
+          # Without both secrets the release has no latest.json, so in-app updates cannot install.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
           releaseName: "HideMyWindows ${{ github.event.inputs.tag || github.ref_name }}"

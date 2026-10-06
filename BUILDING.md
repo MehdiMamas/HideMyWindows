@@ -49,6 +49,13 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds x64, x86
 and ARM64 installers on GitHub's Windows runners and publishes them to a GitHub
 release automatically — so you don't need every toolchain locally.
 
+Installed copies check that release for updates. Signing uses a minisign key
+generated with `npm run tauri signer generate` and kept outside the repo. The
+public key lives in `src-tauri/tauri.conf.json`. The private key and its
+password are GitHub Actions secrets named `TAURI_SIGNING_PRIVATE_KEY` and
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. A release built without those secrets
+does not publish `latest.json`, so the in-app updater has nothing to install.
+
 ## Project layout
 
 ```

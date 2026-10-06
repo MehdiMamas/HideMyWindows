@@ -121,6 +121,15 @@
     "maintainer": "Reconstruit și întreținut de comunitate",
     "license": "Licențiat sub MIT cu Commons Clause.",
     "sourceCode": "Cod sursă",
-    "reportIssue": "Raportează o problemă"
+    "reportIssue": "Raportează o problemă",
+    "checkForUpdates": "Caută actualizări",
+    "checking": "Se caută actualizări…",
+    "upToDate": "Ești la zi.",
+    "updateTitle": "Actualizare disponibilă",
+    "updatePrompt": "Versiunea {version} este disponibilă. O descarci și o instalezi acum?\n\n{notes}",
+    "updatePromptNoNotes": "Versiunea {version} este disponibilă. O descarci și o instalezi acum?",
+    "downloading": "Se descarcă {version}…",
+    "updateFailed": "Nu s-au putut căuta actualizări. {error}",
+    "updateDev": "Căutarea actualizărilor funcționează în versiunile instalate."
   }
 }

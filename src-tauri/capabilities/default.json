@@ -8,9 +8,12 @@
     "core:window:allow-show",
     "core:window:allow-hide",
     "core:window:allow-set-focus",
+    "core:window:allow-unminimize",
     "core:event:default",
     "dialog:default",
     "opener:default",
+    "process:allow-restart",
+    "updater:default",
     "opener:allow-open-path",
     "opener:allow-open-url"
   ]

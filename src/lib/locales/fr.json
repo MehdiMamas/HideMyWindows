@@ -121,6 +121,15 @@
     "maintainer": "Reconstruit et maintenu par la communauté",
     "license": "Sous licence MIT avec la Commons Clause.",
     "sourceCode": "Code source",
-    "reportIssue": "Signaler un problème"
+    "reportIssue": "Signaler un problème",
+    "checkForUpdates": "Rechercher des mises à jour",
+    "checking": "Recherche de mises à jour…",
+    "upToDate": "Vous êtes à jour.",
+    "updateTitle": "Mise à jour disponible",
+    "updatePrompt": "La version {version} est disponible. La télécharger et l'installer maintenant ?\n\n{notes}",
+    "updatePromptNoNotes": "La version {version} est disponible. La télécharger et l'installer maintenant ?",
+    "downloading": "Téléchargement de {version}…",
+    "updateFailed": "Impossible de rechercher les mises à jour. {error}",
+    "updateDev": "La recherche de mises à jour fonctionne dans les versions installées."
   }
 }

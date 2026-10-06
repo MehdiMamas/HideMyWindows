@@ -3,6 +3,13 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.4] — 2026-10-06
+
+### Added
+- **Updates from GitHub releases.** The app checks for a newer release on
+  startup and asks before downloading and installing it. About has a Check
+  for updates button for the same flow.
+
 ## [2.0.3] — 2026-10-06
 
 ### Added

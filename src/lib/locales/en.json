@@ -122,7 +122,16 @@
     "maintainer": "Rebuilt and maintained by the community",
     "license": "Licensed under MIT with the Commons Clause.",
     "sourceCode": "Source code",
-    "reportIssue": "Report an issue"
+    "reportIssue": "Report an issue",
+    "checkForUpdates": "Check for updates",
+    "checking": "Checking for updates…",
+    "upToDate": "You're up to date.",
+    "updateTitle": "Update available",
+    "updatePrompt": "Version {version} is available. Download and install it now?\n\n{notes}",
+    "updatePromptNoNotes": "Version {version} is available. Download and install it now?",
+    "downloading": "Downloading {version}…",
+    "updateFailed": "Couldn't check for updates. {error}",
+    "updateDev": "Update checks run in installed builds."
   },
   "errors": {
     "generic": "Something went wrong",

@@ -12,6 +12,10 @@ src-tauri/gen/schemas/
 src-tauri/resources/*.dll
 src-tauri/resources/hmw-release-x86.exe
 
+# Updater signing keys (the private key must stay out of the repo)
+*.key
+*.key.pub
+
 # Editor / OS
 .DS_Store
 Thumbs.db

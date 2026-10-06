@@ -121,6 +121,15 @@
     "maintainer": "Odbudowany i utrzymywany przez społeczność",
     "license": "Na licencji MIT z klauzulą Commons Clause.",
     "sourceCode": "Kod źródłowy",
-    "reportIssue": "Zgłoś problem"
+    "reportIssue": "Zgłoś problem",
+    "checkForUpdates": "Sprawdź aktualizacje",
+    "checking": "Sprawdzanie aktualizacji…",
+    "upToDate": "Masz najnowszą wersję.",
+    "updateTitle": "Dostępna aktualizacja",
+    "updatePrompt": "Wersja {version} jest dostępna. Pobrać i zainstalować teraz?\n\n{notes}",
+    "updatePromptNoNotes": "Wersja {version} jest dostępna. Pobrać i zainstalować teraz?",
+    "downloading": "Pobieranie {version}…",
+    "updateFailed": "Nie udało się sprawdzić aktualizacji. {error}",
+    "updateDev": "Sprawdzanie aktualizacji działa w zainstalowanych kompilacjach."
   }
 }
