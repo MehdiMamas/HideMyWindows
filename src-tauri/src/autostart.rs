@@ -70,9 +70,7 @@ mod tests {
         ));
         assert_eq!(
             command,
-            format!(
-                r#""C:\Program Files\HideMyWindows\hidemywindows.exe" {START_MINIMIZED_ARG}"#
-            )
+            format!(r#""C:\Program Files\HideMyWindows\hidemywindows.exe" {START_MINIMIZED_ARG}"#)
         );
     }
 }
