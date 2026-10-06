@@ -470,6 +470,17 @@ pub fn run() {
         .expect("error while running HideMyWindows");
 }
 
+/// Theme is applied in the frontend; this helper keeps the enum referenced for
+/// potential native theming and documents the mapping.
+#[allow(dead_code)]
+fn theme_name(theme: Theme) -> &'static str {
+    match theme {
+        Theme::System => "system",
+        Theme::Light => "light",
+        Theme::Dark => "dark",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::started_minimized;
@@ -479,16 +490,5 @@ mod tests {
         assert!(started_minimized(["hidemywindows.exe", "--minimized"]));
         assert!(!started_minimized(["hidemywindows.exe"]));
         assert!(!started_minimized(["hidemywindows.exe", "--release-all"]));
-    }
-}
-
-/// Theme is applied in the frontend; this helper keeps the enum referenced for
-/// potential native theming and documents the mapping.
-#[allow(dead_code)]
-fn theme_name(theme: Theme) -> &'static str {
-    match theme {
-        Theme::System => "system",
-        Theme::Light => "light",
-        Theme::Dark => "dark",
     }
 }
