@@ -4,111 +4,96 @@
 
 ![Banner](Assets/Banner.png)
 
-> ℹ️ **Despre această versiune — o continuare a comunității.**
-> HideMyWindows original, de [Cristian Gambino (@zCri)](https://github.com/zCri), nu mai era actualizat. Această versiune **2.0** este o continuare întreținută de comunitate: **păstrează același nume și scop**, dar reconstruiește aplicația pe o bază mai ușoară și mai ușor de întreținut (Tauri + Svelte). Tot meritul pentru idee și aplicația originală îi revine autorului.
+**HideMyWindows** este o aplicație Windows care **ascunde ferestrele de capturile de ecran** — capturi, înregistrări și programe de streaming precum OBS.
+Este făcută pentru **utilizatori preocupați de confidențialitate, streameri și studenți** care vor să controleze ce văd ceilalți când își partajează ecranul.
 
-**HideMyWindows** este o aplicație Microsoft Windows care îți permite să **ascunzi ferestrele de pe desktop de metodele de captură a ecranului** (screenshot-uri, înregistrări video, software de streaming precum OBS).  
-Este concepută pentru **utilizatori preocupați de confidențialitate, streameri și studenți** care doresc un control mai bun asupra a ceea ce pot vedea alții atunci când partajează ecranul.
+> ℹ️ **Despre această versiune — reconstruită și îmbunătățită de [Mehdi](https://github.com/mehdimamas).**
+> HideMyWindows original, de [Cristian Gambino (@zCri)](https://github.com/zCri), nu mai era actualizat. Această versiune **2.0** **păstrează același nume și scop** și reconstruiește aplicația de la zero pe o bază mai ușoară și mai ușor de întreținut. Meritul pentru idee și aplicația originală îi revine autorului — vezi [Credite](#-credite).
 
 ---
 
 ## ✨ Funcționalități
 
-- 🔒 **Ascunde ferestrele de capturi de ecran și înregistrări** - 🎯 **Țintește după fereastră, proces sau nume** (suportă și potrivirea prin regex)  
-- ⚡ **Reguli automate pentru ferestre** – ascunde automat programele la lansare  
-- 🖥️ **Interfață modernă și frumoasă** folosind [lepoco/WPFUI](https://github.com/lepoco/wpfui)  
-- 🔄 **Mod fundal** – rulează silențios în zona de notificare (tray)  
-- 🚀 **Ascundere prin lansare rapidă** pentru protecție rapidă a confidențialității  
-- ⚙️ Opțiuni configurabile:  
-  - Ascunde **HideMyWindows** în sine  
-  - Afișează/Ascunde în bara de activități  
-  - Minimizează în zona de notificare (tray)  
-  - Metode de monitorizare a proceselor și ferestrelor  
+- 🔒 **Ascunde ferestrele de capturi și înregistrări** cu protecția Windows `SetWindowDisplayAffinity` (`WDA_EXCLUDEFROMCAPTURE`).
+- 🎯 **Țintire după proces, fereastră, titlu, clasă sau PID** — cu `conține`, `începe/se termină cu`, `egal` și **regex**.
+- ⚡ **Reguli automate** — ascunde aplicațiile imediat ce apar și, opțional, continuă să reaplice ca ferestrele noi să rămână ascunse.
+- 🚀 **Lansare rapidă** — pornește o aplicație deja ascunsă, înainte să apară pe ecran.
+- 🖥️ **Ascunde butonul din bara de activități** al oricărei aplicații.
+- 🪶 **Mică și nativă** — un nucleu Tauri 2 (Rust) cu interfață Svelte. Instalatorul are câțiva MB, nu sute.
+- 🔄 **În zona de notificare**, **pornire cu Windows** opțională, teme închis / deschis / sistem.
+- 🌍 **Localizată**: English, Français, Italiano, Română, Polski.
 
 ---
 
 ## 📥 Instalare
 
-### Microsoft Store (în curând)
-[![Obține de la Microsoft](https://img.shields.io/badge/Microsoft%20Store-Descarcă-blue?logo=microsoft&style=for-the-badge)](https://www.microsoft.com/store/apps)  
+### Versiuni GitHub
+Descarcă cel mai recent instalator pentru arhitectura ta de pe [**pagina de versiuni**](../../releases):
 
-### GitHub Releases
-- Descarcă cea mai recentă versiune de pe [pagina Releases](../../releases).  
-- Rulează instalatorul sau executabilul portabil.
+| PC-ul tău | Descărcare |
+| --- | --- |
+| Intel/AMD pe 64 de biți (majoritatea PC-urilor) | `HideMyWindows_x64-setup.exe` |
+| Windows pe 32 de biți | `HideMyWindows_x86-setup.exe` |
+| ARM64 (ex. Surface Pro X) | `HideMyWindows_arm64-setup.exe` |
 
-### Compilare din sursă
-Consultă [BUILDING.md](BUILDING.md) pentru a compila aplicația (Tauri 2 + Svelte) pe Windows.
+Rulează instalatorul și pornește HideMyWindows. Nu sunt necesare drepturi de administrator.
+
+> **Notă despre arhitectură:** această versiune ascunde aplicațiile care rulează pe **aceeași arhitectură** ca build-ul instalat. Pe un PC pe 64 de biți, instalează build-ul x64 (acoperă marea majoritate a aplicațiilor moderne). Build-ul x86 există pentru Windows pe 32 de biți.
+
+### Compilare din surse
+Vezi [BUILDING.md](BUILDING.md).
 
 ---
 
 ## 🚀 Utilizare
 
-1. Lansează **HideMyWindows**.
-2. Folosește unealta **Găsește Fereastră** sau introdu manual un PID / nume de proces.
-3. Găsește procesul și ascunde-l!
-4. Aplică **reguli pentru ferestre** pentru a ascunde automat aplicații.
-5. Minimizează în zona de notificare și las-o să ruleze în fundal.
+1. **Acasă** — alege un proces pornit (sau o fereastră) și apasă **Ascunde toate ferestrele** / **Ascunde această fereastră**.
+2. **Lansare rapidă** — adaugă aplicațiile pe care le ascunzi cel mai des și pornește-le deja ascunse dintr-un clic.
+3. **Reguli pentru ferestre** — creează reguli (ex. *numele procesului conține „obs”* → *ascunde toate ferestrele*) ca să ascunzi aplicațiile la pornire. Activează **Continuă să reaplici** pentru aplicațiile care deschid ferestre noi.
+4. **Setări** — ascunde HideMyWindows însuși, rulează în zona de notificare, pornește cu Windows, alege tema și limba.
 
-📸 **Screenshot-uri & Demo (în curând)**
 ![Thumbnail](Assets/Thumbnail.png)
 
-🎥 [Tutorial YouTube – În curând](#)
+---
+
+## ⚙️ Cum funcționează
+
+- HideMyWindows aplică indicatorul Windows **`SetWindowDisplayAffinity`** ferestrelor alese. Același mecanism este folosit de managerii de parole și de aplicațiile protejate DRM ca să-și țină ferestrele în afara capturilor.
+- Ferestrele **proprii** sunt protejate printr-un apel direct. Pentru ferestrele **altei** aplicații, o bibliotecă mică (`hmw_payload.dll`) este încărcată în acea aplicație ca indicatorul să poată fi setat din interior — Windows permite doar procesului care deține fereastra să seteze acest indicator.
+- Regulile automate folosesc **interogare** ușoară în loc de WMI, deci **nu sunt necesare drepturi de administrator**.
+
+Vezi [ARCHITECTURE.md](ARCHITECTURE.md) pentru imaginea completă.
 
 ---
 
-## ⚙️ Configurare
+## 🧰 Tehnologii
 
-HideMyWindows nu necesită nicio configurare externă. Setările sunt salvate automat în interiorul aplicației.
-
-Opțiunile configurabile includ:
-- Ascundere automată a HideMyWindows în sine
-- Rulare în fundal (mod tray)
-- Afișare/Ascundere iconiță în bara de activități
-- Metodă monitorizare procese
-- Metodă monitorizare ferestre
+| Parte | Tehnologie |
+| --- | --- |
+| Nucleu | [Tauri 2](https://tauri.app) + Rust (crate-ul `windows`) |
+| Interfață | [Svelte 5](https://svelte.dev) + Vite |
+| Instalator | NSIS (per utilizator și per calculator), exe portabil |
+| Arhitecturi | x64, x86, ARM64 |
 
 ---
-
-## 👥 Audiență
-
-- 🔹 **Streameri** (utilizatori Twitch, YouTube, OBS)
-- 🔹 **Utilizatori preocupați de confidențialitate** - 🔹 **Studenți** (pentru a evita ca profesorii să spioneze ferestrele în timpul cursurilor online)
-- 🔹 **Oricine își partajează ecranul în mod regulat** ---
 
 ## 📜 Licență
 
-Acest proiect este licențiat sub **MIT cu Clauza Commons**.
-Ești liber să folosești, să modifici și să partajezi software-ul, dar **nu îl poți vinde**.
-
-Vezi [LICENSE.txt](LICENSE) pentru detalii.
+Licențiat sub **MIT cu Commons Clause** — poți folosi, modifica și distribui liber, dar nu poți **vinde**. Vezi [LICENSE.txt](LICENSE.txt).
 
 ---
 
 ## 🙏 Credite
 
-- Dezvoltat de [@zCri](https://github.com/zCri)
-- Mulțumiri lui [@ad2017gd](https://github.com/ad2017gd) pentru ajutorul la dezvoltare
-- UI propulsată de [lepoco/WPFUI](https://github.com/lepoco/wpfui)
-- Și tuturor dezvoltatorilor bibliotecilor folosite
+- **Aplicația originală** de [Cristian Gambino (@zCri)](https://github.com/zCri) — ideea, numele și primele versiuni.
+- Ajutor la dezvoltarea inițială de la [@ad2017gd](https://github.com/ad2017gd) și contribuții de la [@minhprovjp](https://github.com/minhprovjp) și alții.
+- Corecturile pentru fereastra albă și pictograma din zona de notificare din proiectul original sunt păstrate în spirit.
+- **Reconstruit și îmbunătățit de [Mehdi](https://github.com/mehdimamas)** cu [Tauri](https://tauri.app) și [Svelte](https://svelte.dev).
+
+Acest proiect există datorită muncii autorului original. Mulțumim. 💙
 
 ---
 
-## 🌍 Localizare
+## 🤝 Contribuții
 
-- 🇬🇧 English
-- 🇫🇷 Français
-- 🇮🇹 Italiano
-- 🇷🇴 Română
-- 🇵🇱 Polski
-- ... mai multe în curând!
-
----
-
-## ❤️ Suport
-
-Dacă îți place acest proiect și vrei să susții dezvoltarea viitoare:
-
-- 💳 Donează via **PayPal** – [Donează Aici](https://paypal.me/zCri)
-- 🛍️ Cumpără aplicația de pe **Microsoft Store** (în curând)
-
----
+Issue-urile și pull request-urile sunt binevenite — vezi [CONTRIBUTING.md](CONTRIBUTING.md).

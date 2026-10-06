@@ -7,8 +7,8 @@
 **HideMyWindows** is a Windows app that **hides your windows from screen capture** — screenshots, screen recordings and streaming software like OBS.
 It's built for **privacy-minded users, streamers and students** who want control over what others see when they share their screen.
 
-> ℹ️ **About this version — a community continuation.**
-> The original HideMyWindows by [Cristian Gambino (@zCri)](https://github.com/zCri) was no longer being updated. This **2.0** release is a community-maintained continuation that **keeps the same name and purpose** but rebuilds the app from scratch on a lighter, more maintainable foundation. All credit for the original idea and app goes to its original author — see [Credits](#-credits).
+> ℹ️ **About this version — rebuilt and improved by [Mehdi](https://github.com/mehdimamas).**
+> The original HideMyWindows by [Cristian Gambino (@zCri)](https://github.com/zCri) was no longer being updated. This **2.0** release **keeps the same name and purpose** and rebuilds the app from scratch on a lighter, more maintainable foundation. Credit for the original idea and app goes to its original author — see [Credits](#-credits).
 
 ---
 
@@ -88,7 +88,7 @@ Licensed under **MIT with the Commons Clause** — you may use, modify and share
 - **Original app** by [Cristian Gambino (@zCri)](https://github.com/zCri) — the idea, the name and the first versions.
 - Early development help by [@ad2017gd](https://github.com/ad2017gd), and contributions from [@minhprovjp](https://github.com/minhprovjp) and others.
 - The white-box / tray-icon fixes from the original project are carried forward in spirit.
-- Rebuilt and maintained by the community on [Tauri](https://tauri.app) and [Svelte](https://svelte.dev).
+- **Rebuilt and improved by [Mehdi](https://github.com/mehdimamas)** on [Tauri](https://tauri.app) and [Svelte](https://svelte.dev).
 
 This project exists only because of the original author's work. Thank you. 💙
 

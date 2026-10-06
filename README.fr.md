@@ -1,118 +1,99 @@
 # 🪟 HideMyWindows
 
-> 🌐 Disponible en: [English](README.md) | [Français](README.fr.md) | [Italiano](README.it.md) | [Română](README.ro.md) | [Polski](README.pl.md)
+> 🌐 Disponible en : [English](README.md) | [Français](README.fr.md) | [Italiano](README.it.md) | [Română](README.ro.md) | [Polski](README.pl.md)
 
 ![Banner](Assets/Banner.png)
 
-> ℹ️ **À propos de cette version — une continuation communautaire.**
-> Le HideMyWindows original de [Cristian Gambino (@zCri)](https://github.com/zCri) n'était plus mis à jour. Cette version **2.0** est une continuation maintenue par la communauté : elle **garde le même nom et le même objectif**, mais reconstruit l'application sur une base plus légère et plus facile à maintenir (Tauri + Svelte). Tout le mérite de l'idée et de l'application originale revient à son auteur.
+**HideMyWindows** est une application Windows qui **cache vos fenêtres des captures d’écran** — captures, enregistrements et logiciels de streaming comme OBS.
+Elle s’adresse aux **utilisateurs soucieux de leur vie privée, aux streamers et aux étudiants** qui veulent contrôler ce que les autres voient lorsqu’ils partagent leur écran.
 
-**HideMyWindows** est une application Windows qui permet de **cacher vos fenêtres du bureau contre les méthodes de capture d’écran** (captures, enregistrements vidéo, logiciels de streaming comme OBS).  
-Elle est conçue pour les **utilisateurs soucieux de leur vie privée, les streamers et les étudiants** qui veulent mieux contrôler ce que les autres peuvent voir lorsqu’ils partagent leur écran.
+> ℹ️ **À propos de cette version — reconstruite et améliorée par [Mehdi](https://github.com/mehdimamas).**
+> Le HideMyWindows original de [Cristian Gambino (@zCri)](https://github.com/zCri) n’était plus mis à jour. Cette version **2.0** **garde le même nom et le même objectif** et reconstruit l’application de zéro sur une base plus légère et plus facile à maintenir. Le mérite de l’idée et de l’application originale revient à son auteur — voir [Crédits](#-crédits).
 
 ---
 
 ## ✨ Fonctionnalités
 
-- 🔒 **Masquer les fenêtres des captures et enregistrements**  
-- 🎯 **Ciblage par fenêtre, processus ou nom** (supporte les expressions régulières aussi)  
-- ⚡ **Règles automatiques** – masquez les programmes dès leur lancement  
-- 🖥️ **Interface moderne et élégante** grâce à [lepoco/WPFUI](https://github.com/lepoco/wpfui)  
-- 🔄 **Mode en arrière-plan** – fonctionne discrètement dans la barre d’état système
-- 🚀 **Masquage rapide** pour une protection instantanée  
-- ⚙️ Options configurables :  
-  - Masquer **HideMyWindows** lui-même  
-  - Affichage/masquage dans la barre des tâches  
-  - Réduction en barre d’état système  
-  - Méthodes de observation des processus et fenêtres  
+- 🔒 **Masquer les fenêtres des captures et enregistrements** grâce à la protection Windows `SetWindowDisplayAffinity` (`WDA_EXCLUDEFROMCAPTURE`).
+- 🎯 **Ciblage par processus, fenêtre, titre, classe ou PID** — avec `contient`, `commence/finit par`, `égal` et les **expressions régulières**.
+- ⚡ **Règles automatiques** — masquer les applications dès qu’elles apparaissent, et éventuellement réappliquer pour que les nouvelles fenêtres restent cachées.
+- 🚀 **Lancement rapide** — démarrer une application déjà masquée, avant qu’elle ne s’affiche.
+- 🖥️ **Masquer le bouton de la barre des tâches** de n’importe quelle application.
+- 🪶 **Légère et native** — un cœur Tauri 2 (Rust) et une interface Svelte. L’installateur fait quelques Mo, pas des centaines.
+- 🔄 **Dans la zone de notification**, **démarrage avec Windows** en option, thèmes sombre / clair / système.
+- 🌍 **Localisée** : English, Français, Italiano, Română, Polski.
 
 ---
 
 ## 📥 Installation
 
-### Microsoft Store (bientôt disponible)
-[![Obtenez-le sur Microsoft](https://img.shields.io/badge/Microsoft%20Store-Télécharger-blue?logo=microsoft&style=for-the-badge)](https://www.microsoft.com/store/apps)  
-
 ### Versions GitHub
-- Téléchargez la dernière version depuis la [page Releases](../../releases).  
-- Lancez l’installateur ou l’exécutable portable.
+Téléchargez le dernier installateur pour votre architecture depuis la [**page des versions**](../../releases) :
+
+| Votre PC | Téléchargement |
+| --- | --- |
+| Intel/AMD 64 bits (la plupart des PC) | `HideMyWindows_x64-setup.exe` |
+| Windows 32 bits | `HideMyWindows_x86-setup.exe` |
+| ARM64 (ex. Surface Pro X) | `HideMyWindows_arm64-setup.exe` |
+
+Lancez l’installateur, puis HideMyWindows. Aucun droit administrateur n’est requis.
+
+> **Note sur l’architecture :** cette version masque les applications qui tournent sur la **même architecture** que la version installée. Sur un PC 64 bits, installez la version x64 (elle couvre la grande majorité des applications modernes). La version x86 existe pour Windows 32 bits.
 
 ### Compiler depuis les sources
-Consultez [BUILDING.md](BUILDING.md) pour compiler l'application (Tauri 2 + Svelte) sur Windows.
+Voir [BUILDING.md](BUILDING.md).
 
 ---
 
 ## 🚀 Utilisation
 
-1. Lancez **HideMyWindows**.  
-2. Utilisez l’outil **Trouver une fenêtre** ou entrez manuellement un PID / nom de processus.  
-3. Trouvez votre processus et masquez-le!
-4. Appliquez des **règles de fenêtres** pour masquer automatiquement des programmes.  
-5. Réduisez dans la barre d’état système et laissez fonctionner en arrière-plan.  
+1. **Accueil** — choisissez un processus en cours (ou une fenêtre) et cliquez sur **Masquer toutes les fenêtres** / **Masquer cette fenêtre**.
+2. **Lancement rapide** — ajoutez les applications que vous masquez le plus souvent et démarrez-les déjà masquées en un clic.
+3. **Règles de fenêtres** — créez des règles (ex. *le nom du processus contient « obs »* → *masquer toutes les fenêtres*) pour masquer automatiquement les applications à leur lancement. Activez **Continuer à réappliquer** pour les applications qui ouvrent de nouvelles fenêtres.
+4. **Paramètres** — masquer HideMyWindows lui-même, rester dans la zone de notification, démarrer avec Windows, choisir un thème et une langue.
 
-📸 **Captures & Démo (bientôt disponible)**  
 ![Thumbnail](Assets/Thumbnail.png)
 
-🎥 [Tutoriel YouTube – Bientôt](#)  
+---
+
+## ⚙️ Fonctionnement
+
+- HideMyWindows applique le drapeau Windows **`SetWindowDisplayAffinity`** aux fenêtres choisies. Le même mécanisme est utilisé par les gestionnaires de mots de passe et les applications protégées par DRM pour exclure leurs fenêtres des captures.
+- Ses **propres** fenêtres sont protégées par un appel direct. Pour protéger les fenêtres d’**une autre** application, une petite bibliothèque (`hmw_payload.dll`) est chargée dans cette application afin de poser le drapeau depuis l’intérieur — Windows ne laisse que le processus propriétaire d’une fenêtre poser ce drapeau.
+- Les règles automatiques utilisent un **sondage** léger à la place de WMI, donc **aucun droit administrateur n’est nécessaire**.
+
+Voir [ARCHITECTURE.md](ARCHITECTURE.md) pour le détail.
 
 ---
 
-## ⚙️ Configuration
+## 🧰 Technologies
 
-Aucun réglage externe requis. Les paramètres sont sauvegardés automatiquement.  
-
-Options configurables :  
-- Masquage automatique de HideMyWindows lui-même  
-- Exécution en arrière-plan (mode barre système)  
-- Affichage/masquage dans la barre des tâches  
-- Méthode de observation des processus  
-- Méthode de observation des fenêtres  
-
----
-
-## 👥 Public cible
-
-- 🔹 **Streamers** (Twitch, YouTube, OBS)  
-- 🔹 **Utilisateurs soucieux de leur vie privée**  
-- 🔹 **Étudiants** (éviter que les professeurs voient vos fenêtres)  
-- 🔹 **Toute personne partageant son écran régulièrement**  
+| Partie | Technologie |
+| --- | --- |
+| Cœur | [Tauri 2](https://tauri.app) + Rust (crate `windows`) |
+| Interface | [Svelte 5](https://svelte.dev) + Vite |
+| Installateur | NSIS (par utilisateur et par machine), exe portable |
+| Architectures | x64, x86, ARM64 |
 
 ---
 
 ## 📜 Licence
 
-Ce projet est sous licence **MIT avec clause Commons**.  
-Vous êtes libre de l’utiliser, modifier et partager, mais **vous ne pouvez pas le vendre**.  
-
-Voir [LICENSE.txt](LICENSE) pour plus de détails.
+Sous licence **MIT avec la Commons Clause** — vous pouvez l’utiliser, la modifier et la partager librement, mais vous ne pouvez pas la **vendre**. Voir [LICENSE.txt](LICENSE.txt).
 
 ---
 
 ## 🙏 Crédits
 
-- Développé par [@zCri](https://github.com/zCri)  
-- Merci à [@ad2017gd](https://github.com/ad2017gd) pour son aide au développement  
-- Interface basée sur [lepoco/WPFUI](https://github.com/lepoco/wpfui)  
-- Et tous les développeurs des bibliothèques utilisées  
+- **Application originale** de [Cristian Gambino (@zCri)](https://github.com/zCri) — l’idée, le nom et les premières versions.
+- Aide au développement initial de [@ad2017gd](https://github.com/ad2017gd), et contributions de [@minhprovjp](https://github.com/minhprovjp) et d’autres.
+- Les correctifs de la fenêtre blanche et de l’icône de zone de notification du projet original sont repris dans l’esprit.
+- **Reconstruit et amélioré par [Mehdi](https://github.com/mehdimamas)** avec [Tauri](https://tauri.app) et [Svelte](https://svelte.dev).
+
+Ce projet n’existe que grâce au travail de l’auteur original. Merci. 💙
 
 ---
 
-## 🌍 Localisation
+## 🤝 Contribuer
 
-- 🇬🇧 English
-- 🇫🇷 Français
-- 🇮🇹 Italiano
-- 🇷🇴 Română
-- 🇵🇱 Polski
-- ... d’autres arrivent bientôt!
-
----
-
-## ❤️ Soutien
-
-Si vous appréciez ce projet et souhaitez soutenir le développement :  
-
-- 💳 Faites un don via **PayPal** – [Faire un don](https://paypal.me/zCri)  
-- 🛍️ Achetez l’application sur le **Microsoft Store** (bientôt)  
-
----
+Les tickets et les pull requests sont les bienvenus — voir [CONTRIBUTING.md](CONTRIBUTING.md).

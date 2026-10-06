@@ -1,7 +1,8 @@
 # Contributing to HideMyWindows
 
-Thanks for your interest! This is a community-maintained continuation of the
-original HideMyWindows, and contributions are very welcome.
+Thanks for your interest! HideMyWindows 2.0 was rebuilt and improved by
+[Mehdi](https://github.com/mehdimamas) from the original app, and contributions
+are very welcome.
 
 ## Getting started
 

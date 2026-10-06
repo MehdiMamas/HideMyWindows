@@ -4,110 +4,96 @@
 
 ![Banner](Assets/Banner.png)
 
-> ℹ️ **O tej wersji — kontynuacja społeczności.**
-> Oryginalny HideMyWindows autorstwa [Cristiana Gambino (@zCri)](https://github.com/zCri) nie był już aktualizowany. Ta wersja **2.0** to kontynuacja utrzymywana przez społeczność: **zachowuje tę samą nazwę i cel**, ale odbudowuje aplikację na lżejszej i łatwiejszej w utrzymaniu podstawie (Tauri + Svelte). Całe uznanie za pomysł i oryginalną aplikację należy do jej autora.
+**HideMyWindows** to aplikacja dla Windows, która **ukrywa okna przed przechwytywaniem ekranu** — zrzutami, nagraniami i oprogramowaniem do streamingu, takim jak OBS.
+Jest dla **osób dbających o prywatność, streamerów i studentów**, którzy chcą kontrolować, co widzą inni podczas udostępniania ekranu.
 
-**HideMyWindows** to aplikacja dla systemu Microsoft Windows, która pozwala **ukryć okna pulpitu przed metodami przechwytywania ekranu** (zrzuty ekranu, nagrywanie wideo, oprogramowanie do streamingu takie jak OBS).  
-Została zaprojektowana dla **użytkowników dbających o prywatność, streamerów i studentów**, którzy chcą mieć lepszą kontrolę nad tym, co inni widzą podczas udostępniania ekranu.
+> ℹ️ **O tej wersji — odbudowana i ulepszona przez [Mehdiego](https://github.com/mehdimamas).**
+> Oryginalny HideMyWindows autorstwa [Cristiana Gambino (@zCri)](https://github.com/zCri) nie był już aktualizowany. Ta wersja **2.0** **zachowuje tę samą nazwę i cel** i odbudowuje aplikację od zera na lżejszej, łatwiejszej w utrzymaniu podstawie. Uznanie za pomysł i oryginalną aplikację należy do jej autora — zobacz [Podziękowania](#-podziękowania).
 
 ---
 
 ## ✨ Funkcje
 
-- 🔒 **Ukrywanie okien przed zrzutami ekranu i nagraniami** - 🎯 **Targetowanie według okna, procesu lub nazwy** (obsługuje również dopasowanie regex)  
-- ⚡ **Automatyczne reguły okien** – ukrywaj programy automatycznie po ich uruchomieniu  
-- 🖥️ **Nowoczesny i elegancki interfejs** wykorzystujący [lepoco/WPFUI](https://github.com/lepoco/wpfui)  
-- 🔄 **Tryb w tle** – działaj cicho w zasobniku systemowym  
-- 🚀 **Szybkie ukrywanie przy uruchamianiu** dla natychmiastowej ochrony prywatności  
-- ⚙️ Konfigurowalne opcje:  
-  - Ukryj samo **HideMyWindows** - Pokaż/ukryj na pasku zadań  
-  - Minimalizuj do zasobnika  
-  - Metody obserwacji procesów i okien  
+- 🔒 **Ukrywanie okien przed zrzutami i nagraniami** za pomocą ochrony Windows `SetWindowDisplayAffinity` (`WDA_EXCLUDEFROMCAPTURE`).
+- 🎯 **Wybór według procesu, okna, tytułu, klasy lub PID** — z dopasowaniem `zawiera`, `zaczyna/kończy się na`, `równa się` i **wyrażeniami regularnymi**.
+- ⚡ **Automatyczne reguły** — ukrywaj aplikacje w chwili pojawienia się i opcjonalnie stosuj je ponownie, żeby nowe okna zostawały ukryte.
+- 🚀 **Szybkie uruchamianie** — uruchom aplikację już ukrytą, zanim pojawi się na ekranie.
+- 🖥️ **Ukrywanie przycisku na pasku zadań** dowolnej aplikacji.
+- 🪶 **Mała i natywna** — rdzeń Tauri 2 (Rust) i interfejs Svelte. Instalator waży kilka MB, nie setki.
+- 🔄 **W zasobniku**, opcjonalny **start z Windows**, motywy ciemny / jasny / systemowy.
+- 🌍 **Języki**: English, Français, Italiano, Română, Polski.
 
 ---
 
 ## 📥 Instalacja
 
-### Microsoft Store (wkrótce)
-[![Pobierz z Microsoft](https://img.shields.io/badge/Microsoft%20Store-Pobierz-blue?logo=microsoft&style=for-the-badge)](https://www.microsoft.com/store/apps)  
+### Wydania GitHub
+Pobierz najnowszy instalator dla swojej architektury ze [**strony wydań**](../../releases):
 
-### GitHub Releases
-- Pobierz najnowszą wersję ze [strony Releases](../../releases).  
-- Uruchom instalator lub plik wykonywalny portable.
+| Twój komputer | Pobieranie |
+| --- | --- |
+| 64-bit Intel/AMD (większość komputerów) | `HideMyWindows_x64-setup.exe` |
+| 32-bitowy Windows | `HideMyWindows_x86-setup.exe` |
+| ARM64 (np. Surface Pro X) | `HideMyWindows_arm64-setup.exe` |
 
-### Kompilacja ze źródła
-Zobacz [BUILDING.md](BUILDING.md), aby zbudować aplikację (Tauri 2 + Svelte) w systemie Windows.
+Uruchom instalator, a potem HideMyWindows. Uprawnienia administratora nie są wymagane.
+
+> **Uwaga o architekturze:** ta wersja ukrywa aplikacje działające na **tej samej architekturze** co zainstalowana kompilacja. Na komputerze 64-bitowym zainstaluj kompilację x64 (obejmuje zdecydowaną większość współczesnych aplikacji). Kompilacja x86 jest dla 32-bitowego Windows.
+
+### Kompilacja ze źródeł
+Zobacz [BUILDING.md](BUILDING.md).
 
 ---
 
 ## 🚀 Użycie
 
-1. Uruchom **HideMyWindows**.
-2. Użyj narzędzia **Znajdź okno** lub ręcznie wpisz PID / nazwę procesu.
-3. Znajdź swój proces i ukryj go!
-4. Zastosuj **reguły okien**, aby automatycznie ukrywać aplikacje.
-5. Zminimalizuj do zasobnika i pozwól aplikacji działać w tle.
+1. **Start** — wybierz działający proces (albo konkretne okno) i kliknij **Ukryj wszystkie okna** / **Ukryj to okno**.
+2. **Szybkie uruchamianie** — dodaj aplikacje, które ukrywasz najczęściej, i uruchamiaj je już ukryte jednym kliknięciem.
+3. **Reguły okien** — twórz reguły (np. *nazwa procesu zawiera „obs”* → *ukryj wszystkie okna*), żeby ukrywać aplikacje przy starcie. Włącz **Stosuj ponownie**, gdy aplikacja otwiera nowe okna z czasem.
+4. **Ustawienia** — ukryj samo HideMyWindows, działaj w zasobniku, uruchamiaj z Windows, wybierz motyw i język.
 
-📸 **Zrzuty ekranu i Demo (wkrótce)**
 ![Thumbnail](Assets/Thumbnail.png)
 
-🎥 [Tutorial YouTube – Wkrótce](https://www.google.com/search?q=%23)
+---
+
+## ⚙️ Jak to działa
+
+- HideMyWindows ustawia flagę Windows **`SetWindowDisplayAffinity`** na wybranych oknach. Tego samego mechanizmu używają menedżery haseł i aplikacje chronione DRM, żeby ich okna nie trafiały do przechwyceń.
+- **Własne** okna są chronione bezpośrednim wywołaniem. Aby chronić okna **innej** aplikacji, do niej ładowana jest mała biblioteka (`hmw_payload.dll`), bo Windows pozwala ustawić tę flagę tylko procesowi, do którego należy okno.
+- Reguły automatyczne używają lekkiego **odpytywania** zamiast WMI, więc **uprawnienia administratora nie są potrzebne**.
+
+Pełny opis jest w [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
-## ⚙️ Konfiguracja
+## 🧰 Technologie
 
-HideMyWindows nie wymaga żadnej zewnętrznej konfiguracji. Ustawienia są zapisywane automatycznie wewnątrz aplikacji.
-
-Konfigurowalne opcje obejmują:
-- Automatyczne ukrywanie samego HideMyWindows
-- Uruchamianie w tle (tryb zasobnika)
-- Pokazywanie/ukrywanie ikony na pasku zadań
-- Metoda obserwacji procesów
-- Metoda obserwacji okien
+| Część | Technologia |
+| --- | --- |
+| Rdzeń | [Tauri 2](https://tauri.app) + Rust (crate `windows`) |
+| Interfejs | [Svelte 5](https://svelte.dev) + Vite |
+| Instalator | NSIS (dla użytkownika i dla komputera), przenośny exe |
+| Architektury | x64, x86, ARM64 |
 
 ---
-
-## 👥 Odbiorcy
-
-* 🔹 **Streamerzy** (użytkownicy Twitch, YouTube, OBS)
-* 🔹 **Użytkownicy dbający o prywatność** - 🔹 **Studenci** (aby uniknąć podglądania okien przez nauczycieli podczas zdalnych lekcji)
-* 🔹 **Każdy, kto regularnie udostępnia swój ekran** ---
 
 ## 📜 Licencja
 
-Ten projekt jest udostępniany na licencji **MIT z klauzulą Commons**.
-Możesz swobodnie używać, modyfikować i udostępniać oprogramowanie, ale **nie możesz go sprzedawać**.
-
-Zobacz [LICENSE.txt](LICENSE) po szczegóły.
+Na licencji **MIT z klauzulą Commons Clause** — możesz używać, zmieniać i udostępniać, ale nie możesz tego **sprzedawać**. Zobacz [LICENSE.txt](LICENSE.txt).
 
 ---
 
-## 🙏 Twórcy
+## 🙏 Podziękowania
 
-- Stworzone przez [@zCri](https://github.com/zCri)
-- Podziękowania dla [@ad2017gd](https://github.com/ad2017gd) za pomoc w rozwoju
-- UI oparte na [lepoco/WPFUI](https://github.com/lepoco/wpfui)
-- Oraz wszyscy twórcy użytych bibliotek
+- **Oryginalna aplikacja** [Cristiana Gambino (@zCri)](https://github.com/zCri) — pomysł, nazwa i pierwsze wersje.
+- Pomoc przy wczesnym rozwoju od [@ad2017gd](https://github.com/ad2017gd) oraz wkład [@minhprovjp](https://github.com/minhprovjp) i innych.
+- Poprawki białego okna i ikony w zasobniku z oryginalnego projektu są zachowane w duchu.
+- **Odbudowane i ulepszone przez [Mehdiego](https://github.com/mehdimamas)** na [Tauri](https://tauri.app) i [Svelte](https://svelte.dev).
 
----
-
-## 🌍 Lokalizacja
-
-- 🇬🇧 English
-- 🇫🇷 Français
-- 🇮🇹 Italiano
-- 🇷🇴 Română
-- 🇵🇱 Polski
-- ... więcej wkrótce!
+Ten projekt istnieje dzięki pracy oryginalnego autora. Dziękujemy. 💙
 
 ---
 
-## ❤️ Wsparcie
+## 🤝 Współtworzenie
 
-Jeśli podoba ci się ten projekt i chcesz wesprzeć przyszły rozwój:
-
-- 💳 Przekaż darowiznę przez **PayPal** – [Przekaż tutaj](https://paypal.me/zCri)
-- 🛍️ Kup aplikację w **Microsoft Store** (wkrótce)
-
----
+Zgłoszenia i pull requesty są mile widziane — zobacz [CONTRIBUTING.md](CONTRIBUTING.md).
