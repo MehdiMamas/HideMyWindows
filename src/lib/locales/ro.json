@@ -102,6 +102,10 @@
     "reapplyInterval": "Intervalul regulilor persistente (ms)",
     "pollInterval": "Intervalul de detectare a ferestrelor (ms)",
     "openConfigFolder": "Deschide folderul cu setări",
+    "resetAll": "Resetează toate setările",
+    "resetConfirmTitle": "Resetezi toate setările?",
+    "resetConfirm": "Revine la setările implicite și șterge setările rămase de la versiunile mai vechi ale HideMyWindows. Regulile și lansările rapide sunt eliminate.",
+    "resetDone": "Setările au fost resetate.",
     "saved": "Setări salvate.",
     "restartHint": "Unele opțiuni se aplică imediat, altele la următoarea pornire."
   },

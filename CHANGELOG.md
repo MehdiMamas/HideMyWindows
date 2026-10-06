@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.3] — 2026-10-06
+
+### Added
+- **Reset all settings.** Settings can restore factory defaults and delete
+  settings left by older versions, including saved rules and quick launch
+  entries. The old `HideMyWindows.json` file is removed when it is still
+  present.
+
 ## [2.0.2] — 2026-10-05
 
 ### Fixed

@@ -103,6 +103,10 @@
     "reapplyInterval": "Persistent rule interval (ms)",
     "pollInterval": "Window discovery interval (ms)",
     "openConfigFolder": "Open settings folder",
+    "resetAll": "Reset all settings",
+    "resetConfirmTitle": "Reset all settings?",
+    "resetConfirm": "This restores factory defaults and deletes settings left by older versions of HideMyWindows. Rules and quick launch entries are removed.",
+    "resetDone": "Settings reset.",
     "saved": "Settings saved.",
     "restartHint": "Some options apply immediately; others on the next launch."
   },

@@ -122,6 +122,20 @@ impl Config {
         std::fs::write(path, text)?;
         Ok(())
     }
+
+    /// Replace settings in `dir` with factory defaults.
+    ///
+    /// Writes `config.json` and deletes `HideMyWindows.json` when the original
+    /// app left that file behind. Other files in the folder are left alone.
+    pub fn reset_stored(dir: &std::path::Path) -> crate::Result<Self> {
+        let legacy = dir.join("HideMyWindows.json");
+        if legacy.is_file() {
+            std::fs::remove_file(&legacy)?;
+        }
+        let config = Config::default();
+        config.save(&dir.join("config.json"))?;
+        Ok(config)
+    }
 }
 
 #[cfg(test)]
@@ -133,5 +147,36 @@ mod tests {
         let cfg: Config = serde_json::from_str(r#"{"hideSelf":true}"#).unwrap();
         assert!(cfg.hide_self);
         assert!(!cfg.hide_notification_toasts);
+    }
+
+    #[test]
+    fn reset_stored_writes_defaults_and_drops_legacy_file() {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!("hmw-config-reset-{nanos}"));
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let legacy = dir.join("HideMyWindows.json");
+        std::fs::write(&legacy, r#"{"old":true}"#).unwrap();
+        std::fs::write(
+            dir.join("config.json"),
+            r#"{"hideSelf":true,"language":"fr","windowRules":[{"name":"keep"}]}"#,
+        )
+        .unwrap();
+
+        let reset = Config::reset_stored(&dir).unwrap();
+        let defaults = serde_json::to_value(Config::default()).unwrap();
+        assert_eq!(serde_json::to_value(&reset).unwrap(), defaults);
+        assert!(!legacy.exists());
+
+        let loaded = Config::load(&dir.join("config.json"));
+        assert_eq!(serde_json::to_value(&loaded).unwrap(), defaults);
+        assert!(!loaded.hide_self);
+        assert!(loaded.language.is_none());
+        assert!(loaded.window_rules.is_empty());
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

@@ -102,6 +102,10 @@
     "reapplyInterval": "Intervallo regole persistenti (ms)",
     "pollInterval": "Intervallo rilevamento finestre (ms)",
     "openConfigFolder": "Apri cartella impostazioni",
+    "resetAll": "Reimposta tutte le impostazioni",
+    "resetConfirmTitle": "Reimpostare tutte le impostazioni?",
+    "resetConfirm": "Ripristina i valori predefiniti ed elimina le impostazioni lasciate dalle versioni precedenti di HideMyWindows. Regole e avvii rapidi vengono rimossi.",
+    "resetDone": "Impostazioni reimpostate.",
     "saved": "Impostazioni salvate.",
     "restartHint": "Alcune opzioni si applicano subito, altre al prossimo avvio."
   },

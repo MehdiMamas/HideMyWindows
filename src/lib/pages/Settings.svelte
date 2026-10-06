@@ -1,6 +1,7 @@
 <script>
+  import { ask } from "@tauri-apps/plugin-dialog";
   import { openPath } from "@tauri-apps/plugin-opener";
-  import { t, locale, LOCALES } from "../i18n.js";
+  import { t, locale, detectLocale, tr, LOCALES } from "../i18n.js";
   import { config, notify, applyTheme } from "../stores.js";
   import * as api from "../api.js";
   import Card from "../components/Card.svelte";
@@ -63,6 +64,24 @@
       notify(String(e), "error");
     }
   }
+
+  async function resetAll() {
+    clearTimeout(timer);
+    try {
+      const confirmed = await ask(tr("settings.resetConfirm"), {
+        title: tr("settings.resetConfirmTitle"),
+        kind: "warning",
+      });
+      if (!confirmed) return;
+      const next = await api.resetSettings();
+      config.set(next);
+      applyTheme("system");
+      locale.set(detectLocale(null));
+      notify(tr("settings.resetDone"), "success");
+    } catch (e) {
+      notify(String(e), "error");
+    }
+  }
 </script>
 
 <header class="page-head"><h1>{$t("settings.title")}</h1></header>
@@ -107,6 +126,7 @@
     </div>
     <div class="folder-row">
       <Button onclick={openFolder}>{$t("settings.openConfigFolder")}</Button>
+      <Button variant="danger" onclick={resetAll}>{$t("settings.resetAll")}</Button>
     </div>
     <p class="hint">{$t("settings.restartHint")}</p>
   </Card>
@@ -116,7 +136,7 @@
   .page-head { margin-bottom: 14px; }
   .field-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
   .num-row { display: flex; gap: 14px; margin-bottom: 12px; }
-  .folder-row { margin-top: 6px; }
+  .folder-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
   .hint { color: var(--text-faint); font-size: 12px; margin: 10px 0 0; }
   .check-row {
     display: flex;

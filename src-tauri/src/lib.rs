@@ -89,6 +89,27 @@ fn save_config(app: AppHandle, state: State<AppState>, config: Config) -> Result
     Ok(())
 }
 
+/// Restore factory defaults and delete settings left by older versions.
+#[tauri::command]
+fn reset_settings(app: AppHandle, state: State<AppState>) -> Result<Config, String> {
+    let path = state.config_path.clone();
+    let dir = match path.parent() {
+        Some(dir) if !dir.as_os_str().is_empty() => dir.to_path_buf(),
+        _ => std::path::PathBuf::from("."),
+    };
+    let config = Config::reset_stored(&dir).map_err(|e| e.to_string())?;
+
+    apply_self_visibility(&app, config.hide_self);
+    #[cfg(windows)]
+    {
+        let _ = autostart::set_autostart(config.start_with_windows);
+    }
+
+    *state.config.lock().unwrap() = config.clone();
+    let _ = state.rules_wake.send(());
+    Ok(config)
+}
+
 #[tauri::command]
 fn list_processes() -> Result<Vec<ProcessInfo>, String> {
     #[cfg(windows)]
@@ -373,6 +394,7 @@ pub fn run() {
             get_config_dir,
             app_version,
             save_config,
+            reset_settings,
             list_processes,
             list_windows,
             hide_process,

@@ -102,6 +102,10 @@
     "reapplyInterval": "Odstęp reguł trwałych (ms)",
     "pollInterval": "Odstęp wykrywania okien (ms)",
     "openConfigFolder": "Otwórz folder ustawień",
+    "resetAll": "Resetuj wszystkie ustawienia",
+    "resetConfirmTitle": "Zresetować wszystkie ustawienia?",
+    "resetConfirm": "Przywraca ustawienia fabryczne i usuwa ustawienia pozostawione przez starsze wersje HideMyWindows. Reguły i szybkie uruchamianie zostaną usunięte.",
+    "resetDone": "Zresetowano ustawienia.",
     "saved": "Zapisano ustawienia.",
     "restartHint": "Niektóre opcje działają od razu, inne po następnym uruchomieniu."
   },

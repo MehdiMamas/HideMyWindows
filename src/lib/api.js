@@ -4,6 +4,7 @@ export const getConfig = () => invoke("get_config");
 export const getConfigDir = () => invoke("get_config_dir");
 export const appVersion = () => invoke("app_version");
 export const saveConfig = (config) => invoke("save_config", { config });
+export const resetSettings = () => invoke("reset_settings");
 export const listProcesses = () => invoke("list_processes");
 export const listWindows = () => invoke("list_windows");
 

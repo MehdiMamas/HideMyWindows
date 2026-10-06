@@ -102,6 +102,10 @@
     "reapplyInterval": "Intervalle des règles persistantes (ms)",
     "pollInterval": "Intervalle de détection des fenêtres (ms)",
     "openConfigFolder": "Ouvrir le dossier des paramètres",
+    "resetAll": "Réinitialiser tous les paramètres",
+    "resetConfirmTitle": "Réinitialiser tous les paramètres ?",
+    "resetConfirm": "Cela restaure les paramètres d'usine et supprime les réglages laissés par les anciennes versions de HideMyWindows. Les règles et les lancements rapides sont effacés.",
+    "resetDone": "Paramètres réinitialisés.",
     "saved": "Paramètres enregistrés.",
     "restartHint": "Certaines options s'appliquent immédiatement, d'autres au prochain lancement."
   },
