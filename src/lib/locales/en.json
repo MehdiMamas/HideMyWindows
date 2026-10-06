@@ -99,6 +99,7 @@
     "closeToTray": "Keep running in the tray when closed",
     "minimizeToTray": "Minimize to the tray",
     "startWithWindows": "Start automatically with Windows",
+    "startWithWindowsHint": "Starts minimized to the tray.",
     "advanced": "Advanced",
     "reapplyInterval": "Persistent rule interval (ms)",
     "pollInterval": "Window discovery interval (ms)",

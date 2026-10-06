@@ -11,6 +11,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   entries. The old `HideMyWindows.json` file is removed when it is still
   present.
 
+### Changed
+- **Start with Windows opens in the tray.** Sign-in no longer shows the main
+  window. Click the tray icon to open it. Opening the app yourself still
+  shows the window.
+
 ## [2.0.2] — 2026-10-05
 
 ### Fixed

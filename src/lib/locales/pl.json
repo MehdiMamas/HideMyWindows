@@ -98,6 +98,7 @@
     "closeToTray": "Działaj w zasobniku po zamknięciu",
     "minimizeToTray": "Minimalizuj do zasobnika",
     "startWithWindows": "Uruchamiaj automatycznie z systemem Windows",
+    "startWithWindowsHint": "Uruchamia się zminimalizowany do zasobnika.",
     "advanced": "Zaawansowane",
     "reapplyInterval": "Odstęp reguł trwałych (ms)",
     "pollInterval": "Odstęp wykrywania okien (ms)",

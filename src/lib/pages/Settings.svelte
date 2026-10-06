@@ -116,7 +116,12 @@
     </label>
     <Toggle bind:checked={$config.closeToTray} label={$t("settings.closeToTray")} onchange={persist} />
     <Toggle bind:checked={$config.minimizeToTray} label={$t("settings.minimizeToTray")} onchange={persist} />
-    <Toggle bind:checked={$config.startWithWindows} label={$t("settings.startWithWindows")} onchange={persist} />
+    <Toggle
+      bind:checked={$config.startWithWindows}
+      label={$t("settings.startWithWindows")}
+      hint={$t("settings.startWithWindowsHint")}
+      onchange={persist}
+    />
   </Card>
 
   <Card title={$t("settings.advanced")}>

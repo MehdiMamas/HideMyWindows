@@ -98,6 +98,7 @@
     "closeToTray": "Continuer dans la zone de notification à la fermeture",
     "minimizeToTray": "Réduire dans la zone de notification",
     "startWithWindows": "Démarrer automatiquement avec Windows",
+    "startWithWindowsHint": "Démarre réduit dans la zone de notification.",
     "advanced": "Avancé",
     "reapplyInterval": "Intervalle des règles persistantes (ms)",
     "pollInterval": "Intervalle de détection des fenêtres (ms)",

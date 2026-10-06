@@ -15,6 +15,23 @@ use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Emitter, Manager, State};
 
+fn started_minimized<I, S>(args: I) -> bool
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    args.into_iter()
+        .any(|arg| arg.as_ref() == autostart::START_MINIMIZED_ARG)
+}
+
+fn show_main_window(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.unminimize();
+        let _ = window.set_focus();
+    }
+}
+
 /// Shared application state.
 struct AppState {
     config: Mutex<Config>,
@@ -309,12 +326,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
-            "show" => {
-                if let Some(w) = app.get_webview_window("main") {
-                    let _ = w.show();
-                    let _ = w.set_focus();
-                }
-            }
+            "show" => show_main_window(app),
             "quit" => app.exit(0),
             _ => {}
         })
@@ -325,11 +337,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
                 ..
             } = event
             {
-                let app = tray.app_handle();
-                if let Some(w) = app.get_webview_window("main") {
-                    let _ = w.show();
-                    let _ = w.set_focus();
-                }
+                show_main_window(tray.app_handle());
             }
         })
         .build(app)?;
@@ -376,10 +384,10 @@ pub fn run() {
     let (rules_tx, rules_rx) = mpsc::channel();
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            if let Some(w) = app.get_webview_window("main") {
-                let _ = w.show();
-                let _ = w.set_focus();
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // A second sign-in launch should leave the running copy in the tray.
+            if !started_minimized(args) {
+                show_main_window(app);
             }
         }))
         .plugin(tauri_plugin_dialog::init())
@@ -406,12 +414,28 @@ pub fn run() {
             build_tray(&handle)?;
 
             // Apply initial self-visibility + autostart from saved config.
-            let hide_self = {
+            // Rewriting the Run key picks up the minimized flag for installs
+            // that enabled start-with-Windows before it existed.
+            let (hide_self, start_with_windows) = {
                 let state = handle.state::<AppState>();
                 let cfg = state.config.lock().unwrap();
-                cfg.hide_self
+                (cfg.hide_self, cfg.start_with_windows)
             };
             apply_self_visibility(&handle, hide_self);
+            #[cfg(windows)]
+            {
+                let _ = autostart::set_autostart(start_with_windows);
+            }
+            #[cfg(not(windows))]
+            {
+                let _ = start_with_windows;
+            }
+
+            // The window is created hidden. A normal launch opens it; sign-in
+            // (`--minimized` from the Run key) leaves only the tray icon.
+            if !started_minimized(std::env::args()) {
+                show_main_window(&handle);
+            }
 
             #[cfg(windows)]
             spawn_watcher(handle.clone(), rules_rx);
@@ -442,6 +466,18 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running HideMyWindows");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::started_minimized;
+
+    #[test]
+    fn sign_in_launch_stays_in_the_tray() {
+        assert!(started_minimized(["hidemywindows.exe", "--minimized"]));
+        assert!(!started_minimized(["hidemywindows.exe"]));
+        assert!(!started_minimized(["hidemywindows.exe", "--release-all"]));
+    }
 }
 
 /// Theme is applied in the frontend; this helper keeps the enum referenced for

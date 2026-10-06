@@ -98,6 +98,7 @@
     "closeToTray": "Rămâi în zona de notificare la închidere",
     "minimizeToTray": "Minimizează în zona de notificare",
     "startWithWindows": "Pornește automat cu Windows",
+    "startWithWindowsHint": "Pornește minimizat în zona de notificare.",
     "advanced": "Avansate",
     "reapplyInterval": "Intervalul regulilor persistente (ms)",
     "pollInterval": "Intervalul de detectare a ferestrelor (ms)",

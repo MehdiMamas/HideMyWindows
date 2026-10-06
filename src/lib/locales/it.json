@@ -98,6 +98,7 @@
     "closeToTray": "Continua nell'area di notifica alla chiusura",
     "minimizeToTray": "Riduci nell'area di notifica",
     "startWithWindows": "Avvia automaticamente con Windows",
+    "startWithWindowsHint": "Si avvia ridotto nell'area di notifica.",
     "advanced": "Avanzate",
     "reapplyInterval": "Intervallo regole persistenti (ms)",
     "pollInterval": "Intervallo rilevamento finestre (ms)",

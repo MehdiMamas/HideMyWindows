@@ -46,7 +46,8 @@ pub struct Config {
     #[serde(default = "default_true")]
     pub close_to_tray: bool,
 
-    /// Start automatically with Windows (managed via the registry Run key).
+    /// Start automatically with Windows, minimized to the tray
+    /// (managed via the registry Run key).
     #[serde(default)]
     pub start_with_windows: bool,
 
