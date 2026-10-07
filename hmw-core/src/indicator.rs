@@ -510,10 +510,17 @@ public static class HiddenTargetFixture {
             GetRgnBox(region, &mut region_rect);
             let _ = DeleteObject(region);
         }
-        assert_eq!(
+        // GDI excludes the ellipse's right/bottom edge, so its rasterized
+        // region can be one pixel narrower than the window that contains it.
+        let size = indicators.markers[&owner].rect.unwrap().size;
+        for extent in [
             region_rect.right - region_rect.left,
-            indicators.markers[&owner].rect.unwrap().size
-        );
+            region_rect.bottom - region_rect.top,
+        ] {
+            assert!((size - 1..=size).contains(&extent));
+        }
+        assert!(region_rect.left >= 0 && region_rect.top >= 0);
+        assert!(region_rect.right <= size && region_rect.bottom <= size);
         let before = bounds(dot);
         target.command("move");
         indicators.follow();
