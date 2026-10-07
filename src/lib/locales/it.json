@@ -1,5 +1,12 @@
 {
   "app": { "name": "HideMyWindows", "tagline": "Nascondi le tue finestre dalla cattura schermo" },
+  "captureStatus": {
+    "hidden": "Nascosta dalle catture",
+    "visible": "Visibile nelle catture",
+    "checking": "Verifica della protezione…",
+    "unavailable": "Stato della protezione non disponibile",
+    "hint": "Stato attuale della protezione Windows dalla cattura di questa finestra HideMyWindows."
+  },
   "nav": {
     "home": "Home",
     "quickLaunch": "Avvio rapido",

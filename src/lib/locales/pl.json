@@ -1,5 +1,12 @@
 {
   "app": { "name": "HideMyWindows", "tagline": "Ukryj swoje okna przed przechwytywaniem ekranu" },
+  "captureStatus": {
+    "hidden": "Ukryte w przechwytywaniu",
+    "visible": "Widoczne w przechwytywaniu",
+    "checking": "Sprawdzanie ochrony…",
+    "unavailable": "Stan ochrony niedostępny",
+    "hint": "Bieżący stan ochrony Windows przed przechwytywaniem tego okna HideMyWindows."
+  },
   "nav": {
     "home": "Start",
     "quickLaunch": "Szybkie uruchamianie",

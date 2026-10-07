@@ -1,5 +1,12 @@
 {
   "app": { "name": "HideMyWindows", "tagline": "Ascunde-ți ferestrele de la capturarea ecranului" },
+  "captureStatus": {
+    "hidden": "Ascunsă din capturi",
+    "visible": "Vizibilă în capturi",
+    "checking": "Se verifică protecția…",
+    "unavailable": "Starea protecției nu este disponibilă",
+    "hint": "Starea actuală a protecției Windows împotriva capturii pentru această fereastră HideMyWindows."
+  },
   "nav": {
     "home": "Acasă",
     "quickLaunch": "Lansare rapidă",

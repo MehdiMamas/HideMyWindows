@@ -4,8 +4,9 @@
 use crate::Result;
 use windows::Win32::Foundation::{BOOL, HWND, LPARAM, TRUE};
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetClassNameW, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
-    IsWindow, IsWindowVisible, SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
+    EnumWindows, GetClassNameW, GetWindowDisplayAffinity, GetWindowTextLengthW, GetWindowTextW,
+    GetWindowThreadProcessId, IsWindow, IsWindowVisible, SetWindowDisplayAffinity,
+    WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
 };
 
 /// Hide or show a single window from screen capture.
@@ -23,6 +24,15 @@ pub fn set_capture_hidden(hwnd: isize, hidden: bool) -> Result<()> {
         )?;
     }
     Ok(())
+}
+
+/// Read the window's actual capture-exclusion state rather than its saved setting.
+/// WDA_MONITOR blacks out captured content but does not exclude the window.
+pub fn is_capture_hidden(hwnd: isize) -> Result<bool> {
+    let hwnd = HWND(hwnd as *mut core::ffi::c_void);
+    let mut affinity = 0;
+    unsafe { GetWindowDisplayAffinity(hwnd, &mut affinity)? };
+    Ok(affinity == WDA_EXCLUDEFROMCAPTURE.0)
 }
 
 /// True when `hwnd` still refers to a window.
@@ -117,4 +127,54 @@ pub fn windows_for_pid(pid: u32) -> Result<Vec<TopWindow>> {
         .into_iter()
         .filter(|w| w.pid == pid)
         .collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use windows::core::w;
+    use windows::Win32::UI::WindowsAndMessaging::{
+        CreateWindowExW, DestroyWindow, CW_USEDEFAULT, WINDOW_EX_STYLE, WS_OVERLAPPEDWINDOW,
+    };
+
+    #[test]
+    fn capture_status_rejects_an_invalid_window() {
+        assert!(is_capture_hidden(0).is_err());
+    }
+
+    #[test]
+    fn capture_status_reads_back_the_window_affinity() {
+        struct TestWindow(HWND);
+        impl Drop for TestWindow {
+            fn drop(&mut self) {
+                unsafe {
+                    let _ = DestroyWindow(self.0);
+                }
+            }
+        }
+
+        let window = TestWindow(unsafe {
+            CreateWindowExW(
+                WINDOW_EX_STYLE(0),
+                w!("STATIC"),
+                w!("HideMyWindows capture status test"),
+                WS_OVERLAPPEDWINDOW,
+                CW_USEDEFAULT,
+                CW_USEDEFAULT,
+                100,
+                100,
+                None,
+                None,
+                None,
+                None,
+            )
+            .expect("create test window")
+        });
+        let hwnd = window.0 .0 as isize;
+        assert!(!is_capture_hidden(hwnd).unwrap());
+        set_capture_hidden(hwnd, true).unwrap();
+        assert!(is_capture_hidden(hwnd).unwrap());
+        set_capture_hidden(hwnd, false).unwrap();
+        assert!(!is_capture_hidden(hwnd).unwrap());
+    }
 }

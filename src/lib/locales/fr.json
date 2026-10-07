@@ -1,5 +1,12 @@
 {
   "app": { "name": "HideMyWindows", "tagline": "Masquez vos fenêtres de la capture d'écran" },
+  "captureStatus": {
+    "hidden": "Masquée des captures",
+    "visible": "Visible dans les captures",
+    "checking": "Vérification de la protection…",
+    "unavailable": "État de protection indisponible",
+    "hint": "État actuel de la protection Windows contre la capture de cette fenêtre HideMyWindows."
+  },
   "nav": {
     "home": "Accueil",
     "quickLaunch": "Lancement rapide",

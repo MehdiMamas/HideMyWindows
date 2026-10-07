@@ -1,5 +1,12 @@
 {
   "app": { "name": "HideMyWindows", "tagline": "Hide your windows from screen capture" },
+  "captureStatus": {
+    "hidden": "Hidden from capture",
+    "visible": "Visible to capture",
+    "checking": "Checking capture status…",
+    "unavailable": "Capture status unavailable",
+    "hint": "Current Windows capture-protection state of this HideMyWindows window."
+  },
   "nav": {
     "home": "Home",
     "quickLaunch": "Quick launch",

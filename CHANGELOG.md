@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.6] — 2026-10-06
+
+### Added
+- **Capture status in the app header.** A small indicator shows whether this
+  HideMyWindows window is currently excluded from capture, using the actual
+  Windows display-affinity state. It refreshes when settings change, when the
+  window regains focus, and every second. An unavailable check is shown explicitly.
+
 ## [2.0.4] — 2026-10-06
 
 ### Added

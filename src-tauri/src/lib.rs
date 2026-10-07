@@ -89,6 +89,21 @@ fn app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
+/// Query the invoking window, not the configured hide-self preference.
+#[tauri::command]
+fn capture_hidden(window: tauri::WebviewWindow) -> Result<bool, String> {
+    #[cfg(windows)]
+    {
+        let hwnd = window.hwnd().map_err(|e| e.to_string())?;
+        hmw_core::window::is_capture_hidden(hwnd.0 as isize).map_err(|e| e.0)
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = window;
+        Err("Capture status is only available on Windows".into())
+    }
+}
+
 #[tauri::command]
 fn save_config(app: AppHandle, state: State<AppState>, config: Config) -> Result<(), String> {
     // Apply side effects that depend on config.
@@ -403,6 +418,7 @@ pub fn run() {
             get_config,
             get_config_dir,
             app_version,
+            capture_hidden,
             save_config,
             reset_settings,
             list_processes,
