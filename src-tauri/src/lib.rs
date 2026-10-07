@@ -439,6 +439,8 @@ pub fn run() {
             };
             apply_self_visibility(&handle, hide_self);
             #[cfg(windows)]
+            hmw_core::indicator::start();
+            #[cfg(windows)]
             {
                 let _ = autostart::set_autostart(start_with_windows);
             }

@@ -15,6 +15,7 @@ It's built for **privacy-minded users, streamers and students** who want control
 ## ✨ Features
 
 - 🔒 **Hide windows from screenshots & recordings** using the Windows `SetWindowDisplayAffinity` protection (`WDA_EXCLUDEFROMCAPTURE`).
+- 🔴 **Red dot on hidden windows’ title bars** while HideMyWindows runs — see which windows are protected without opening the app. The dot stays out of captures and does not block clicks.
 - 🎯 **Target by process, window, title, class or PID** — with `contains`, `starts/ends with`, `equals` and **regex** matching.
 - ⚡ **Automatic window rules** — hide apps the moment they appear, and optionally keep re-applying so new windows stay hidden.
 - 🚀 **Quick launch** — start an app already hidden, before it ever draws on screen.

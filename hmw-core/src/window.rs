@@ -116,13 +116,17 @@ unsafe extern "system" fn enum_proc(hwnd: HWND, lparam: LPARAM) -> BOOL {
     if state.visible_only && !IsWindowVisible(hwnd).as_bool() {
         return TRUE;
     }
+    let class = window_class(hwnd);
+    if class == crate::indicator::CLASS_NAME {
+        return TRUE;
+    }
     let mut pid = 0u32;
     GetWindowThreadProcessId(hwnd, Some(&mut pid));
     state.windows.push(TopWindow {
         hwnd: hwnd.0 as isize,
         pid,
         title: window_title(hwnd),
-        class: window_class(hwnd),
+        class,
     });
     TRUE
 }

@@ -9,6 +9,11 @@ pub mod config;
 pub mod model;
 
 #[cfg(windows)]
+pub mod indicator;
+#[cfg(any(windows, test))]
+mod indicator_position;
+
+#[cfg(windows)]
 pub mod cleanup;
 #[cfg(windows)]
 pub mod hider;

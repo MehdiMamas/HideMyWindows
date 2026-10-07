@@ -26,6 +26,22 @@ fn needs_window(action: HideAction) -> bool {
 /// Apply an action to every window of a process (or its main window, for
 /// single-window/tray actions).
 pub fn apply_to_process(pid: u32, action: HideAction, payload_path: &str) -> Result<()> {
+    // Controller-owned title-bar dots must remain capture-excluded when the
+    // user unhides HideMyWindows itself. The filtered list omits these HWNDs.
+    if pid == unsafe { windows::Win32::System::Threading::GetCurrentProcessId() }
+        && matches!(
+            action,
+            HideAction::HideProcessWindows | HideAction::UnhideProcessWindows
+        )
+    {
+        for window in windows_for_pid(pid)? {
+            crate::window::set_capture_hidden(
+                window.hwnd,
+                action == HideAction::HideProcessWindows,
+            )?;
+        }
+        return Ok(());
+    }
     let hwnd = if needs_window(action) {
         windows_for_pid(pid)?
             .first()

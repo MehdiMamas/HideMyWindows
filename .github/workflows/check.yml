@@ -47,7 +47,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Test core and Windows capture status
-        run: cargo test --locked -p hmw-core
+        run: cargo test --locked -p hmw-core -- --test-threads=1
 
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings

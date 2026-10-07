@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.8] — 2026-10-07
+
+### Added
+- **Red dots on the hidden apps' own title bars.** While HideMyWindows runs,
+  a small red dot appears beside each capture-excluded window's heading,
+  including custom title bars. It follows the target as it moves, scales with
+  DPI, stays underneath covering windows, and disappears on unhide, minimize,
+  or close. The dot is click-through and excluded from screen capture itself.
+  Borderless fullscreen windows and notification popups do not get title dots.
+
 ## [2.0.7] — 2026-10-07
 
 ### Fixed
