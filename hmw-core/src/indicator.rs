@@ -559,10 +559,21 @@ public static class HiddenTargetFixture {
             .unwrap();
         }
         indicators.follow();
-        assert_eq!(
-            unsafe { GetWindow(dot, GW_HWNDPREV).unwrap() },
-            cover.hwnd,
-            "the dot must stay underneath a covering window"
+        // Windows can insert unrelated utility windows between these HWNDs.
+        // What matters for occlusion is their relative order, not adjacency.
+        let mut stacking = Vec::new();
+        let mut current = unsafe { GetTopWindow(None).unwrap() };
+        loop {
+            stacking.push(current);
+            match unsafe { GetWindow(current, GW_HWNDNEXT) } {
+                Ok(next) if !next.is_invalid() => current = next,
+                _ => break,
+            }
+        }
+        let rank = |hwnd| stacking.iter().position(|item| *item == hwnd).unwrap();
+        assert!(
+            rank(cover.hwnd) < rank(dot) && rank(dot) < rank(target.hwnd),
+            "dot must be below the covering window and above its target: {stacking:?}"
         );
         drop(cover);
         assert!(
