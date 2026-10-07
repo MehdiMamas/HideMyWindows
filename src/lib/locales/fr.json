@@ -1,12 +1,5 @@
 {
   "app": { "name": "HideMyWindows", "tagline": "Masquez vos fenêtres de la capture d'écran" },
-  "captureStatus": {
-    "hidden": "Masquée des captures",
-    "visible": "Visible dans les captures",
-    "checking": "Vérification de la protection…",
-    "unavailable": "État de protection indisponible",
-    "hint": "État actuel de la protection Windows contre la capture de cette fenêtre HideMyWindows."
-  },
   "nav": {
     "home": "Accueil",
     "quickLaunch": "Lancement rapide",
@@ -29,6 +22,16 @@
     "noResults": "Aucun résultat"
   },
   "dashboard": {
+    "captureLabels": {
+      "hidden": "Masquée",
+      "partial": "Partiellement masquée",
+      "unknown": "État inconnu"
+    },
+    "captureHints": {
+      "hidden": "Windows indique que cette cible est exclue des captures. Pour un processus, toutes les fenêtres visibles sont masquées.",
+      "partial": "Certaines fenêtres visibles de ce processus sont masquées, mais les autres restent visibles dans les captures.",
+      "unknown": "La protection actuelle contre la capture n’a pas pu être vérifiée."
+    },
     "title": "Masquer une application en cours",
     "subtitle": "Choisissez un processus ou une fenêtre, puis masquez-le des captures et enregistrements d'écran.",
     "processes": "Processus",

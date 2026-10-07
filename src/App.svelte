@@ -12,7 +12,6 @@
   import Settings from "./lib/pages/Settings.svelte";
   import About from "./lib/pages/About.svelte";
   import Toasts from "./lib/components/Toasts.svelte";
-  import CaptureStatus from "./lib/components/CaptureStatus.svelte";
 
   let current = $state("home");
   let ready = $state(false);
@@ -83,7 +82,6 @@
   </aside>
 
   <main>
-    <header class="capture-header"><CaptureStatus /></header>
     {#if ready}
       <CurrentPage />
     {/if}
@@ -117,5 +115,4 @@
   main {
     flex: 1; min-width: 0; padding: 26px 30px; overflow-y: auto; display: flex; flex-direction: column;
   }
-  .capture-header { display: flex; justify-content: flex-end; margin-bottom: 12px; }
 </style>

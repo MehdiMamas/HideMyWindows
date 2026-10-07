@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 export const getConfig = () => invoke("get_config");
 export const getConfigDir = () => invoke("get_config_dir");
 export const appVersion = () => invoke("app_version");
-export const captureHidden = () => invoke("capture_hidden");
+export const captureStatuses = () => invoke("capture_statuses");
 export const saveConfig = (config) => invoke("save_config", { config });
 export const resetSettings = () => invoke("reset_settings");
 export const listProcesses = () => invoke("list_processes");

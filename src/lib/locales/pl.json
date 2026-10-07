@@ -1,12 +1,5 @@
 {
   "app": { "name": "HideMyWindows", "tagline": "Ukryj swoje okna przed przechwytywaniem ekranu" },
-  "captureStatus": {
-    "hidden": "Ukryte w przechwytywaniu",
-    "visible": "Widoczne w przechwytywaniu",
-    "checking": "Sprawdzanie ochrony…",
-    "unavailable": "Stan ochrony niedostępny",
-    "hint": "Bieżący stan ochrony Windows przed przechwytywaniem tego okna HideMyWindows."
-  },
   "nav": {
     "home": "Start",
     "quickLaunch": "Szybkie uruchamianie",
@@ -29,6 +22,16 @@
     "noResults": "Brak wyników"
   },
   "dashboard": {
+    "captureLabels": {
+      "hidden": "Ukryte",
+      "partial": "Częściowo ukryte",
+      "unknown": "Stan nieznany"
+    },
+    "captureHints": {
+      "hidden": "Windows wskazuje, że ten element jest wykluczony z przechwytywania. W przypadku procesu wszystkie widoczne okna są ukryte.",
+      "partial": "Niektóre widoczne okna tego procesu są ukryte, ale inne nadal są widoczne w przechwytywaniu.",
+      "unknown": "Nie można zweryfikować bieżącej ochrony przed przechwytywaniem."
+    },
     "title": "Ukryj działającą aplikację",
     "subtitle": "Wybierz proces lub okno, a następnie ukryj je przed zrzutami i nagraniami ekranu.",
     "processes": "Procesy",

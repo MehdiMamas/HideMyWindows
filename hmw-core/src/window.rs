@@ -35,6 +35,27 @@ pub fn is_capture_hidden(hwnd: isize) -> Result<bool> {
     Ok(affinity == WDA_EXCLUDEFROMCAPTURE.0)
 }
 
+/// Observe all visible top-level windows, including those owned by other apps.
+pub fn capture_snapshot() -> Result<crate::model::CaptureSnapshot> {
+    use crate::model::{CaptureSnapshot, CaptureStatus};
+    use std::collections::HashMap;
+
+    let mut windows = HashMap::new();
+    let mut by_process: HashMap<u32, Vec<Option<bool>>> = HashMap::new();
+    for window in list_top_windows(true)? {
+        let hidden = is_capture_hidden(window.hwnd).ok();
+        windows.insert(window.hwnd, CaptureStatus::from_window_states([hidden]));
+        by_process.entry(window.pid).or_default().push(hidden);
+    }
+    Ok(CaptureSnapshot {
+        windows,
+        processes: by_process
+            .into_iter()
+            .map(|(pid, states)| (pid, CaptureStatus::from_window_states(states)))
+            .collect(),
+    })
+}
+
 /// True when `hwnd` still refers to a window.
 pub fn window_is_alive(hwnd: isize) -> bool {
     if hwnd == 0 {
@@ -135,6 +156,7 @@ mod tests {
     use windows::core::w;
     use windows::Win32::UI::WindowsAndMessaging::{
         CreateWindowExW, DestroyWindow, CW_USEDEFAULT, WINDOW_EX_STYLE, WS_OVERLAPPEDWINDOW,
+        WS_VISIBLE,
     };
 
     #[test]
@@ -158,7 +180,7 @@ mod tests {
                 WINDOW_EX_STYLE(0),
                 w!("STATIC"),
                 w!("HideMyWindows capture status test"),
-                WS_OVERLAPPEDWINDOW,
+                WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
                 100,
@@ -174,7 +196,15 @@ mod tests {
         assert!(!is_capture_hidden(hwnd).unwrap());
         set_capture_hidden(hwnd, true).unwrap();
         assert!(is_capture_hidden(hwnd).unwrap());
+        assert_eq!(
+            capture_snapshot().unwrap().windows.get(&hwnd),
+            Some(&crate::model::CaptureStatus::Hidden)
+        );
         set_capture_hidden(hwnd, false).unwrap();
         assert!(!is_capture_hidden(hwnd).unwrap());
+        assert_eq!(
+            capture_snapshot().unwrap().windows.get(&hwnd),
+            Some(&crate::model::CaptureStatus::Visible)
+        );
     }
 }

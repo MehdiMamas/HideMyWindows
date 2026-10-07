@@ -1,12 +1,5 @@
 {
   "app": { "name": "HideMyWindows", "tagline": "Nascondi le tue finestre dalla cattura schermo" },
-  "captureStatus": {
-    "hidden": "Nascosta dalle catture",
-    "visible": "Visibile nelle catture",
-    "checking": "Verifica della protezione…",
-    "unavailable": "Stato della protezione non disponibile",
-    "hint": "Stato attuale della protezione Windows dalla cattura di questa finestra HideMyWindows."
-  },
   "nav": {
     "home": "Home",
     "quickLaunch": "Avvio rapido",
@@ -29,6 +22,16 @@
     "noResults": "Nessun risultato"
   },
   "dashboard": {
+    "captureLabels": {
+      "hidden": "Nascosta",
+      "partial": "Parzialmente nascosta",
+      "unknown": "Stato sconosciuto"
+    },
+    "captureHints": {
+      "hidden": "Windows indica che questo elemento è escluso dalle catture. Per un processo, tutte le finestre visibili sono nascoste.",
+      "partial": "Alcune finestre visibili di questo processo sono nascoste, ma altre rimangono visibili nelle catture.",
+      "unknown": "Non è stato possibile verificare la protezione attuale dalla cattura."
+    },
     "title": "Nascondi un'app in esecuzione",
     "subtitle": "Scegli un processo o una finestra, poi nascondilo da screenshot e registrazioni dello schermo.",
     "processes": "Processi",

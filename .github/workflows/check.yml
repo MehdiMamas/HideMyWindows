@@ -33,7 +33,7 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Test capture status indicator
+      - name: Test target capture badges
         run: npm test
 
       - name: Build payload (x64)

@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.7] — 2026-10-07
+
+### Fixed
+- **Hidden badges belong to the targets.** The Home list now marks windows and
+  processes that Windows reports as hidden from capture. Processes with a mix
+  of hidden and visible windows show **Partly hidden**; unverifiable states show
+  **Status unknown**. Status refreshes after actions and every second, including
+  changes from automatic rules and Quick Launch. The app-header badge is removed.
+
 ## [2.0.6] — 2026-10-06
 
 ### Added

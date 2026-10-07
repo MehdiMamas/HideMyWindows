@@ -9,7 +9,7 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 use hmw_core::config::{Config, Theme};
-use hmw_core::model::{HideAction, ProcessInfo};
+use hmw_core::model::{CaptureSnapshot, HideAction, ProcessInfo};
 use serde::Serialize;
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
@@ -89,17 +89,15 @@ fn app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-/// Query the invoking window, not the configured hide-self preference.
+/// Query target windows and aggregate their observed state per process.
 #[tauri::command]
-fn capture_hidden(window: tauri::WebviewWindow) -> Result<bool, String> {
+fn capture_statuses() -> Result<CaptureSnapshot, String> {
     #[cfg(windows)]
     {
-        let hwnd = window.hwnd().map_err(|e| e.to_string())?;
-        hmw_core::window::is_capture_hidden(hwnd.0 as isize).map_err(|e| e.0)
+        hmw_core::window::capture_snapshot().map_err(|e| e.0)
     }
     #[cfg(not(windows))]
     {
-        let _ = window;
         Err("Capture status is only available on Windows".into())
     }
 }
@@ -418,7 +416,7 @@ pub fn run() {
             get_config,
             get_config_dir,
             app_version,
-            capture_hidden,
+            capture_statuses,
             save_config,
             reset_settings,
             list_processes,

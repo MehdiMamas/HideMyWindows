@@ -1,9 +1,11 @@
 <script>
+  import { onMount } from "svelte";
   import { t } from "../i18n.js";
   import { notify } from "../stores.js";
   import * as api from "../api.js";
   import Button from "../components/Button.svelte";
   import TextField from "../components/TextField.svelte";
+  import CaptureBadge from "../components/CaptureBadge.svelte";
 
   let mode = $state("processes"); // "processes" | "windows"
   let processes = $state([]);
@@ -11,19 +13,37 @@
   let query = $state("");
   let selected = $state(null); // { kind, pid, hwnd?, name }
   let loading = $state(false);
+  let captureStatuses = $state(null);
+  let alive = false;
+  let listRequest = 0;
+  let statusRequest = 0;
 
-  async function refresh() {
-    loading = true;
+  async function refresh({ quiet = false } = {}) {
+    const request = ++listRequest;
+    const requestedMode = mode;
+    if (!quiet) loading = true;
     try {
-      if (mode === "processes") {
-        processes = await api.listProcesses();
-      } else {
-        windows = await api.listWindows();
+      const entries = requestedMode === "processes"
+        ? await api.listProcesses() : await api.listWindows();
+      if (alive && request === listRequest) {
+        if (requestedMode === "processes") processes = entries;
+        else windows = entries;
       }
     } catch (e) {
-      notify(String(e), "error");
+      if (alive && request === listRequest) notify(String(e), "error");
     } finally {
-      loading = false;
+      if (alive && request === listRequest) loading = false;
+    }
+  }
+
+  async function refreshStatuses() {
+    const request = ++statusRequest;
+    try {
+      const snapshot = await api.captureStatuses();
+      if (alive && request === statusRequest) captureStatuses = snapshot;
+    } catch {
+      // A failed query must not leave a stale "Hidden" badge behind.
+      if (alive && request === statusRequest) captureStatuses = null;
     }
   }
 
@@ -54,20 +74,39 @@
 
   async function act(action, successKey) {
     if (!selected) return;
+    const target = selected;
     try {
-      if (selected.kind === "process") {
-        await api.hideProcess(selected.pid, action);
+      if (target.kind === "process") {
+        await api.hideProcess(target.pid, action);
       } else {
-        await api.hideWindow(selected.hwnd, action);
+        await api.hideWindow(target.hwnd, action);
       }
-      notify($t(successKey, { name: selected.name }), "success");
+      notify($t(successKey, { name: target.name }), "success");
     } catch (e) {
       notify(String(e), "error");
+    } finally {
+      // Read back actual state, including actions that failed or only partly applied.
+      await refreshStatuses();
     }
   }
 
-  $effect(() => {
-    refresh();
+  onMount(() => {
+    alive = true;
+    void refresh();
+    void refreshStatuses();
+    const statusTimer = setInterval(refreshStatuses, 1000);
+    const listTimer = setInterval(() => { void refresh({ quiet: true }); }, 5000);
+    const onFocus = () => {
+      void refresh({ quiet: true });
+      void refreshStatuses();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => {
+      alive = false;
+      clearInterval(statusTimer);
+      clearInterval(listTimer);
+      window.removeEventListener("focus", onFocus);
+    };
   });
 </script>
 
@@ -86,7 +125,7 @@
     </button>
   </div>
   <div class="grow"><TextField bind:value={query} placeholder={$t("common.search")} /></div>
-  <Button onclick={refresh}>{$t("common.refresh")}</Button>
+  <Button onclick={() => { void refresh(); void refreshStatuses(); }}>{$t("common.refresh")}</Button>
 </div>
 
 <div class="list" role="listbox">
@@ -102,6 +141,7 @@
         onclick={() => selectProcess(p)}
       >
         <span class="name">{p.name}</span>
+        <CaptureBadge status={captureStatuses ? (captureStatuses.processes[p.pid] ?? "noWindows") : "unknown"} />
         <span class="meta">{$t("dashboard.pid")} {p.pid}</span>
       </button>
     {/each}
@@ -113,6 +153,7 @@
         onclick={() => selectWindow(w)}
       >
         <span class="name">{w.title || "—"}</span>
+        <CaptureBadge status={captureStatuses?.windows[w.hwnd] ?? "unknown"} />
         <span class="meta">{w.class} · {$t("dashboard.pid")} {w.pid}</span>
       </button>
     {/each}
@@ -166,7 +207,7 @@
   }
   .item:hover { background: var(--bg-hover); }
   .item.sel { background: color-mix(in srgb, var(--accent) 22%, transparent); }
-  .item .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .item .meta { color: var(--text-faint); font-size: 12px; flex: none; }
   .muted { color: var(--text-faint); padding: 16px; }
   .actions { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }

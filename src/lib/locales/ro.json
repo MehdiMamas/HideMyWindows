@@ -1,12 +1,5 @@
 {
   "app": { "name": "HideMyWindows", "tagline": "Ascunde-ți ferestrele de la capturarea ecranului" },
-  "captureStatus": {
-    "hidden": "Ascunsă din capturi",
-    "visible": "Vizibilă în capturi",
-    "checking": "Se verifică protecția…",
-    "unavailable": "Starea protecției nu este disponibilă",
-    "hint": "Starea actuală a protecției Windows împotriva capturii pentru această fereastră HideMyWindows."
-  },
   "nav": {
     "home": "Acasă",
     "quickLaunch": "Lansare rapidă",
@@ -29,6 +22,16 @@
     "noResults": "Niciun rezultat"
   },
   "dashboard": {
+    "captureLabels": {
+      "hidden": "Ascunsă",
+      "partial": "Parțial ascunsă",
+      "unknown": "Stare necunoscută"
+    },
+    "captureHints": {
+      "hidden": "Windows indică faptul că această țintă este exclusă din capturi. Pentru un proces, toate ferestrele vizibile sunt ascunse.",
+      "partial": "Unele ferestre vizibile ale acestui proces sunt ascunse, dar altele rămân vizibile în capturi.",
+      "unknown": "Protecția actuală împotriva capturii nu a putut fi verificată."
+    },
     "title": "Ascunde o aplicație pornită",
     "subtitle": "Alege un proces sau o fereastră, apoi ascunde-o de capturi și înregistrări de ecran.",
     "processes": "Procese",
