@@ -52,6 +52,10 @@ jobs:
           cargo test --locked -p hmw-core -- --test-threads=1 2>&1 | Tee-Object -Variable nativeTestOutput
           $nativeTestExit = $LASTEXITCODE
           @('### Windows native test output', '```text', ($nativeTestOutput -join "`n"), '```') | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+          if ($nativeTestExit -ne 0) {
+            $details = ($nativeTestOutput -join "`n").Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows native tests failed::$details"
+          }
           exit $nativeTestExit
 
       - name: Clippy
