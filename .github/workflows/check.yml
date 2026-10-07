@@ -47,7 +47,12 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Test core and Windows capture status
-        run: cargo test --locked -p hmw-core -- --test-threads=1
+        shell: pwsh
+        run: |
+          cargo test --locked -p hmw-core -- --test-threads=1 2>&1 | Tee-Object -Variable nativeTestOutput
+          $nativeTestExit = $LASTEXITCODE
+          @('### Windows native test output', '```text', ($nativeTestOutput -join "`n"), '```') | Add-Content -Path $env:GITHUB_STEP_SUMMARY
+          exit $nativeTestExit
 
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings

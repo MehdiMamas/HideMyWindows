@@ -340,7 +340,7 @@ mod tests {
     // A real, separately owned WinForms window. Its UI thread pumps messages
     // while a background reader queues commands; no foreign UI thread is blocked.
     const FIXTURE: &str = r#"
-Add-Type -ReferencedAssemblies System.Windows.Forms,System.Drawing -TypeDefinition @'
+Add-Type -ReferencedAssemblies System.dll,System.Windows.Forms,System.Drawing -TypeDefinition @'
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
