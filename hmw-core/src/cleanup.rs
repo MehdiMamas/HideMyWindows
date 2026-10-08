@@ -516,7 +516,7 @@ fn is_partial_copy(error: &windows::core::Error) -> bool {
     code == 299 || code & 0xFFFF == 299
 }
 
-fn export_remote(process: HANDLE, base: usize, name: &str) -> Result<usize> {
+pub(crate) fn export_remote(process: HANDLE, base: usize, name: &str) -> Result<usize> {
     export_va(base, name, |addr, buf| read_remote(process, addr, buf))
         .ok_or_else(|| Error(format!("Could not resolve {name} in the loaded module")))
 }

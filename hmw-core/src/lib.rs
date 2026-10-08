@@ -7,6 +7,7 @@
 
 pub mod config;
 pub mod model;
+pub mod rule_status;
 
 #[cfg(windows)]
 pub mod indicator;
@@ -29,6 +30,8 @@ pub mod process;
 pub mod watcher;
 #[cfg(windows)]
 pub mod window;
+#[cfg(windows)]
+pub mod wow64;
 
 pub use config::Config;
 pub use model::{

@@ -1,5 +1,8 @@
 {
-  "app": { "name": "HideMyWindows", "tagline": "Nascondi le tue finestre dalla cattura schermo" },
+  "app": {
+    "name": "HideMyWindows",
+    "tagline": "Nascondi le tue finestre dalla cattura schermo"
+  },
   "nav": {
     "home": "Home",
     "quickLaunch": "Avvio rapido",
@@ -91,7 +94,12 @@
       "unhideWindow": "Mostra finestra",
       "hideTrayIcon": "Nascondi pulsante barra applicazioni",
       "unhideTrayIcon": "Mostra pulsante barra applicazioni"
-    }
+    },
+    "resultTitle": "Risultato delle regole",
+    "resultCounts": "{hidden} di {matched} finestre corrispondenti nascoste dalla cattura",
+    "resultUnknown": "Impossibile verificare {count} finestre.",
+    "resultIssues": "{count} problemi — mostra dettagli",
+    "issueNotice": "Regole finestre: {count} problemi. Consulta il risultato e i dettagli nelle regole."
   },
   "settings": {
     "title": "Impostazioni",

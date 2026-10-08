@@ -1,6 +1,7 @@
 <script>
   import { t } from "../i18n.js";
   import { config, notify } from "../stores.js";
+  import { ruleStatus } from "../ruleStatus.js";
   import * as api from "../api.js";
   import Button from "../components/Button.svelte";
   import Select from "../components/Select.svelte";
@@ -70,6 +71,22 @@
   <p>{$t("rules.subtitle")}</p>
 </header>
 
+{#if $ruleStatus}
+  <section class="rule-result" class:has-issues={$ruleStatus.errors.length > 0} aria-label={$t("rules.resultTitle")}>
+    <strong>{$t("rules.resultTitle")}</strong>
+    <p aria-live="polite">{$t("rules.resultCounts", { hidden: $ruleStatus.hiddenWindows, matched: $ruleStatus.matchedWindows })}</p>
+    {#if $ruleStatus.unknownWindows}
+      <p>{$t("rules.resultUnknown", { count: $ruleStatus.unknownWindows })}</p>
+    {/if}
+    {#if $ruleStatus.errors.length}
+      <details>
+        <summary>{$t("rules.resultIssues", { count: $ruleStatus.errors.length })}</summary>
+        <ul>{#each $ruleStatus.errors as error}<li>{error}</li>{/each}</ul>
+      </details>
+    {/if}
+  </section>
+{/if}
+
 <div class="bar">
   <Button variant="primary" onclick={addRule}>+ {$t("rules.add")}</Button>
 </div>
@@ -101,6 +118,12 @@
   .page-head { margin-bottom: 14px; }
   .page-head p { color: var(--text-dim); margin: 0; }
   .bar { margin-bottom: 14px; }
+  .rule-result { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
+  .rule-result.has-issues { border-left: 3px solid var(--warning); }
+  .rule-result p { margin: 6px 0; color: var(--text-dim); }
+  .rule-result summary { cursor: pointer; color: var(--warning); }
+  .rule-result ul { padding-left: 20px; margin-bottom: 0; }
+  .rule-result li { overflow-wrap: anywhere; margin-top: 6px; }
   .rules { display: flex; flex-direction: column; gap: 12px; }
   .rule {
     background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);

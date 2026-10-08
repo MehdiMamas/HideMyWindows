@@ -5,26 +5,24 @@
 //! The technique is the classic `CreateRemoteThread` + `LoadLibraryW` loader:
 //! we write the payload's path into the target, start a thread at
 //! `LoadLibraryW`, then start further threads at the payload's exported
-//! functions (resolved as `remote_module_base + local_export_rva`). The HWND a
+//! functions (resolved from the remote module export table). The HWND a
 //! function needs is passed directly as the thread parameter, so no extra
 //! remote allocation is required for calls.
 //!
-//! v2 supports injecting into processes of the **same architecture** as the
-//! HideMyWindows build (x64→x64, x86→x86, arm64→arm64). Cross-architecture
-//! injection is intentionally not attempted; the UI surfaces a clear message.
+//! The x64 controller delegates x86 targets to a bundled x86 helper and DLL.
+//! Exports are resolved from the DLL actually loaded in the target, including
+//! when an earlier HideMyWindows version left its payload running.
 
 use crate::process::{is_process_64bit, wide_to_string, SafeHandle};
 use crate::{Error, Result};
-use std::collections::HashMap;
-use std::sync::Mutex;
-use windows::core::{PCSTR, PCWSTR};
-use windows::Win32::Foundation::WAIT_FAILED;
+use windows::core::PCWSTR;
+use windows::Win32::Foundation::{WAIT_FAILED, WAIT_OBJECT_0};
 use windows::Win32::System::Diagnostics::Debug::WriteProcessMemory;
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Module32FirstW, Module32NextW, MODULEENTRY32W, TH32CS_SNAPMODULE,
     TH32CS_SNAPMODULE32,
 };
-use windows::Win32::System::LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW};
+use windows::Win32::System::LibraryLoader::{GetModuleHandleW, GetProcAddress};
 use windows::Win32::System::Memory::{
     VirtualAllocEx, VirtualFreeEx, MEM_COMMIT, MEM_RELEASE, MEM_RESERVE, PAGE_READWRITE,
 };
@@ -33,10 +31,6 @@ use windows::Win32::System::Threading::{
     LPTHREAD_START_ROUTINE, PROCESS_CREATE_THREAD, PROCESS_QUERY_INFORMATION, PROCESS_VM_OPERATION,
     PROCESS_VM_READ, PROCESS_VM_WRITE,
 };
-
-/// Cache of export-name -> RVA within a locally loaded copy of a payload DLL.
-/// Keyed by the payload path. Resolving RVAs once avoids repeated local loads.
-static RVA_CACHE: Mutex<Option<HashMap<String, HashMap<String, isize>>>> = Mutex::new(None);
 
 /// The inner function-pointer type of `LPTHREAD_START_ROUTINE`, used to give
 /// `transmute` an explicit target type.
@@ -91,55 +85,6 @@ fn remote_module_base(pid: u32, module_file_name: &str) -> Option<isize> {
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
     None
-}
-
-/// Resolve (and cache) the RVAs of the payload's exports by loading a local
-/// copy of the DLL. The local copy must be the same architecture as this
-/// build (it is — we always pick the payload matching our own arch for
-/// same-arch targets).
-fn export_rvas(payload_path: &str) -> Result<HashMap<String, isize>> {
-    {
-        let guard = RVA_CACHE.lock().unwrap();
-        if let Some(map) = guard.as_ref().and_then(|m| m.get(payload_path)) {
-            return Ok(map.clone());
-        }
-    }
-
-    const EXPORTS: &[&str] = &[
-        "HmwHideAll",
-        "HmwUnhideAll",
-        "HmwHideWindow",
-        "HmwUnhideWindow",
-        "HmwHideTray",
-        "HmwUnhideTray",
-        "HmwHideToasts",
-        "HmwUnhideToasts",
-    ];
-
-    let wide = to_wide(payload_path);
-    let module = unsafe { LoadLibraryW(PCWSTR(wide.as_ptr()))? };
-    if module.is_invalid() {
-        return Err(Error("Failed to load payload DLL locally".into()));
-    }
-    let base = module.0 as isize;
-    let mut map = HashMap::new();
-    for &name in EXPORTS {
-        let cname = std::ffi::CString::new(name).unwrap();
-        let proc = unsafe { GetProcAddress(module, PCSTR(cname.as_ptr() as *const u8)) };
-        match proc {
-            Some(f) => {
-                let addr = f as usize as isize;
-                map.insert(name.to_string(), addr - base);
-            }
-            None => return Err(Error(format!("Payload is missing export {name}"))),
-        }
-    }
-
-    let mut guard = RVA_CACHE.lock().unwrap();
-    guard
-        .get_or_insert_with(HashMap::new)
-        .insert(payload_path.to_string(), map.clone());
-    Ok(map)
 }
 
 /// Inject the payload into `pid` if it is not already present, returning the
@@ -222,8 +167,12 @@ fn ensure_loaded(handle: &SafeHandle, pid: u32, payload_path: &str) -> Result<is
 pub fn call_export(pid: u32, payload_path: &str, export: &str, hwnd: isize) -> Result<()> {
     let handle = open_target(pid)?;
 
-    // Guard against cross-architecture targets, which we don't support.
+    // Delegate WOW64 targets; each process still loads a matching DLL.
     let target_64 = is_process_64bit(handle.0)?;
+    if !target_64 && cfg!(target_arch = "x86_64") {
+        drop(handle);
+        return crate::wow64::call(pid, export, hwnd);
+    }
     if target_64 != cfg!(target_pointer_width = "64") {
         return Err(Error(format!(
             "This {}-bit build of HideMyWindows cannot hide a {}-bit application. \
@@ -238,12 +187,8 @@ pub fn call_export(pid: u32, payload_path: &str, export: &str, hwnd: isize) -> R
     }
 
     let base = ensure_loaded(&handle, pid, payload_path)?;
-    let rvas = export_rvas(payload_path)?;
-    let rva = rvas
-        .get(export)
-        .copied()
-        .ok_or_else(|| Error(format!("Unknown payload export {export}")))?;
-    let func_addr = (base + rva) as *const core::ffi::c_void;
+    let func_addr =
+        crate::cleanup::export_remote(handle.0, base as usize, export)? as *const core::ffi::c_void;
 
     let start: LPTHREAD_START_ROUTINE =
         Some(unsafe { std::mem::transmute::<*const core::ffi::c_void, ThreadStart>(func_addr) });
@@ -254,8 +199,17 @@ pub fn call_export(pid: u32, payload_path: &str, export: &str, hwnd: isize) -> R
     };
     let thread = unsafe { CreateRemoteThread(handle.0, None, 0, start, param, 0, None)? };
     let thread = SafeHandle(thread);
+    if unsafe { WaitForSingleObject(thread.0, 5_000) } != WAIT_OBJECT_0 {
+        return Err(Error(
+            "The target did not finish the hide/unhide action".into(),
+        ));
+    }
+    let mut exit = 0;
     unsafe {
-        WaitForSingleObject(thread.0, 5_000);
+        GetExitCodeThread(thread.0, &mut exit)?;
+    }
+    if exit != 0 {
+        return Err(Error(format!("The target action failed (code {exit:#x})")));
     }
     Ok(())
 }

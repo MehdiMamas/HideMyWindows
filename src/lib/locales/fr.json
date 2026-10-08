@@ -1,5 +1,8 @@
 {
-  "app": { "name": "HideMyWindows", "tagline": "Masquez vos fenêtres de la capture d'écran" },
+  "app": {
+    "name": "HideMyWindows",
+    "tagline": "Masquez vos fenêtres de la capture d'écran"
+  },
   "nav": {
     "home": "Accueil",
     "quickLaunch": "Lancement rapide",
@@ -91,7 +94,12 @@
       "unhideWindow": "Afficher la fenêtre",
       "hideTrayIcon": "Masquer le bouton de la barre des tâches",
       "unhideTrayIcon": "Afficher le bouton de la barre des tâches"
-    }
+    },
+    "resultTitle": "Résultat des règles",
+    "resultCounts": "{hidden} fenêtres sur {matched} correspondantes masquées des captures",
+    "resultUnknown": "Impossible de vérifier {count} fenêtres.",
+    "resultIssues": "{count} problèmes — afficher les détails",
+    "issueNotice": "Règles de fenêtres : {count} problèmes. Consultez le résultat et les détails dans les règles."
   },
   "settings": {
     "title": "Paramètres",

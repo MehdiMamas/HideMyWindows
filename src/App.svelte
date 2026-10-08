@@ -5,6 +5,7 @@
   import { config, notify, applyTheme } from "./lib/stores.js";
   import { checkForUpdates } from "./lib/updater.js";
   import * as api from "./lib/api.js";
+  import { updateRuleStatus } from "./lib/ruleStatus.js";
 
   import Dashboard from "./lib/pages/Dashboard.svelte";
   import QuickLaunch from "./lib/pages/QuickLaunch.svelte";
@@ -42,10 +43,14 @@
           if (c && c.theme === "system") applyTheme("system");
         });
 
-      await listen("rule-errors", (event) => {
-        const errs = event.payload || [];
-        if (errs.length) notify(errs[0], "warning", 6000);
+      // Subscribe before reading the snapshot so startup issues are not lost.
+      let receivedStatus = false;
+      await listen("rule-status", (event) => {
+        receivedStatus = true;
+        updateRuleStatus(event.payload);
       });
+      const status = await api.getRuleStatus();
+      if (!receivedStatus) updateRuleStatus(status);
     } catch (e) {
       notify(String(e), "error", 0);
     } finally {

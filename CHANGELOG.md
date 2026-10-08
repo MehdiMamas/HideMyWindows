@@ -3,6 +3,20 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.9] — 2026-10-07
+
+### Fixed
+- **32-bit apps work from the x64 build.** Hide/unhide, process rules, Quick
+  Launch, and taskbar actions automatically use a bundled x86 helper and
+  payload. Switching builds is no longer necessary for apps like AnyDesk.
+  Uninstall cleanup still releases those targets.
+- **One live rule result instead of stacked errors.** Window rules shows the
+  number of matched windows Windows confirms are hidden, unknown states, and
+  all current failures together. Repeated failures stay quiet; changed issues
+  replace the existing warning and recovery clears it.
+- Resolve actions from the payload actually loaded in the target, so a running
+  payload from an earlier version does not use a newer DLL's export offsets.
+
 ## [2.0.8] — 2026-10-07
 
 ### Added

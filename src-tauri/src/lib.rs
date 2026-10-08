@@ -38,6 +38,7 @@ struct AppState {
     config_path: std::path::PathBuf,
     /// Wakes the rule watcher so a saved config is applied immediately.
     rules_wake: Sender<()>,
+    rule_status: Mutex<hmw_core::rule_status::RuleStatus>,
 }
 
 #[derive(Serialize, Clone)]
@@ -72,6 +73,11 @@ fn payload_path(_app: &AppHandle) -> Result<String, String> {
 #[tauri::command]
 fn get_config(state: State<AppState>) -> Config {
     state.config.lock().unwrap().clone()
+}
+
+#[tauri::command]
+fn get_rule_status(state: State<AppState>) -> hmw_core::rule_status::RuleStatus {
+    state.rule_status.lock().unwrap().clone()
 }
 
 #[tauri::command]
@@ -246,7 +252,8 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
         let mut tick: u64 = 0;
         // True after a successful hide, so turning the option off restores toasts once.
         let mut toasts_hidden = false;
-        let mut last_toast_error = String::new();
+        let mut notification_errors = Vec::new();
+        let mut full_errors = Vec::new();
         let mut session = hmw_core::watcher::RuleSession::new();
         // Startup applies every saved rule without waiting for the timer.
         let mut full = true;
@@ -263,54 +270,44 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
             };
 
             if hide_toasts {
-                let errors = hmw_core::notifications::apply_notification_toasts(true, &payload);
-                let message = errors.first().cloned().unwrap_or_default();
-                if message != last_toast_error {
-                    last_toast_error = message.clone();
-                    if !message.is_empty() {
-                        let _ = app.emit("rule-errors", vec![message]);
-                    }
-                }
-                if errors.is_empty() {
+                notification_errors =
+                    hmw_core::notifications::apply_notification_toasts(true, &payload);
+                if notification_errors.is_empty() {
                     toasts_hidden = true;
                 }
             } else if toasts_hidden {
-                let errors = hmw_core::notifications::apply_notification_toasts(false, &payload);
-                if errors.is_empty() {
+                notification_errors =
+                    hmw_core::notifications::apply_notification_toasts(false, &payload);
+                if notification_errors.is_empty() {
                     toasts_hidden = false;
-                    last_toast_error.clear();
-                } else if errors.first().map(String::as_str) != Some(last_toast_error.as_str()) {
-                    last_toast_error = errors[0].clone();
-                    let _ = app.emit("rule-errors", errors);
                 }
-            }
-
-            if full {
-                // A save (or the first pass) releases hides that no longer match,
-                // then applies the ones the current rules ask for.
-                let errors = session.apply(&rules, &payload, false);
-                if !errors.is_empty() {
-                    let _ = app.emit("rule-errors", errors);
-                }
-                full = false;
             } else {
-                // Frequent pass: persistent rules only. Records hides, does not release.
-                let errors = session.apply(&rules, &payload, true);
-
-                // Slower discovery pass: all rules (every `poll_ms`).
-                if tick.is_multiple_of((poll_ms / reapply_ms).max(1)) {
-                    let more = session.apply(&rules, &payload, false);
-                    if !more.is_empty() {
-                        let _ = app.emit("rule-errors", more);
-                    }
-                }
-
-                if !errors.is_empty() {
-                    let _ = app.emit("rule-errors", errors);
-                }
-
-                tick = tick.wrapping_add(1);
+                notification_errors.clear();
             }
+
+            // Run one pass per tick. Retain full-pass issues between discovery
+            // passes, since a persistent-only pass cannot clear other rules.
+            let mut errors = if full || tick.is_multiple_of((poll_ms / reapply_ms).max(1)) {
+                full_errors = session.apply(&rules, &payload, false);
+                full = false;
+                full_errors.clone()
+            } else {
+                let mut errors = full_errors.clone();
+                errors.extend(session.apply(&rules, &payload, true));
+                errors
+            };
+            errors.extend(notification_errors.iter().cloned());
+            let observed = session.status(&rules);
+            errors.extend(observed.errors.iter().cloned());
+            let report = observed.with_errors(errors);
+            let state = app.state::<AppState>();
+            let mut previous = state.rule_status.lock().unwrap();
+            if *previous != report {
+                *previous = report.clone();
+                drop(previous);
+                let _ = app.emit("rule-status", report);
+            }
+            tick = tick.wrapping_add(1);
 
             match rules_rx.recv_timeout(Duration::from_millis(reapply_ms)) {
                 Ok(()) => {
@@ -364,6 +361,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
 #[cfg(windows)]
 mod wow64_helper {
     include!(concat!(env!("OUT_DIR"), "/wow64_helper.rs"));
+    include!(concat!(env!("OUT_DIR"), "/wow64_payload.rs"));
 }
 
 /// Write the bundled 32-bit cleanup helper under `%TEMP%\HideMyWindows` so an
@@ -372,7 +370,9 @@ mod wow64_helper {
 #[cfg(windows)]
 fn materialize_wow64_helper() -> Option<std::path::PathBuf> {
     let bytes = wow64_helper::WOW64_HELPER?;
-    let dir = std::env::temp_dir().join("HideMyWindows");
+    let dir = std::env::temp_dir()
+        .join("HideMyWindows")
+        .join(env!("CARGO_PKG_VERSION"));
     std::fs::create_dir_all(&dir).ok()?;
     let path = dir.join("hmw-release-x86.exe");
     if std::fs::write(&path, bytes).is_err() && !path.is_file() {
@@ -381,8 +381,25 @@ fn materialize_wow64_helper() -> Option<std::path::PathBuf> {
     Some(path)
 }
 
+#[cfg(windows)]
+fn configure_wow64_actions() {
+    let Some(bytes) = wow64_helper::WOW64_PAYLOAD else {
+        return;
+    };
+    let Some(helper) = materialize_wow64_helper() else {
+        return;
+    };
+    // Keep the original filename so uninstall cleanup recognizes the DLL.
+    let payload = helper.parent().unwrap().join("hmw_payload.dll");
+    if std::fs::write(&payload, bytes).is_ok() || payload.is_file() {
+        hmw_core::wow64::configure(helper, payload);
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(windows)]
+    configure_wow64_actions();
     // Before the single-instance plugin: uninstall must release hides even
     // while another copy of the app is still running.
     #[cfg(windows)]
@@ -411,9 +428,11 @@ pub fn run() {
             config: Mutex::new(config),
             config_path,
             rules_wake: rules_tx,
+            rule_status: Mutex::default(),
         })
         .invoke_handler(tauri::generate_handler![
             get_config,
+            get_rule_status,
             get_config_dir,
             app_version,
             capture_statuses,

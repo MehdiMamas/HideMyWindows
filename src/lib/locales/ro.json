@@ -1,5 +1,8 @@
 {
-  "app": { "name": "HideMyWindows", "tagline": "Ascunde-ți ferestrele de la capturarea ecranului" },
+  "app": {
+    "name": "HideMyWindows",
+    "tagline": "Ascunde-ți ferestrele de la capturarea ecranului"
+  },
   "nav": {
     "home": "Acasă",
     "quickLaunch": "Lansare rapidă",
@@ -91,7 +94,12 @@
       "unhideWindow": "Afișează fereastra",
       "hideTrayIcon": "Ascunde butonul din bara de activități",
       "unhideTrayIcon": "Afișează butonul din bara de activități"
-    }
+    },
+    "resultTitle": "Rezultatul regulilor",
+    "resultCounts": "{hidden} din {matched} ferestre potrivite ascunse de captură",
+    "resultUnknown": "Nu s-au putut verifica {count} ferestre.",
+    "resultIssues": "{count} probleme — arată detaliile",
+    "issueNotice": "Reguli ferestre: {count} probleme. Vezi rezultatul și detaliile în reguli."
   },
   "settings": {
     "title": "Setări",

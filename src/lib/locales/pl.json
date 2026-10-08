@@ -1,5 +1,8 @@
 {
-  "app": { "name": "HideMyWindows", "tagline": "Ukryj swoje okna przed przechwytywaniem ekranu" },
+  "app": {
+    "name": "HideMyWindows",
+    "tagline": "Ukryj swoje okna przed przechwytywaniem ekranu"
+  },
   "nav": {
     "home": "Start",
     "quickLaunch": "Szybkie uruchamianie",
@@ -91,7 +94,12 @@
       "unhideWindow": "Pokaż okno",
       "hideTrayIcon": "Ukryj przycisk na pasku zadań",
       "unhideTrayIcon": "Pokaż przycisk na pasku zadań"
-    }
+    },
+    "resultTitle": "Wynik reguł",
+    "resultCounts": "{hidden} z {matched} pasujących okien ukrytych przed przechwytywaniem",
+    "resultUnknown": "Nie można zweryfikować {count} okien.",
+    "resultIssues": "{count} problemów — pokaż szczegóły",
+    "issueNotice": "Reguły okien: {count} problemów. Zobacz wynik i szczegóły w regułach okien."
   },
   "settings": {
     "title": "Ustawienia",

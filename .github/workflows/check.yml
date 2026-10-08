@@ -33,7 +33,7 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Test target capture badges
+      - name: Test frontend
         run: npm test
 
       - name: Build payload (x64)
@@ -45,6 +45,14 @@ jobs:
 
       - name: Rust format check
         run: cargo fmt --all -- --check
+
+      - name: Build the 32-bit helper and payload
+        shell: bash
+        run: |
+          rustup target add i686-pc-windows-msvc
+          cargo build -p hmw-release -p hmw-payload --release --target i686-pc-windows-msvc
+          cp target/i686-pc-windows-msvc/release/hmw-release.exe src-tauri/resources/hmw-release-x86.exe
+          cp target/i686-pc-windows-msvc/release/hmw_payload.dll src-tauri/resources/hmw_payload_x86.dll
 
       - name: Test core and Windows capture status
         shell: pwsh

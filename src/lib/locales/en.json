@@ -1,5 +1,8 @@
 {
-  "app": { "name": "HideMyWindows", "tagline": "Hide your windows from screen capture" },
+  "app": {
+    "name": "HideMyWindows",
+    "tagline": "Hide your windows from screen capture"
+  },
   "nav": {
     "home": "Home",
     "quickLaunch": "Quick launch",
@@ -92,7 +95,12 @@
       "unhideWindow": "Unhide window",
       "hideTrayIcon": "Hide taskbar button",
       "unhideTrayIcon": "Show taskbar button"
-    }
+    },
+    "resultTitle": "Rule result",
+    "resultCounts": "{hidden} of {matched} matched windows hidden from capture",
+    "resultUnknown": "Could not verify {count} windows.",
+    "resultIssues": "{count} issues — show details",
+    "issueNotice": "Window rules: {count} issues. See Window rules for the result and details."
   },
   "settings": {
     "title": "Settings",

@@ -39,7 +39,7 @@ Download the latest installer for your architecture from the [**Releases page**]
 
 Run the installer and launch HideMyWindows. No admin rights required.
 
-> **Note on architecture:** this version hides apps that run on the **same architecture** as the build you install. On a 64-bit PC, install the x64 build (it covers the vast majority of modern apps). The x86 build exists for 32-bit Windows.
+> **Note on architecture:** install the x64 build on a 64-bit Intel/AMD PC. It handles both 64-bit and 32-bit apps automatically using its bundled x86 helper. The x86 build is for 32-bit Windows; the ARM64 build handles native ARM64 apps.
 
 ### Build from source
 See [BUILDING.md](BUILDING.md).

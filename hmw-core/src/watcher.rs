@@ -40,6 +40,28 @@ pub struct RuleSession {
 }
 
 impl RuleSession {
+    /// Read capture affinity for the current hide matches; never infer success
+    /// merely from an injection completing or a rule being enabled.
+    pub fn status(&self, rules: &[WindowRule]) -> crate::rule_status::RuleStatus {
+        let mut status = crate::rule_status::RuleStatus::default();
+        let windows = match list_top_windows(true) {
+            Ok(windows) => windows,
+            Err(error) => return status.with_errors(vec![error.0]),
+        };
+        let (desired, _) = evaluate(rules, &windows, false, &mut HashMap::new());
+        for window in windows {
+            if desired.processes.contains(&window.pid) || desired.windows.contains(&window.hwnd) {
+                status.matched_windows += 1;
+                match crate::window::is_capture_hidden(window.hwnd) {
+                    Ok(true) => status.hidden_windows += 1,
+                    Ok(false) => {}
+                    Err(_) => status.unknown_windows += 1,
+                }
+            }
+        }
+        status
+    }
+
     pub fn new() -> Self {
         Self {
             applied: HideSet::default(),
