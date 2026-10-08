@@ -66,6 +66,12 @@ jobs:
           }
           exit $nativeTestExit
 
+      - name: Build ARM64 protection payload
+        shell: bash
+        run: |
+          rustup target add aarch64-pc-windows-msvc
+          cargo build --locked -p hmw-payload --release --target aarch64-pc-windows-msvc
+
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
