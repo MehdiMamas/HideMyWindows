@@ -12,6 +12,8 @@ pub mod rule_status;
 
 #[cfg(windows)]
 mod capture_affinity;
+#[cfg(windows)]
+mod capture_presentation;
 
 #[cfg(windows)]
 pub mod indicator;

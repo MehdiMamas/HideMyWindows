@@ -160,6 +160,15 @@ mod tests {
         WS_OVERLAPPEDWINDOW, WS_VISIBLE,
     };
 
+    struct TestWindow(HWND);
+    impl Drop for TestWindow {
+        fn drop(&mut self) {
+            unsafe {
+                let _ = DestroyWindow(self.0);
+            }
+        }
+    }
+
     #[test]
     fn capture_status_rejects_an_invalid_window() {
         assert!(is_capture_hidden(0).is_err());
@@ -167,15 +176,6 @@ mod tests {
 
     #[test]
     fn capture_status_reads_back_the_window_affinity() {
-        struct TestWindow(HWND);
-        impl Drop for TestWindow {
-            fn drop(&mut self) {
-                unsafe {
-                    let _ = DestroyWindow(self.0);
-                }
-            }
-        }
-
         let window = TestWindow(unsafe {
             CreateWindowExW(
                 WINDOW_EX_STYLE(0),
@@ -264,6 +264,51 @@ mod tests {
         assert!(
             marker.is_invalid(),
             "failed exclusion must undo its transition hint"
+        );
+    }
+
+    #[test]
+    fn an_existing_application_cloak_is_not_owned_or_removed_by_capture_protection() {
+        use windows::Win32::Graphics::Dwm::{
+            DwmGetWindowAttribute, DwmSetWindowAttribute, DWMWA_CLOAK, DWMWA_CLOAKED,
+            DWM_CLOAKED_APP,
+        };
+        let window = TestWindow(unsafe {
+            CreateWindowExW(
+                WINDOW_EX_STYLE(0),
+                w!("STATIC"),
+                w!("Existing cloak"),
+                WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                0,
+                0,
+                100,
+                100,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap()
+        });
+        let enabled = BOOL(1);
+        unsafe { DwmSetWindowAttribute(window.0, DWMWA_CLOAK, &enabled as *const _ as _, 4) }
+            .unwrap();
+        let read_cloak = || {
+            let mut flags = 0u32;
+            unsafe { DwmGetWindowAttribute(window.0, DWMWA_CLOAKED, &mut flags as *mut _ as _, 4) }
+                .unwrap();
+            flags
+        };
+        assert_ne!(read_cloak() & DWM_CLOAKED_APP, 0);
+        set_capture_hidden(window.0 .0 as isize, true).unwrap();
+        set_capture_hidden(window.0 .0 as isize, false).unwrap();
+        assert!(
+            unsafe { GetPropW(window.0, w!("HideMyWindows.MinimizedCaptureCloak")) }.is_invalid()
+        );
+        assert_ne!(
+            read_cloak() & DWM_CLOAKED_APP,
+            0,
+            "another feature's cloak must survive unhide"
         );
     }
 }

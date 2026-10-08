@@ -25,6 +25,7 @@ extern "C" void HmwRememberGateAffinity(HWND, DWORD);
 extern "C" void HmwRestoreGateAffinity(HWND);
 extern "C" BOOL HmwSuppressCaptureTransitions(HWND);
 extern "C" void HmwRestoreCaptureTransitions(HWND);
+extern "C" void HmwCapturePresentationUpdated(HWND);
 
 static bool top_level(HWND hwnd) {
     DWORD pid = 0;
@@ -64,7 +65,10 @@ static bool protect(HWND hwnd) {
             ok = real_affinity(hwnd, WDA_EXCLUDEFROMCAPTURE) &&
                 GetWindowDisplayAffinity(hwnd, &affinity) && affinity == WDA_EXCLUDEFROMCAPTURE;
         }
-        if (ok) RemovePropW(hwnd, failure);
+        if (ok) {
+            RemovePropW(hwnd, failure);
+            HmwCapturePresentationUpdated(hwnd);
+        }
         else {
             DWORD error = GetLastError();
             if (transition_added) HmwRestoreCaptureTransitions(hwnd);
@@ -107,6 +111,7 @@ static HDWP WINAPI hook_defer(HDWP batch, HWND hwnd, HWND after, int x, int y, i
     return real_defer(batch, hwnd, after, x, y, cx, cy, flags);
 }
 static BOOL WINAPI hook_affinity(HWND hwnd, DWORD affinity) {
+    if (!top_level(hwnd)) return real_affinity(hwnd, affinity);
     EnterCriticalSection(&gate);
     if (top_level(hwnd) && (enabled.load(std::memory_order_relaxed) || HmwNormalGateDecision(hwnd) > 0)) {
         affinity = WDA_EXCLUDEFROMCAPTURE;
@@ -120,6 +125,7 @@ static BOOL WINAPI hook_affinity(HWND hwnd, DWORD affinity) {
     if ((result && affinity != WDA_EXCLUDEFROMCAPTURE) || (!result && transition_added))
         HmwRestoreCaptureTransitions(hwnd);
     LeaveCriticalSection(&gate);
+    if (result) HmwCapturePresentationUpdated(hwnd);
     SetLastError(error);
     return result;
 }

@@ -28,6 +28,8 @@ use windows::Win32::UI::WindowsAndMessaging::{
 
 #[path = "../../hmw-core/src/capture_affinity.rs"]
 mod capture_affinity;
+#[path = "../../hmw-core/src/capture_presentation.rs"]
+mod capture_presentation;
 mod gate;
 mod toasts;
 // Compile the same platform-independent rule types and decision logic in the
@@ -112,6 +114,11 @@ pub extern "C" fn HmwSuppressCaptureTransitions(hwnd: HWND) -> BOOL {
 #[no_mangle]
 pub extern "C" fn HmwRestoreCaptureTransitions(hwnd: HWND) {
     capture_affinity::restore_transitions(hwnd);
+}
+
+#[no_mangle]
+pub extern "C" fn HmwCapturePresentationUpdated(hwnd: HWND) {
+    capture_presentation::protection_updated(hwnd);
 }
 
 fn set_all_windows(hidden: bool) {

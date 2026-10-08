@@ -119,7 +119,7 @@ jobs:
           releaseBody: "See CHANGELOG.md for what changed. Download the installer for your architecture below."
           # Publish only after all three installers finish successfully.
           releaseDraft: true
-          prerelease: false
+          prerelease: ${{ contains(needs.prepare.outputs.tag, '-') }}
           args: --target ${{ matrix.target }}
 
   publish:

@@ -84,6 +84,7 @@ public static class FrameTarget {
    if(cmd=="minimize-noactivate") ShowWindow(displayed,7);
    if(cmd=="minimize-async") ShowWindowAsync(displayed,6);
    if(cmd=="minimize-system") SendMessageW(displayed,0x112,new IntPtr(0xf020),IntPtr.Zero);
+   if(cmd=="hide-local") ShowWindow(displayed,0);
    if(cmd=="restore") ShowWindow(displayed,4);
    if(cmd=="blocked") {
     expectHidden=false; displayed=Make(2);
@@ -227,11 +228,29 @@ fn resources() -> PathBuf {
         .join("src-tauri/resources")
 }
 
+fn wait_for_local_cloak(hwnd: windows::Win32::Foundation::HWND, expected: bool) {
+    use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_CLOAKED, DWM_CLOAKED_APP};
+    let until = Instant::now() + Duration::from_secs(3);
+    loop {
+        let mut flags = 0u32;
+        unsafe { DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &mut flags as *mut _ as _, 4) }
+            .unwrap();
+        if (flags & DWM_CLOAKED_APP != 0) == expected {
+            return;
+        }
+        assert!(
+            Instant::now() < until,
+            "local DWM cloak did not become {expected} (flags={flags})"
+        );
+        std::thread::sleep(Duration::from_millis(10));
+    }
+}
+
 #[test]
 fn inactive_minimize_and_restore_keep_x64_and_x86_windows_protected() {
     use windows::core::w;
     use windows::Win32::Foundation::HWND;
-    use windows::Win32::UI::WindowsAndMessaging::{GetPropW, IsIconic};
+    use windows::Win32::UI::WindowsAndMessaging::{GetPropW, IsIconic, IsWindowVisible};
     let resources = resources();
     hmw_core::wow64::configure(
         resources.join("hmw-release-x86.exe"),
@@ -295,13 +314,42 @@ fn inactive_minimize_and_restore_keep_x64_and_x86_windows_protected() {
                 assert!(
                     !unsafe { GetPropW(hwnd, w!("HideMyWindows.CaptureTransitions")) }.is_invalid()
                 );
+                wait_for_local_cloak(hwnd, true);
+                assert!(
+                    !unsafe { GetPropW(hwnd, w!("HideMyWindows.MinimizedCaptureCloak")) }
+                        .is_invalid()
+                );
+                assert!(
+                    unsafe { IsWindowVisible(hwnd) }.as_bool(),
+                    "cloak must retain the taskbar window's visible style"
+                );
+                assert!(hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
                 target.command("restore");
                 assert!(!unsafe { IsIconic(hwnd) }.as_bool());
+                wait_for_local_cloak(hwnd, false);
                 assert!(hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
+                assert!(
+                    !captured_secret(),
+                    "restoring a protected window exposed its desktop pixels"
+                );
             }
+            target.command("hide-local");
+            wait_for_local_cloak(hwnd, true);
+            assert!(!unsafe { IsWindowVisible(hwnd) }.as_bool());
+            assert!(hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
+            target.command("restore");
+            wait_for_local_cloak(hwnd, false);
+            assert!(unsafe { IsWindowVisible(hwnd) }.as_bool());
+            // Turning protection off while minimized must release our cloak;
+            // the target remains minimized and can be restored normally.
+            target.command("minimize");
+            wait_for_local_cloak(hwnd, true);
             hmw_core::hider::apply_to_window(hwnd.0 as isize, unhide, &payload).unwrap();
+            wait_for_local_cloak(hwnd, false);
             assert!(!hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
             assert!(unsafe { GetPropW(hwnd, w!("HideMyWindows.CaptureTransitions")) }.is_invalid());
+            assert!(unsafe { IsIconic(hwnd) }.as_bool());
+            target.command("restore");
         }
     }
 }

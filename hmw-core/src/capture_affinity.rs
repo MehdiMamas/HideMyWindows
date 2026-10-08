@@ -9,9 +9,10 @@ use std::sync::Mutex;
 use windows::core::w;
 use windows::Win32::Foundation::{BOOL, HANDLE, HWND};
 use windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_TRANSITIONS_FORCEDISABLED};
+use windows::Win32::System::Threading::GetCurrentProcessId;
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetPropW, GetWindowDisplayAffinity, RemovePropW, SetPropW, SetWindowDisplayAffinity,
-    WDA_EXCLUDEFROMCAPTURE, WINDOW_DISPLAY_AFFINITY,
+    GetPropW, GetWindowDisplayAffinity, GetWindowThreadProcessId, RemovePropW, SetPropW,
+    SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WINDOW_DISPLAY_AFFINITY,
 };
 
 const TRANSITIONS: windows::core::PCWSTR = w!("HideMyWindows.CaptureTransitions");
@@ -73,6 +74,15 @@ pub fn restore_transitions(hwnd: HWND) {
 
 /// Idempotent affinity updates for single-window hides, toasts and our UI.
 pub fn set_affinity(hwnd: HWND, affinity: u32) -> windows::core::Result<()> {
+    unsafe {
+        let mut pid = 0;
+        GetWindowThreadProcessId(hwnd, Some(&mut pid));
+        if pid != GetCurrentProcessId() {
+            // Retain the API's ownership/error behavior for foreign handles,
+            // including no-op requests. Never cloak another process from here.
+            return SetWindowDisplayAffinity(hwnd, WINDOW_DISPLAY_AFFINITY(affinity));
+        }
+    }
     let added = affinity == WDA_EXCLUDEFROMCAPTURE.0 && suppress_transitions(hwnd);
     let mut current = 0;
     unsafe {
@@ -93,5 +103,6 @@ pub fn set_affinity(hwnd: HWND, affinity: u32) -> windows::core::Result<()> {
             restore_transitions(hwnd);
         }
     }
+    crate::capture_presentation::protection_updated(hwnd);
     Ok(())
 }

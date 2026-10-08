@@ -1,6 +1,6 @@
 {
   "name": "hidemywindows",
-  "version": "2.1.1",
+  "version": "2.1.2-rc.1",
   "description": "Hide your windows from screen capture, screenshots and recordings.",
   "license": "MIT",
   "type": "module",

@@ -3,6 +3,36 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.1.2-rc.1] — 2026-10-08
+
+### Candidate fix
+- **Minimized protected-window presentation cleanup.** The 2.1.1 animation
+  workaround did not resolve the reported black rectangle when minimizing
+  WhatsApp behind another app. This candidate temporarily applies an
+  application DWM cloak to the protected window once it is actually minimized,
+  or locally hidden after having been visible. It releases its own cloak on
+  restore or unhide. Display affinity remains excluded throughout.
+- Per-process minimize, show/hide and location events update presentation
+  promptly. A 200 ms recovery scan covers missed or pre-state-change events.
+  The event thread waits for Windows messages while idle. It operates inside
+  the target process, without global animation changes or foreground stealing.
+- Initially invisible pre-show windows and windows already cloaked by another
+  feature retain their existing behavior. Unhiding a minimized window removes
+  our cloak without restoring or focusing it. Recycled HWNDs cannot inherit
+  state from destroyed windows.
+- Regression checks now query the actual `DWMWA_CLOAKED` application bit on
+  x64/x86 targets through minimize, hide, restore and unhide paths, verify
+  uninterrupted capture exclusion, and preserve a pre-existing application
+  cloak. The check is stronger than 2.1.1's animation-marker assertions.
+
+### Validation limits
+- This is a prerelease candidate, not a confirmed resolution on the reporting
+  Windows 11 desktop. Native Windows tests validate DWM state and capture
+  protection; they cannot capture the original screenshot-excluded artifact
+  or reproduce the user's WhatsApp/GPU setup. Install the candidate and fully
+  restart WhatsApp to test that exact inactive-window case.
+- The prerelease does not replace the stable release in the automatic updater.
+
 ## [2.1.1] — 2026-10-08
 
 ### Fixed
