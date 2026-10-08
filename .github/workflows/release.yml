@@ -81,6 +81,46 @@ jobs:
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
           releaseName: "HideMyWindows ${{ github.event.inputs.tag || github.ref_name }}"
           releaseBody: "See CHANGELOG.md for what changed. Download the installer for your architecture below."
-          releaseDraft: false
+          # Publish only after all three installers finish successfully.
+          releaseDraft: true
           prerelease: false
           args: --target ${{ matrix.target }}
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish the complete release
+        uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        with:
+          script: |
+            const fs = require('fs');
+            const tag = process.env.RELEASE_TAG;
+            const version = tag.replace(/^v/, '');
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              ...context.repo, per_page: 100
+            });
+            const release = releases.find(r => r.tag_name === tag);
+            if (!release) throw new Error(`Missing draft release for ${tag}`);
+            const assets = await github.paginate(github.rest.repos.listReleaseAssets, {
+              ...context.repo, release_id: release.id, per_page: 100
+            });
+            for (const arch of ['x64', 'x86', 'arm64']) {
+              const expected = `HideMyWindows_${version}_${arch}-setup.exe`;
+              if (!assets.some(a => a.name === expected && a.size > 0)) {
+                throw new Error(`Missing installer: ${expected}`);
+              }
+            }
+            const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+            const marker = `## [${version}]`;
+            const start = changelog.indexOf(marker);
+            if (start < 0) throw new Error(`Missing changelog for ${version}`);
+            const next = changelog.indexOf('\n## [', start + marker.length);
+            const notes = changelog.slice(start, next < 0 ? undefined : next).trim();
+            await github.rest.repos.updateRelease({
+              ...context.repo, release_id: release.id, draft: false,
+              body: notes + '\n\nDownload the installer for your architecture below.'
+            });
