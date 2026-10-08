@@ -67,10 +67,16 @@ jobs:
           exit $nativeTestExit
 
       - name: Build ARM64 protection payload
-        shell: bash
+        shell: pwsh
         run: |
           rustup target add aarch64-pc-windows-msvc
-          cargo build --locked -p hmw-payload --release --target aarch64-pc-windows-msvc
+          cargo build --locked -p hmw-payload --release --target aarch64-pc-windows-msvc 2>&1 | Tee-Object -Variable armBuildOutput
+          $armBuildExit = $LASTEXITCODE
+          if ($armBuildExit -ne 0) {
+            $details = ($armBuildOutput -join "`n").Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=ARM64 protection build failed::$details"
+          }
+          exit $armBuildExit
 
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
