@@ -11,7 +11,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   WhatsApp behind another app. This candidate temporarily applies an
   application DWM cloak to the protected window once it is actually minimized,
   or locally hidden after having been visible. It releases its own cloak on
-  restore or unhide. Display affinity remains excluded throughout.
+  restore or unhide. Native minimize/restore keeps capture exclusion active;
+  tray-hidden windows retain our protection marker when Windows reports no
+  presented affinity. Protected restoration releases the cloak only after
+  actual capture exclusion is verified.
 - Per-process minimize, show/hide and location events update presentation
   promptly. A 200 ms recovery scan covers missed or pre-state-change events.
   The event thread waits for Windows messages while idle. It operates inside

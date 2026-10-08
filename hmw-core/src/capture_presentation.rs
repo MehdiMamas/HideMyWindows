@@ -72,29 +72,28 @@ pub fn synchronize(hwnd: HWND) {
         // Some apps hide their window instead of using the native iconic
         // state. Do not cloak an initially invisible pre-show window: wait
         // until it has actually been visible at least once.
-        let affinity_result = GetWindowDisplayAffinity(hwnd, &mut affinity);
-        let _ = SetPropW(
-            hwnd,
-            w!("HideMyWindows.CapturePresentationAffinity"),
-            HANDLE((affinity as usize + 1) as *mut _),
-        );
-        let _ = SetPropW(
-            hwnd,
-            w!("HideMyWindows.CapturePresentationAffinityResult"),
-            HANDLE(
-                (affinity_result
-                    .as_ref()
-                    .err()
-                    .map_or(0, |e| e.code().0 as u32) as usize)
-                    .wrapping_add(1) as *mut _,
-            ),
-        );
+        // A locally hidden window has no presented surface, and Windows can
+        // report WDA_NONE until it is shown again. Our transition marker was
+        // installed with protection; do not discard it based on that hidden
+        // surface query. Explicit unhide removes the marker and our cloak.
         let locally_hidden_protected = tracked
-            && (IsIconic(hwnd).as_bool()
-                || (!visible && !GetPropW(hwnd, SEEN_VISIBLE).is_invalid()))
-            && affinity_result.is_ok()
-            && affinity == WDA_EXCLUDEFROMCAPTURE.0;
+            && ((!visible && !GetPropW(hwnd, SEEN_VISIBLE).is_invalid())
+                || (IsIconic(hwnd).as_bool()
+                    && GetWindowDisplayAffinity(hwnd, &mut affinity).is_ok()
+                    && affinity == WDA_EXCLUDEFROMCAPTURE.0));
         if !locally_hidden_protected {
+            // A protected restore must regain a capture-excluded presented
+            // surface before we reveal it locally. Explicit unhide is allowed
+            // to release the cloak without this protection requirement.
+            if owned
+                && tracked
+                && (!visible
+                    || IsIconic(hwnd).as_bool()
+                    || GetWindowDisplayAffinity(hwnd, &mut affinity).is_err()
+                    || affinity != WDA_EXCLUDEFROMCAPTURE.0)
+            {
+                return;
+            }
             if owned && cloak(hwnd, false).is_ok() {
                 let _ = RemovePropW(hwnd, CLOAK);
             }

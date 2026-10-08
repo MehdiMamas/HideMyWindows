@@ -240,7 +240,7 @@ fn wait_for_local_cloak(hwnd: windows::Win32::Foundation::HWND, expected: bool) 
         }
         assert!(
             Instant::now() < until,
-            "local DWM cloak did not become {expected} (flags={flags}, iconic={}, visible={}, marker={:?}, seen={:?}, observed={:?}, owned={:?}, result={:?}, observedAffinity={:?}, affinityResult={:?})",
+            "local DWM cloak did not become {expected} (flags={flags}, iconic={}, visible={}, marker={:?}, seen={:?}, observed={:?}, owned={:?}, result={:?})",
             unsafe { windows::Win32::UI::WindowsAndMessaging::IsIconic(hwnd) }.as_bool(),
             unsafe { windows::Win32::UI::WindowsAndMessaging::IsWindowVisible(hwnd) }.as_bool(),
             unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.CaptureTransitions")) },
@@ -248,8 +248,7 @@ fn wait_for_local_cloak(hwnd: windows::Win32::Foundation::HWND, expected: bool) 
             unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.CapturePresentationObserved")) },
             unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.MinimizedCaptureCloak")) },
             unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.CaptureCloakResult")) },
-            unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.CapturePresentationAffinity")) },
-            unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.CapturePresentationAffinityResult")) }
+
         );
         std::thread::sleep(Duration::from_millis(10));
     }
@@ -345,16 +344,18 @@ fn inactive_minimize_and_restore_keep_x64_and_x86_windows_protected() {
             }
             eprintln!("presentation test: x86={x86} hide={hide:?} operation=hide-local");
             target.command("hide-local");
-            assert!(
-                hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap(),
-                "capture affinity lost after local hide"
-            );
             wait_for_local_cloak(hwnd, true);
             assert!(!unsafe { IsWindowVisible(hwnd) }.as_bool());
-            assert!(hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
+            // Windows reports no affinity for this non-presented surface;
+            // restoration must recover exclusion without exposing its pixels.
             target.command("restore");
             wait_for_local_cloak(hwnd, false);
             assert!(unsafe { IsWindowVisible(hwnd) }.as_bool());
+            assert!(hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
+            assert!(
+                !captured_secret(),
+                "tray restoration exposed protected pixels"
+            );
             // Turning protection off while minimized must release our cloak;
             // the target remains minimized and can be restored normally.
             target.command("minimize");

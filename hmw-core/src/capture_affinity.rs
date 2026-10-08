@@ -11,8 +11,8 @@ use windows::Win32::Foundation::{BOOL, HANDLE, HWND};
 use windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_TRANSITIONS_FORCEDISABLED};
 use windows::Win32::System::Threading::GetCurrentProcessId;
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetPropW, GetWindowDisplayAffinity, GetWindowThreadProcessId, RemovePropW, SetPropW,
-    SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WINDOW_DISPLAY_AFFINITY,
+    GetPropW, GetWindowDisplayAffinity, GetWindowThreadProcessId, IsWindowVisible, RemovePropW,
+    SetPropW, SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WINDOW_DISPLAY_AFFINITY,
 };
 
 const TRANSITIONS: windows::core::PCWSTR = w!("HideMyWindows.CaptureTransitions");
@@ -86,7 +86,10 @@ pub fn set_affinity(hwnd: HWND, affinity: u32) -> windows::core::Result<()> {
     let added = affinity == WDA_EXCLUDEFROMCAPTURE.0 && suppress_transitions(hwnd);
     let mut current = 0;
     unsafe {
-        if GetWindowDisplayAffinity(hwnd, &mut current).is_err() || current != affinity {
+        if !IsWindowVisible(hwnd).as_bool()
+            || GetWindowDisplayAffinity(hwnd, &mut current).is_err()
+            || current != affinity
+        {
             if let Err(error) = SetWindowDisplayAffinity(hwnd, WINDOW_DISPLAY_AFFINITY(affinity)) {
                 if added {
                     restore_transitions(hwnd);
@@ -97,8 +100,9 @@ pub fn set_affinity(hwnd: HWND, affinity: u32) -> windows::core::Result<()> {
         // A process-hide hook can override an unhide request. Keep transitions
         // suppressed until exclusion actually ends, including no-op updates.
         if affinity != WDA_EXCLUDEFROMCAPTURE.0
-            && GetWindowDisplayAffinity(hwnd, &mut current).is_ok()
-            && current != WDA_EXCLUDEFROMCAPTURE.0
+            && ((!IsWindowVisible(hwnd).as_bool())
+                || (GetWindowDisplayAffinity(hwnd, &mut current).is_ok()
+                    && current != WDA_EXCLUDEFROMCAPTURE.0))
         {
             restore_transitions(hwnd);
         }

@@ -119,7 +119,7 @@ static BOOL WINAPI hook_affinity(HWND hwnd, DWORD affinity) {
     BOOL transition_added = affinity == WDA_EXCLUDEFROMCAPTURE && HmwSuppressCaptureTransitions(hwnd);
     DWORD current = 0;
     // Avoid rebuilding the compositor's redacted surface for no-op updates.
-    BOOL result = GetWindowDisplayAffinity(hwnd, &current) && current == affinity;
+    BOOL result = IsWindowVisible(hwnd) && GetWindowDisplayAffinity(hwnd, &current) && current == affinity;
     if (!result) result = real_affinity(hwnd, affinity);
     DWORD error = GetLastError();
     if ((result && affinity != WDA_EXCLUDEFROMCAPTURE) || (!result && transition_added))
