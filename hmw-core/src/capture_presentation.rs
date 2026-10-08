@@ -21,7 +21,21 @@ static STARTED: AtomicBool = AtomicBool::new(false);
 
 fn cloak(hwnd: HWND, enabled: bool) -> windows::core::Result<()> {
     let value = BOOL::from(enabled);
-    unsafe { DwmSetWindowAttribute(hwnd, DWMWA_CLOAK, &value as *const _ as _, 4) }
+    unsafe {
+        let result = DwmSetWindowAttribute(hwnd, DWMWA_CLOAK, &value as *const _ as _, 4);
+        // Zero means no attempt; one represents S_OK. Preserve HRESULT bits
+        // on both architectures for read-only troubleshooting.
+        let code = result
+            .as_ref()
+            .err()
+            .map_or(0, |error| error.code().0 as u32);
+        let _ = SetPropW(
+            hwnd,
+            w!("HideMyWindows.CaptureCloakResult"),
+            HANDLE((code as usize).wrapping_add(1) as *mut _),
+        );
+        result
+    }
 }
 
 /// Only modify our own protected windows and only release cloaks we applied.
@@ -41,6 +55,11 @@ pub fn synchronize(hwnd: HWND) {
             }
             return;
         }
+        let _ = SetPropW(
+            hwnd,
+            w!("HideMyWindows.CapturePresentationObserved"),
+            HANDLE(std::ptr::dangling_mut::<u8>().cast()),
+        );
         let visible = IsWindowVisible(hwnd).as_bool();
         if tracked && visible && GetPropW(hwnd, SEEN_VISIBLE).is_invalid() {
             let _ = SetPropW(

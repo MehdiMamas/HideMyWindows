@@ -240,7 +240,14 @@ fn wait_for_local_cloak(hwnd: windows::Win32::Foundation::HWND, expected: bool) 
         }
         assert!(
             Instant::now() < until,
-            "local DWM cloak did not become {expected} (flags={flags})"
+            "local DWM cloak did not become {expected} (flags={flags}, iconic={}, visible={}, marker={:?}, seen={:?}, observed={:?}, owned={:?}, result={:?})",
+            unsafe { windows::Win32::UI::WindowsAndMessaging::IsIconic(hwnd) }.as_bool(),
+            unsafe { windows::Win32::UI::WindowsAndMessaging::IsWindowVisible(hwnd) }.as_bool(),
+            unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.CaptureTransitions")) },
+            unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.CaptureWasVisible")) },
+            unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.CapturePresentationObserved")) },
+            unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.MinimizedCaptureCloak")) },
+            unsafe { windows::Win32::UI::WindowsAndMessaging::GetPropW(hwnd, windows::core::w!("HideMyWindows.CaptureCloakResult")) }
         );
         std::thread::sleep(Duration::from_millis(10));
     }
@@ -292,6 +299,7 @@ fn inactive_minimize_and_restore_keep_x64_and_x86_windows_protected() {
                 "minimize-async",
                 "minimize-system",
             ] {
+                eprintln!("presentation test: x86={x86} hide={hide:?} operation={minimize}");
                 other_app.send("focus");
                 assert_eq!(
                     other_app
@@ -333,6 +341,7 @@ fn inactive_minimize_and_restore_keep_x64_and_x86_windows_protected() {
                     "restoring a protected window exposed its desktop pixels"
                 );
             }
+            eprintln!("presentation test: x86={x86} hide={hide:?} operation=hide-local");
             target.command("hide-local");
             wait_for_local_cloak(hwnd, true);
             assert!(!unsafe { IsWindowVisible(hwnd) }.as_bool());
