@@ -382,7 +382,7 @@ class FirstShow {
         // argument, so temporarily make that test resource unavailable too.
         let restore = if arch == "x86" {
             let original = resources.join("hmw_payload_x86.dll");
-            let backup = dir.join("disabled-x86.dll");
+            let backup = resources.join("hmw_payload_x86.disabled.dll");
             std::fs::rename(&original, &backup).unwrap();
             Some(RestoreDll(original, backup))
         } else {

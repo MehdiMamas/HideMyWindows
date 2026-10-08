@@ -82,7 +82,14 @@ static HDWP WINAPI hook_defer(HDWP batch, HWND hwnd, HWND after, int x, int y, i
 }
 static BOOL WINAPI hook_affinity(HWND hwnd, DWORD affinity) {
     EnterCriticalSection(&gate);
-    if (enabled.load(std::memory_order_relaxed) && top_level(hwnd)) affinity = WDA_EXCLUDEFROMCAPTURE;
+    if (enabled.load(std::memory_order_relaxed) && top_level(hwnd)) {
+        affinity = WDA_EXCLUDEFROMCAPTURE;
+        DWORD current = 0;
+        if (GetWindowDisplayAffinity(hwnd, &current) && current == affinity) {
+            LeaveCriticalSection(&gate);
+            return TRUE; // Avoid rebuilding the compositor's redacted surface.
+        }
+    }
     BOOL result = real_affinity(hwnd, affinity);
     LeaveCriticalSection(&gate);
     return result;
