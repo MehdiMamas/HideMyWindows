@@ -679,11 +679,19 @@ class FirstShow {
             let pid = launch.expect("protected launch");
             let _process = Launched(pid);
             let deadline = Instant::now() + Duration::from_secs(20);
-            while !marker.is_file() {
-                assert!(Instant::now() < deadline, "first-show marker missing");
+            // File.WriteAllText creates the file before filling it. Observe
+            // a completed result, not existence alone, while still failing
+            // immediately if the fixture reports an unprotected first show.
+            let first_show = loop {
+                if let Ok(result) = std::fs::read_to_string(&marker) {
+                    if !result.is_empty() {
+                        break result;
+                    }
+                }
+                assert!(Instant::now() < deadline, "first-show result missing");
                 std::thread::sleep(Duration::from_millis(10));
-            }
-            assert_eq!(std::fs::read_to_string(marker).unwrap(), "protected");
+            };
+            assert_eq!(first_show, "protected");
             std::thread::sleep(Duration::from_millis(150));
             stop.store(true, Ordering::SeqCst);
             recorder.join().unwrap();
