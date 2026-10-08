@@ -72,10 +72,27 @@ pub fn synchronize(hwnd: HWND) {
         // Some apps hide their window instead of using the native iconic
         // state. Do not cloak an initially invisible pre-show window: wait
         // until it has actually been visible at least once.
+        let affinity_result = GetWindowDisplayAffinity(hwnd, &mut affinity);
+        let _ = SetPropW(
+            hwnd,
+            w!("HideMyWindows.CapturePresentationAffinity"),
+            HANDLE((affinity as usize + 1) as *mut _),
+        );
+        let _ = SetPropW(
+            hwnd,
+            w!("HideMyWindows.CapturePresentationAffinityResult"),
+            HANDLE(
+                (affinity_result
+                    .as_ref()
+                    .err()
+                    .map_or(0, |e| e.code().0 as u32) as usize)
+                    .wrapping_add(1) as *mut _,
+            ),
+        );
         let locally_hidden_protected = tracked
             && (IsIconic(hwnd).as_bool()
                 || (!visible && !GetPropW(hwnd, SEEN_VISIBLE).is_invalid()))
-            && GetWindowDisplayAffinity(hwnd, &mut affinity).is_ok()
+            && affinity_result.is_ok()
             && affinity == WDA_EXCLUDEFROMCAPTURE.0;
         if !locally_hidden_protected {
             if owned && cloak(hwnd, false).is_ok() {
@@ -201,7 +218,7 @@ pub fn protection_updated(hwnd: HWND) {
     unsafe {
         let mut affinity = 0;
         if !GetPropW(hwnd, PROTECTED).is_invalid()
-            && GetWindowDisplayAffinity(hwnd, &mut affinity).is_ok()
+            && affinity_result.is_ok()
             && affinity == WDA_EXCLUDEFROMCAPTURE.0
         {
             start();
