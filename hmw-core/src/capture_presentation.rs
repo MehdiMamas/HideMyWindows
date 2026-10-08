@@ -218,7 +218,7 @@ pub fn protection_updated(hwnd: HWND) {
     unsafe {
         let mut affinity = 0;
         if !GetPropW(hwnd, PROTECTED).is_invalid()
-            && affinity_result.is_ok()
+            && GetWindowDisplayAffinity(hwnd, &mut affinity).is_ok()
             && affinity == WDA_EXCLUDEFROMCAPTURE.0
         {
             start();
