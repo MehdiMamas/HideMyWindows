@@ -64,7 +64,7 @@
   },
   "rules": {
     "title": "Reguli ferestre",
-    "subtitle": "Ascunde automat aplicații și ferestre imediat ce apar.",
+    "subtitle": "Activează o regulă, lasă HideMyWindows pornit și deschide aplicațiile normal. Ferestrele compatibile rămân vizibile pentru tine și sunt excluse din înregistrări.",
     "empty": "Încă nicio regulă. Adaugă una pentru a ascunde automat ferestrele potrivite.",
     "add": "Adaugă regulă",
     "target": "Criteriu",
@@ -73,7 +73,7 @@
     "action": "Acțiune",
     "enabled": "Activată",
     "persistent": "Reaplică continuu",
-    "persistentHint": "Reaplică periodic pentru a menține ascunse ferestrele noi.",
+    "persistentHint": "Verifică și ferestrele existente periodic. Ferestrele noi compatibile sunt verificate automat.",
     "targets": {
       "windowTitle": "Titlul ferestrei",
       "windowClass": "Clasa ferestrei",

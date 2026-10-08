@@ -82,9 +82,32 @@ for changed failures and shows all details in Window rules.
 
 WinEvent creation/show notifications wake discovery; timers remain a fallback.
 Process-name/PID rules enumerate processes in the current session before windows
-appear. These asynchronous events reduce ordinary launch latency but cannot
-guarantee exclusion before first paint; Quick Launch and process-level protection
-are the intended pre-show path. Elevated targets still need matching privileges.
+appear. Events and polling remain fallback discovery for existing windows.
+
+A desktop-wide, same-architecture WH_CBT hook now intercepts ordinary window
+creation synchronously in the owning process. It temporarily removes initial
+WS_VISIBLE and installs a same-thread subclass. A session-local shared-memory
+snapshot supplies enabled capture-hide rules, using the same comparator logic
+as the controller. WM_CREATE replay, WM_SHOWWINDOW and WM_WINDOWPOSCHANGING
+verify exclusion before allowing the window to show. Matched processes install
+the existing API detours to prevent subsequent affinity resets. Torn or invalid
+snapshots hold show requests; a recovery worker retries and restores the prior
+affinity when rules are removed or the controller exits. The controller reports
+failure properties on invisible windows too.
+
+The installing thread pumps messages; an x86 helper owns a separate x86 hook in
+the x64 build and follows saved rule changes every 200 ms. It retains a parent
+process handle and exits with the controller. Named mutexes prevent two writers
+of an architecture's bounded 64 KiB policy; reader retries never block apps on
+the controller. Hook callbacks and subclasses are outside DllMain, and target
+modules are pinned until process exit to keep outstanding callbacks valid.
+
+Coverage is limited to hookable desktop apps of the gate's architecture on the
+current desktop and at accessible integrity levels. Existing windows, titles
+assigned after visibility, protected apps, alternative renderers and native API
+bypasses do not have a universal first-frame guarantee. Elevated targets still
+need matching privileges. Native tests exercise normal x64/x86 launches, actual
+GDI capture frames, pre-show affinity, policy failure/recovery and gate shutdown.
 
 ## Config
 

@@ -65,7 +65,7 @@
   },
   "rules": {
     "title": "Window rules",
-    "subtitle": "Automatically hide apps and windows as soon as they appear.",
+    "subtitle": "Enable a rule, keep HideMyWindows running, and open your apps normally. Matching supported windows stay visible to you and are excluded from recording.",
     "empty": "No rules yet. Add a rule to auto-hide matching windows.",
     "add": "Add rule",
     "target": "Match on",
@@ -74,7 +74,7 @@
     "action": "Action",
     "enabled": "Enabled",
     "persistent": "Keep re-applying",
-    "persistentHint": "Re-apply on a timer so new windows stay hidden.",
+    "persistentHint": "Also re-check existing windows on a timer. New supported windows are checked automatically.",
     "targets": {
       "windowTitle": "Window title",
       "windowClass": "Window class",

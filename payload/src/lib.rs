@@ -213,11 +213,15 @@ pub extern "C" fn HmwEnsureGateWorker() {
 }
 
 #[no_mangle]
+/// # Safety
+/// `bytes` must reference `len` readable policy bytes until this call returns.
 pub unsafe extern "system" fn HmwGateStart(bytes: *const u8, len: u32, excluded_pid: u32) -> u32 {
     HmwStartNormalGate(bytes, len, excluded_pid)
 }
 
 #[no_mangle]
+/// # Safety
+/// `bytes` must reference `len` readable policy bytes until this call returns.
 pub unsafe extern "system" fn HmwGateUpdate(bytes: *const u8, len: u32) -> u32 {
     HmwUpdateNormalGate(bytes, len)
 }

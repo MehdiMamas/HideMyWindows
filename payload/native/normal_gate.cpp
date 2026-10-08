@@ -51,9 +51,9 @@ static thread_local Reader reader;
 static int decide(HWND hwnd) {
     if (!reader.view) {
         reader.mapping = OpenFileMappingW(FILE_MAP_READ, FALSE, name);
-        if (!reader.mapping) return 0;
+        if (!reader.mapping) return GetLastError() == ERROR_FILE_NOT_FOUND ? 0 : -1;
         reader.view = static_cast<SharedPolicy*>(MapViewOfFile(reader.mapping, FILE_MAP_READ, 0, 0, sizeof(SharedPolicy)));
-        if (!reader.view) { CloseHandle(reader.mapping); reader.mapping = nullptr; return 0; }
+        if (!reader.view) { CloseHandle(reader.mapping); reader.mapping = nullptr; return -1; }
     }
     auto view = reader.view;
     DWORD owner = view->owner;
@@ -64,7 +64,10 @@ static int decide(HWND hwnd) {
         reader.owner_pid = owner;
     }
     // A controller that exited must not leave apps permanently locally hidden.
-    if (!reader.owner || WaitForSingleObject(reader.owner, 0) != WAIT_TIMEOUT) return 0;
+    if (!reader.owner) return -1;
+    DWORD state = WaitForSingleObject(reader.owner, 0);
+    if (state == WAIT_OBJECT_0) return 0;
+    if (state != WAIT_TIMEOUT) return -1;
     std::vector<unsigned char> bytes;
     bool consistent = false;
     for (int attempt = 0; attempt < 3; ++attempt) {

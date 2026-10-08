@@ -64,7 +64,7 @@
   },
   "rules": {
     "title": "Regole finestre",
-    "subtitle": "Nascondi automaticamente app e finestre non appena compaiono.",
+    "subtitle": "Attiva una regola, lascia HideMyWindows aperto e apri le app normalmente. Le finestre compatibili restano visibili a te e sono escluse dalle registrazioni.",
     "empty": "Ancora nessuna regola. Aggiungine una per nascondere automaticamente le finestre corrispondenti.",
     "add": "Aggiungi regola",
     "target": "Criterio",
@@ -73,7 +73,7 @@
     "action": "Azione",
     "enabled": "Abilitata",
     "persistent": "Riapplica di continuo",
-    "persistentHint": "Riapplica periodicamente per mantenere nascoste le nuove finestre.",
+    "persistentHint": "Controlla anche le finestre esistenti periodicamente. Le nuove finestre compatibili vengono controllate automaticamente.",
     "targets": {
       "windowTitle": "Titolo finestra",
       "windowClass": "Classe finestra",

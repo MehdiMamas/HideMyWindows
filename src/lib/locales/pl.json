@@ -64,7 +64,7 @@
   },
   "rules": {
     "title": "Reguły okien",
-    "subtitle": "Automatycznie ukrywaj aplikacje i okna zaraz po ich pojawieniu.",
+    "subtitle": "Włącz regułę, pozostaw HideMyWindows uruchomiony i otwieraj aplikacje normalnie. Obsługiwane okna pozostają widoczne dla Ciebie i są wykluczone z nagrań.",
     "empty": "Brak reguł. Dodaj regułę, aby automatycznie ukrywać pasujące okna.",
     "add": "Dodaj regułę",
     "target": "Kryterium",
@@ -73,7 +73,7 @@
     "action": "Akcja",
     "enabled": "Włączona",
     "persistent": "Stosuj ponownie",
-    "persistentHint": "Stosuje ponownie co jakiś czas, aby nowe okna pozostały ukryte.",
+    "persistentHint": "Sprawdza też istniejące okna okresowo. Nowe obsługiwane okna są sprawdzane automatycznie.",
     "targets": {
       "windowTitle": "Tytuł okna",
       "windowClass": "Klasa okna",

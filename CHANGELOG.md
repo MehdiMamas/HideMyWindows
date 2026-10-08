@@ -3,6 +3,36 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] — 2026-10-08
+
+### Added
+- **Open apps normally with automatic recording exclusion.** While
+  HideMyWindows runs, a synchronous desktop window-creation gate checks enabled
+  hide rules inside supported apps. It holds initial visibility until matching
+  windows have verified capture exclusion, then shows them to you. Quick Launch
+  is optional, and nonpersistent rules also cover newly created windows.
+- **32-bit normal launches in the x64 build.** A bundled x86 helper maintains
+  its own gate and follows saved rules. It exits when the controller exits.
+- **Blocked-window recovery and reporting.** Failed decisions keep the window
+  locally invisible. Repairs replay pending show requests; removing rules or
+  stopping the gate restores affinity it applied. Invisible failure properties
+  appear in Window rules alongside existing rule results.
+- Native tests exercise normal x64/x86 launches without watcher injection,
+  pre-show affinity, actual desktop captures, malformed-policy recovery and
+  shutdown. Existing process-hide and Quick Launch capture tests remain.
+
+### Compatibility
+- Run HideMyWindows before opening matching apps. Restart target apps after
+  updating to replace older payloads. Prefer process-name rules for first-window
+  protection; titles assigned after visibility cannot be known beforehand.
+- The gate covers hookable apps on the current desktop at accessible privilege
+  levels and with a matching architecture (native x86/ARM64; x64 plus x86 in the
+  x64 build). Windows can block protected or elevated apps. Existing windows,
+  native API bypasses, alternate renderers and capture methods that ignore
+  display affinity do not have a universal first-frame guarantee.
+- Saved x86 rule changes take up to 200 ms to reach the helper. Gate policies
+  are limited to 64 KiB; installation/update failures are reported explicitly.
+
 ## [2.0.10] — 2026-10-07
 
 ### Fixed

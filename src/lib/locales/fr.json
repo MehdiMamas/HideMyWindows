@@ -64,7 +64,7 @@
   },
   "rules": {
     "title": "Règles de fenêtre",
-    "subtitle": "Masquez automatiquement les applications et fenêtres dès leur apparition.",
+    "subtitle": "Activez une règle, laissez HideMyWindows ouvert et ouvrez vos applications normalement. Les fenêtres compatibles restent visibles pour vous et sont exclues des enregistrements.",
     "empty": "Aucune règle. Ajoutez-en une pour masquer automatiquement les fenêtres correspondantes.",
     "add": "Ajouter une règle",
     "target": "Critère",
@@ -73,7 +73,7 @@
     "action": "Action",
     "enabled": "Activée",
     "persistent": "Réappliquer en continu",
-    "persistentHint": "Réapplique périodiquement pour garder les nouvelles fenêtres masquées.",
+    "persistentHint": "Vérifie aussi les fenêtres existantes périodiquement. Les nouvelles fenêtres compatibles sont vérifiées automatiquement.",
     "targets": {
       "windowTitle": "Titre de la fenêtre",
       "windowClass": "Classe de la fenêtre",

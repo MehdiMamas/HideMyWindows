@@ -15,7 +15,7 @@ It's built for **privacy-minded users, streamers and students** who want control
 ## ✨ Features
 
 - 🔒 **Hide windows from screenshots & recordings** using the Windows `SetWindowDisplayAffinity` protection (`WDA_EXCLUDEFROMCAPTURE`).
-- 🛡️ **Pre-show process protection** — new windows in a protected process are capture-excluded before standard Windows APIs show them. Quick Launch waits for readiness and stops on failure. Restart protected apps after updating; ordinary launches can still appear before a rule reaches them. Existing-instance and child-process windows require their own protection.
+- 🛡️ **Protection for normal app launches** — while HideMyWindows runs, supported desktop windows are checked before showing. Matching windows receive verified capture exclusion, then appear on your screen; failed checks keep them locally invisible for retry. Open apps as usual; Quick Launch is optional. The x64 build includes a separate x86 gate. Elevated, protected, other-desktop and foreign-architecture apps have Windows coverage limits.
 - 🔴 **Red dot on hidden windows’ title bars** while HideMyWindows runs — see which windows are protected without opening the app. The dot stays out of captures and does not block clicks.
 - 🎯 **Target by process, window, title, class or PID** — with `contains`, `starts/ends with`, `equals` and **regex** matching.
 - ⚡ **Automatic window rules** — hide apps the moment they appear, and optionally keep re-applying so new windows stay hidden.
@@ -51,7 +51,7 @@ See [BUILDING.md](BUILDING.md).
 
 1. **Home** — pick a running process (or a specific window) and click **Hide all windows** / **Hide this window**.
 2. **Quick launch** — add the apps you hide most often and start them already hidden with one click.
-3. **Window rules** — create rules (e.g. *process name contains "obs"* → *hide all windows*) to auto-hide apps as they start. Turn on **Keep re-applying** for apps that open new windows over time.
+3. **Window rules** — create and enable a process-name rule, then open that app normally. New supported windows are checked before showing, even without **Keep re-applying**. That option also reconciles existing windows on a timer. Process-name rules are preferable when a title is set after the window appears.
 4. **Settings** — hide HideMyWindows itself, run in the tray, start with Windows, pick a theme and language.
 
 ![Thumbnail](Assets/Thumbnail.png)
@@ -62,7 +62,7 @@ See [BUILDING.md](BUILDING.md).
 
 - HideMyWindows applies the Windows **`SetWindowDisplayAffinity`** capture-protection flag to the windows you choose. The same mechanism is used by password managers and DRM-protected apps to keep their own windows out of screen captures.
 - Its **own** windows are protected with a direct call. To protect **another** app's windows, a small helper library (`hmw_payload.dll`) is loaded into that app so the flag can be set from inside it — because Windows only lets a window's own process set this flag.
-- Automatic rules use lightweight **polling** instead of WMI, so **no administrator rights are needed**.
+- Automatic rules use a synchronous desktop window hook plus events and polling for existing or unsupported windows. The app must already be running. Elevated targets require an elevated controller; Windows can prevent interception of protected apps. A title that changes after visibility can only be discovered afterward.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full picture.
 

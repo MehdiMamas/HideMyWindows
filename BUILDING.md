@@ -44,7 +44,10 @@ cargo test -p hmw-core -- --test-threads=1
 
 The x64 app embeds both x86 files and extracts them into a version-specific
 temporary directory. The helper runs without a console and shares the app's
-permissions; elevated targets still require an elevated controller.
+permissions; elevated targets still require an elevated controller. The x86
+helper also runs a separate message-pumping desktop window gate while the x64
+app is running, so 32-bit apps can be opened normally. Its parent process handle
+ensures the helper exits with the controller.
 
 ## 3. Run or build
 

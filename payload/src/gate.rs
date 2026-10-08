@@ -16,6 +16,10 @@ unsafe fn wide(ptr: *const u16) -> String {
 
 /// The native hook supplies a consistent, bounded snapshot from shared memory.
 /// A malformed policy blocks showing rather than silently allowing a match.
+///
+/// # Safety
+/// `bytes` must point to `len` readable bytes; the three text pointers must
+/// point to bounded, NUL-terminated UTF-16 strings for the duration of the call.
 #[no_mangle]
 pub unsafe extern "C" fn HmwGateDecision(
     bytes: *const u8,

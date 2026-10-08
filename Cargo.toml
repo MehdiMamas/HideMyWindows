@@ -3,7 +3,7 @@ resolver = "2"
 members = ["hmw-core", "hmw-release", "payload", "src-tauri"]
 
 [workspace.package]
-version = "2.0.10"
+version = "2.1.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/mehdimamas/hidemywindows"
