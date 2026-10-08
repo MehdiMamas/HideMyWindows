@@ -14,7 +14,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   failures reported in the rule result.
 - **Quick Launch stops on protection failure.** The primary thread is resumed
   only after the new payload reports readiness and process protection is armed.
-  A failed protected launch is terminated while still suspended.
+  A failed protected launch is terminated while still suspended. Later blocked
+  windows are also reported for Quick Launch processes.
 - **Faster rule discovery.** Window events wake discovery promptly, and
   process-name/PID rules can protect UI processes before their first window.
   Background services and other user sessions are omitted.

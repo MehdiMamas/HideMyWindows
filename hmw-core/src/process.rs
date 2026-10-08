@@ -88,10 +88,32 @@ pub fn process_path(pid: u32) -> Option<String> {
 
 /// True when `pid` still refers to a running process.
 pub fn process_is_alive(pid: u32) -> bool {
+    process_started_at(pid).is_some()
+}
+
+/// Stable identity for monitored launches, avoiding PID reuse and handle leaks.
+pub fn process_started_at(pid: u32) -> Option<u64> {
+    use windows::Win32::Foundation::FILETIME;
+    use windows::Win32::System::Threading::{GetExitCodeProcess, GetProcessTimes};
     if pid == 0 {
-        return false;
+        return None;
     }
-    unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).is_ok() }
+    unsafe {
+        let handle = SafeHandle(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?);
+        let mut exit_code = 0;
+        GetExitCodeProcess(handle.0, &mut exit_code).ok()?;
+        if exit_code != 259 {
+            return None;
+        } // STILL_ACTIVE
+        let (mut created, mut exited, mut kernel, mut user) = (
+            FILETIME::default(),
+            FILETIME::default(),
+            FILETIME::default(),
+            FILETIME::default(),
+        );
+        GetProcessTimes(handle.0, &mut created, &mut exited, &mut kernel, &mut user).ok()?;
+        Some((u64::from(created.dwHighDateTime) << 32) | u64::from(created.dwLowDateTime))
+    }
 }
 
 /// The file name (with extension) of a process, e.g. `notepad.exe`.

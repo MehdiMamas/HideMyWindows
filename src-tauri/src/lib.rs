@@ -39,6 +39,7 @@ struct AppState {
     /// Wakes the rule watcher so a saved config is applied immediately.
     rules_wake: Sender<()>,
     rule_status: Mutex<hmw_core::rule_status::RuleStatus>,
+    protected_launches: Mutex<std::collections::HashMap<u32, u64>>,
 }
 
 #[derive(Serialize, Clone)]
@@ -213,7 +214,17 @@ fn quick_launch(app: AppHandle, path: String, arguments: String) -> Result<u32, 
     #[cfg(windows)]
     {
         let payload = payload_path(&app)?;
-        hmw_core::launch::launch_hidden(&path, &arguments, &payload).map_err(|e| e.0)
+        let pid = hmw_core::launch::launch_hidden(&path, &arguments, &payload).map_err(|e| e.0)?;
+        if let Some(created) = hmw_core::process::process_started_at(pid) {
+            let state = app.state::<AppState>();
+            state
+                .protected_launches
+                .lock()
+                .unwrap()
+                .insert(pid, created);
+            let _ = state.rules_wake.send(());
+        }
+        Ok(pid)
     }
     #[cfg(not(windows))]
     {
@@ -298,6 +309,23 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
                 errors
             };
             errors.extend(notification_errors.iter().cloned());
+            // A launch can pass readiness but later encounter an unsupported
+            // window. Keep it invisible and report that failure too.
+            let launched: Vec<u32> = {
+                let state = app.state::<AppState>();
+                let mut launched = state.protected_launches.lock().unwrap();
+                launched.retain(|pid, created| {
+                    hmw_core::process::process_started_at(*pid) == Some(*created)
+                });
+                launched.keys().copied().collect()
+            };
+            for pid in launched {
+                if let Err(error) = hmw_core::hider::check_protection(pid, &payload) {
+                    if hmw_core::process::process_is_alive(pid) {
+                        errors.push(format!("Quick Launch process {pid}: {}", error.0));
+                    }
+                }
+            }
             let observed = session.status(&rules);
             errors.extend(observed.errors.iter().cloned());
             let report = observed.with_errors(errors);
@@ -430,6 +458,7 @@ pub fn run() {
             config_path,
             rules_wake: rules_tx,
             rule_status: Mutex::default(),
+            protected_launches: Mutex::default(),
         })
         .invoke_handler(tauri::generate_handler![
             get_config,
