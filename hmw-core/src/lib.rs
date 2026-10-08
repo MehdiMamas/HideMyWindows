@@ -11,6 +11,9 @@ pub mod model;
 pub mod rule_status;
 
 #[cfg(windows)]
+mod capture_affinity;
+
+#[cfg(windows)]
 pub mod indicator;
 #[cfg(any(windows, test))]
 mod indicator_position;

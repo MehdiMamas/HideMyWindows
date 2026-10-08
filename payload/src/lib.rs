@@ -22,11 +22,12 @@ use windows::Win32::System::Com::{
 use windows::Win32::System::LibraryLoader::DisableThreadLibraryCalls;
 use windows::Win32::UI::Shell::{ITaskbarList, TaskbarList};
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetClassNameW, GetWindowDisplayAffinity, GetWindowTextW, GetWindowThreadProcessId,
-    IsWindowVisible, SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
-    WINDOW_DISPLAY_AFFINITY,
+    EnumWindows, GetClassNameW, GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible,
+    WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
 };
 
+#[path = "../../hmw-core/src/capture_affinity.rs"]
+mod capture_affinity;
 mod gate;
 mod toasts;
 // Compile the same platform-independent rule types and decision logic in the
@@ -99,13 +100,18 @@ unsafe extern "system" fn apply_cb(hwnd: HWND, lparam: LPARAM) -> BOOL {
 /// shows up as GPU time on the app that is streaming. A read of the current
 /// affinity does not.
 fn set_affinity(hwnd: HWND, affinity: u32) {
-    unsafe {
-        let mut current = 0u32;
-        if GetWindowDisplayAffinity(hwnd, &mut current).is_ok() && current == affinity {
-            return;
-        }
-        let _ = SetWindowDisplayAffinity(hwnd, WINDOW_DISPLAY_AFFINITY(affinity));
-    }
+    let _ = capture_affinity::set_affinity(hwnd, affinity);
+}
+
+// Native pre-show hooks call these before using the affinity API trampoline.
+#[no_mangle]
+pub extern "C" fn HmwSuppressCaptureTransitions(hwnd: HWND) -> BOOL {
+    BOOL::from(capture_affinity::suppress_transitions(hwnd))
+}
+
+#[no_mangle]
+pub extern "C" fn HmwRestoreCaptureTransitions(hwnd: HWND) {
+    capture_affinity::restore_transitions(hwnd);
 }
 
 fn set_all_windows(hidden: bool) {

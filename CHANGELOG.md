@@ -3,6 +3,32 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.1.1] — 2026-10-08
+
+### Fixed
+- **Work around black rectangles when minimizing a capture-hidden window while
+  another app has focus.** Protected windows now disable their own DWM
+  minimize/restore transitions before capture exclusion is applied. Capture
+  exclusion remains active throughout minimizing and restoring. Unhiding a
+  window restores normal transitions; Windows' global animation settings are
+  unchanged. The workaround covers window hides, process hides, automatic
+  normal-launch protection, toast hides and the controller's own windows.
+- Repeated hide requests avoid resetting display affinity or reapplying the
+  transition override. Failed exclusion rolls back newly applied overrides.
+- Windows regression checks exercise inactive minimizing through synchronous,
+  asynchronous and system-command paths, restore, repeated hides and unhide
+  cleanup on x64 and x86. Existing pre-show and desktop-capture checks also
+  verify transition suppression on newly protected windows.
+- Releases now run the full Windows validation workflow before building and
+  publishing installers. Explicit `release/v*` branches can start a release.
+
+### Compatibility
+- Restart protected apps after updating to load the new payload. Capture-hidden
+  windows minimize and restore without DWM transition animations. The local
+  artifact itself is excluded from screenshots, so regression checks verify
+  the transition policy and uninterrupted protection; a physical Windows 11
+  desktop is needed to confirm the original intermittent visual symptom.
+
 ## [2.1.0] — 2026-10-08
 
 ### Added
