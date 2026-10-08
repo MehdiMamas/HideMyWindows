@@ -7,8 +7,8 @@
 //! The host (HideMyWindows.exe) injects this DLL and then starts remote threads
 //! at the exported functions below; the HWND an action needs is passed directly
 //! as the thread parameter. A lightweight background worker re-applies the
-//! "hide all" state so windows created later are hidden too — replacing the old
-//! API-hooking approach with something far simpler and more robust.
+//! "hide all" state as a recovery check. Native pre-show interception protects
+//! newly created windows before visibility instead of waiting for that worker.
 #![cfg(windows)]
 
 use core::ffi::c_void;
@@ -28,6 +28,14 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 
 mod toasts;
+
+extern "C" {
+    fn HmwInstallHooks() -> u32;
+    fn HmwEnableHooks(enabled: BOOL);
+    fn HmwRecoverProtection(hwnd: HWND);
+    fn HmwReplayPendingShow(hwnd: HWND);
+    fn HmwHookFailure() -> u32;
+}
 
 /// Whether "hide all windows of this process" is currently active.
 static HIDING: AtomicBool = AtomicBool::new(false);
@@ -61,8 +69,13 @@ unsafe extern "system" fn apply_cb(hwnd: HWND, lparam: LPARAM) -> BOOL {
     let ctx = &*(lparam.0 as *const EnumCtx);
     let mut pid = 0u32;
     GetWindowThreadProcessId(hwnd, Some(&mut pid));
-    if pid == ctx.pid && IsWindowVisible(hwnd).as_bool() {
-        set_affinity(hwnd, ctx.affinity);
+    if pid == ctx.pid {
+        if ctx.affinity == WDA_EXCLUDEFROMCAPTURE.0 {
+            HmwRecoverProtection(hwnd);
+        } else {
+            set_affinity(hwnd, ctx.affinity);
+        }
+        HmwReplayPendingShow(hwnd);
     }
     TRUE
 }
@@ -220,6 +233,13 @@ fn set_tray(hwnd_param: *mut c_void, visible: bool) {
 
 #[no_mangle]
 pub extern "system" fn HmwHideAll(_param: *mut c_void) -> u32 {
+    let error = unsafe { HmwInstallHooks() };
+    if error != 0 {
+        return error;
+    }
+    unsafe {
+        HmwEnableHooks(TRUE);
+    }
     HIDING.store(true, Ordering::SeqCst);
     ensure_worker();
     apply_hiding_flag();
@@ -228,9 +248,25 @@ pub extern "system" fn HmwHideAll(_param: *mut c_void) -> u32 {
 
 #[no_mangle]
 pub extern "system" fn HmwUnhideAll(_param: *mut c_void) -> u32 {
+    // Initialization can be absent when cleanup only loaded this DLL. The
+    // native helper is a no-op until its installation succeeds.
+    unsafe {
+        HmwEnableHooks(BOOL(0));
+    }
     HIDING.store(false, Ordering::SeqCst);
     apply_hiding_flag();
     0
+}
+
+/// Readiness is explicit: a polling-only payload is not sufficient for launch.
+#[no_mangle]
+pub extern "system" fn HmwPrepareProtection(_param: *mut c_void) -> u32 {
+    unsafe { HmwInstallHooks() }
+}
+
+#[no_mangle]
+pub extern "system" fn HmwCheckProtection(_param: *mut c_void) -> u32 {
+    unsafe { HmwHookFailure() }
 }
 
 #[no_mangle]

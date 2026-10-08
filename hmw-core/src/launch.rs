@@ -3,11 +3,12 @@
 
 use crate::hider::apply_to_process;
 use crate::model::HideAction;
+use crate::process::SafeHandle;
 use crate::{Error, Result};
 use windows::core::PWSTR;
-use windows::Win32::Foundation::CloseHandle;
 use windows::Win32::System::Threading::{
-    CreateProcessW, ResumeThread, CREATE_SUSPENDED, PROCESS_INFORMATION, STARTUPINFOW,
+    CreateProcessW, ResumeThread, TerminateProcess, CREATE_SUSPENDED, PROCESS_INFORMATION,
+    STARTUPINFOW,
 };
 
 fn to_wide(s: &str) -> Vec<u16> {
@@ -59,16 +60,23 @@ pub fn launch_hidden(path: &str, arguments: &str, payload_path: &str) -> Result<
     }
 
     let pid = info.dwProcessId;
+    let process = SafeHandle(info.hProcess);
+    let thread = SafeHandle(info.hThread);
 
     // Hide before the app's main thread gets to run and draw.
-    let hide_result = apply_to_process(pid, HideAction::HideProcessWindows, payload_path);
-
-    unsafe {
-        ResumeThread(info.hThread);
-        let _ = CloseHandle(info.hThread);
-        let _ = CloseHandle(info.hProcess);
+    if let Err(error) = apply_to_process(pid, HideAction::HideProcessWindows, payload_path) {
+        unsafe {
+            let _ = TerminateProcess(process.0, 1);
+        }
+        return Err(Error(format!(
+            "Protected launch stopped before the app could start: {error}"
+        )));
     }
-
-    hide_result?;
+    if unsafe { ResumeThread(thread.0) } == u32::MAX {
+        unsafe {
+            let _ = TerminateProcess(process.0, 1);
+        }
+        return Err(Error("Protected launch could not resume the app".into()));
+    }
     Ok(pid)
 }

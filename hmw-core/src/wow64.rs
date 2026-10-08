@@ -24,6 +24,8 @@ pub fn supports_export(export: &str) -> bool {
             | "HmwUnhideTray"
             | "HmwHideToasts"
             | "HmwUnhideToasts"
+            | "HmwPrepareProtection"
+            | "HmwCheckProtection"
     )
 }
 

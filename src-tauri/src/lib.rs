@@ -244,6 +244,7 @@ fn apply_self_visibility(app: &AppHandle, hidden: bool) {
 
 #[cfg(windows)]
 fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
+    hmw_core::rule_events::start(app.state::<AppState>().rules_wake.clone());
     std::thread::spawn(move || {
         let payload = match payload_path(&app) {
             Ok(p) => p,

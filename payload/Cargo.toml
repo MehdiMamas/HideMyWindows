@@ -8,6 +8,9 @@ license.workspace = true
 name = "hmw_payload"
 crate-type = ["cdylib"]
 
+[build-dependencies]
+cc = "1"
+
 [target.'cfg(windows)'.dependencies.windows]
 workspace = true
 features = [

@@ -27,6 +27,8 @@ pub mod notifications;
 #[cfg(windows)]
 pub mod process;
 #[cfg(windows)]
+pub mod rule_events;
+#[cfg(windows)]
 pub mod watcher;
 #[cfg(windows)]
 pub mod window;

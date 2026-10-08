@@ -11,7 +11,7 @@
 
 use crate::hider::{apply_to_process, apply_to_window};
 use crate::model::{HideAction, RuleTarget, WindowRule};
-use crate::process::{process_is_alive, process_name};
+use crate::process::{list_processes, process_is_alive, process_name};
 use crate::window::{list_top_windows, window_is_alive, window_pid, TopWindow};
 use std::collections::{HashMap, HashSet};
 
@@ -114,6 +114,13 @@ impl RuleSession {
         let outcome = apply_hides(&desired, &self.applied, payload_path);
         errors.extend(outcome.errors);
         self.applied = outcome.kept;
+        for &pid in &self.applied.processes {
+            if let Err(error) = crate::hider::check_protection(pid, payload_path) {
+                if process_is_alive(pid) {
+                    errors.push(format!("Process {pid}: {}", error.0));
+                }
+            }
+        }
         errors
     }
 }
@@ -137,6 +144,32 @@ fn evaluate(
         .iter()
         .filter(|r| r.enabled && !r.value.is_empty() && (!persistent_only || r.persistent))
         .collect();
+
+    // Process rules do not need to wait for a first visible window. This also
+    // retains protection while an app has temporarily closed all its windows.
+    if let Ok(processes) = list_processes() {
+        for process in processes {
+            for rule in &active {
+                let value = match rule.target {
+                    RuleTarget::ProcessName => process.name.clone(),
+                    RuleTarget::ProcessId => process.pid.to_string(),
+                    _ => continue,
+                };
+                if !rule.matches(&value) {
+                    continue;
+                }
+                match rule.action {
+                    HideAction::HideProcessWindows => {
+                        desired.processes.insert(process.pid);
+                    }
+                    HideAction::UnhideProcessWindows => {
+                        unhides.push(UnhideOp::Process(process.pid))
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
 
     for w in windows {
         for rule in &active {
