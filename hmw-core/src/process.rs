@@ -104,6 +104,23 @@ pub fn process_name(pid: u32) -> Option<String> {
     })
 }
 
+/// Background services and other sign-in sessions cannot create windows on
+/// this user's desktop. Do not inject them while anticipating UI processes.
+pub fn in_current_session(pid: u32) -> bool {
+    use windows::Win32::System::RemoteDesktop::ProcessIdToSessionId;
+    unsafe {
+        let mut target = 0;
+        let mut current = 0;
+        ProcessIdToSessionId(pid, &mut target).is_ok()
+            && ProcessIdToSessionId(
+                windows::Win32::System::Threading::GetCurrentProcessId(),
+                &mut current,
+            )
+            .is_ok()
+            && target == current
+    }
+}
+
 /// True if the target process is 64-bit (always false on a 32-bit OS).
 pub fn is_process_64bit(handle: HANDLE) -> Result<bool> {
     if !is_os_64bit() {

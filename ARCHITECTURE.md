@@ -37,7 +37,7 @@ be called **by a thread inside the window's owning process**.
 
 ## Injecting the payload
 
-A classic, well-documented loader — no API hooking:
+The loader uses the standard remote-thread mechanism:
 
 1. `OpenProcess` with the rights needed to allocate memory and create a thread.
 2. Write the payload's path into the target with `VirtualAllocEx` +
@@ -48,9 +48,20 @@ A classic, well-documented loader — no API hooking:
    `CreateRemoteThread` at that address. The HWND an action needs is passed
    directly as the thread parameter — no extra remote allocation.
 
-The payload starts a lightweight background thread that re-applies the
-"hide all" state, so windows created later are hidden too. This replaces the old
-`CreateWindowEx` API hook with something far simpler and more robust.
+Process hiding installs a pinned Microsoft Detours engine (MIT, x86/x64/ARM64)
+for CreateWindowExW/A, ShowWindow/ShowWindowAsync, SetWindowPos,
+DeferWindowPos and SetWindowDisplayAffinity. Creation strips initial WS_VISIBLE
+until capture exclusion is verified; show paths refuse visibility on failure.
+A 300 ms worker remains for recovery, including safely replaying blocked show
+requests once protection succeeds. Hooks remain installed but pass through
+while process hiding is disabled.
+
+Quick Launch creates the process suspended, requires HmwPrepareProtection and
+HmwHideAll to finish successfully, then resumes the primary thread. Failure
+terminates that launch. Older injected DLLs without the readiness export require
+a target restart. Capture tests include pre-visibility affinity checks and actual
+GDI desktop frames, with visible controls, on x64/x86. This does not guarantee
+all capture/rendering APIs or separately launched child processes.
 
 The x64 controller routes x86 targets through its bundled x86 helper and x86
 payload. Each injector still runs in the same architecture as its target.
@@ -69,8 +80,11 @@ The controller retains one rule-status snapshot, reads capture affinity to
 count verified hides, and emits changes. The frontend keeps one notification
 for changed failures and shows all details in Window rules.
 
-This polling approach needs **no administrator rights** (the old WMI watcher
-sometimes did).
+WinEvent creation/show notifications wake discovery; timers remain a fallback.
+Process-name/PID rules enumerate processes in the current session before windows
+appear. These asynchronous events reduce ordinary launch latency but cannot
+guarantee exclusion before first paint; Quick Launch and process-level protection
+are the intended pre-show path. Elevated targets still need matching privileges.
 
 ## Config
 

@@ -3,6 +3,31 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.10] — 2026-10-07
+
+### Fixed
+- **Pre-show protection for process hides.** Protected processes intercept
+  standard Windows creation, show, asynchronous show and positioning paths,
+  applying and verifying capture exclusion before visibility. App attempts to
+  reset affinity remain excluded. Polling remains a recovery mechanism.
+  Windows whose protection cannot be confirmed stay locally invisible, with
+  failures reported in the rule result.
+- **Quick Launch stops on protection failure.** The primary thread is resumed
+  only after the new payload reports readiness and process protection is armed.
+  A failed protected launch is terminated while still suspended.
+- **Faster rule discovery.** Window events wake discovery promptly, and
+  process-name/PID rules can protect UI processes before their first window.
+  Background services and other user sessions are omitted.
+
+### Compatibility
+- Restart target apps after updating to replace older, polling-only payloads.
+- Ordinary launches still have a race before rule discovery; use Quick Launch
+  and process-level hiding for the strongest protection. Window title/class
+  rules cannot know a future window before it exists. Tests cover x64/x86
+  desktop captures through the standard APIs; alternate renderers, native API
+  bypasses and windows in separately launched child processes need separate
+  validation/protection.
+
 ## [2.0.9] — 2026-10-07
 
 ### Fixed

@@ -16,7 +16,7 @@
 use crate::process::{is_process_64bit, wide_to_string, SafeHandle};
 use crate::{Error, Result};
 use windows::core::PCWSTR;
-use windows::Win32::Foundation::{WAIT_FAILED, WAIT_OBJECT_0};
+use windows::Win32::Foundation::WAIT_OBJECT_0;
 use windows::Win32::System::Diagnostics::Debug::WriteProcessMemory;
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Module32FirstW, Module32NextW, MODULEENTRY32W, TH32CS_SNAPMODULE,
@@ -27,7 +27,7 @@ use windows::Win32::System::Memory::{
     VirtualAllocEx, VirtualFreeEx, MEM_COMMIT, MEM_RELEASE, MEM_RESERVE, PAGE_READWRITE,
 };
 use windows::Win32::System::Threading::{
-    CreateRemoteThread, GetExitCodeThread, OpenProcess, WaitForSingleObject, INFINITE,
+    CreateRemoteThread, GetExitCodeThread, OpenProcess, WaitForSingleObject,
     LPTHREAD_START_ROUTINE, PROCESS_CREATE_THREAD, PROCESS_QUERY_INFORMATION, PROCESS_VM_OPERATION,
     PROCESS_VM_READ, PROCESS_VM_WRITE,
 };
@@ -114,6 +114,7 @@ fn ensure_loaded(handle: &SafeHandle, pid: u32, payload_path: &str) -> Result<is
     if remote_mem.is_null() {
         return Err(Error("VirtualAllocEx failed".into()));
     }
+    let mut safe_to_free = true;
     let result = (|| -> Result<()> {
         unsafe {
             WriteProcessMemory(
@@ -136,8 +137,13 @@ fn ensure_loaded(handle: &SafeHandle, pid: u32, payload_path: &str) -> Result<is
         let thread =
             unsafe { CreateRemoteThread(handle.0, None, 0, start, Some(remote_mem), 0, None)? };
         let thread = SafeHandle(thread);
-        if unsafe { WaitForSingleObject(thread.0, INFINITE) } == WAIT_FAILED {
-            return Err(Error("WaitForSingleObject failed".into()));
+        if unsafe { WaitForSingleObject(thread.0, 10_000) } != WAIT_OBJECT_0 {
+            // The loader may still read this path. Keep it valid until the
+            // target exits; a failed Quick Launch terminates that target.
+            safe_to_free = false;
+            return Err(Error(
+                "The target did not load capture protection within 10 seconds".into(),
+            ));
         }
         let mut exit = 0u32;
         unsafe { GetExitCodeThread(thread.0, &mut exit)? };
@@ -149,8 +155,10 @@ fn ensure_loaded(handle: &SafeHandle, pid: u32, payload_path: &str) -> Result<is
         Ok(())
     })();
 
-    unsafe {
-        let _ = VirtualFreeEx(handle.0, remote_mem, 0, MEM_RELEASE);
+    if safe_to_free {
+        unsafe {
+            let _ = VirtualFreeEx(handle.0, remote_mem, 0, MEM_RELEASE);
+        }
     }
     result?;
 

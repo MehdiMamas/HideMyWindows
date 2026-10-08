@@ -57,11 +57,13 @@ static void remember_show(HWND hwnd, int cmd) {
 static BOOL WINAPI hook_show(HWND hwnd, int cmd) {
     if (cmd != SW_HIDE && !protect(hwnd)) { remember_show(hwnd, cmd); return FALSE; }
     RemovePropW(hwnd, pending);
+    if (cmd == SW_HIDE) RemovePropW(hwnd, failure);
     return real_show(hwnd, cmd);
 }
 static BOOL WINAPI hook_show_async(HWND hwnd, int cmd) {
     if (cmd != SW_HIDE && !protect(hwnd)) { remember_show(hwnd, cmd); return FALSE; }
     RemovePropW(hwnd, pending);
+    if (cmd == SW_HIDE) RemovePropW(hwnd, failure);
     return real_show_async(hwnd, cmd);
 }
 static BOOL WINAPI hook_pos(HWND hwnd, HWND after, int x, int y, int cx, int cy, UINT flags) {
@@ -187,5 +189,9 @@ extern "C" void HmwRecoverProtection(HWND hwnd) {
     if (enabled.load(std::memory_order_acquire) && top_level(hwnd) &&
         (IsWindowVisible(hwnd) || GetPropW(hwnd, pending))) {
         if (protect(hwnd)) HmwReplayPendingShow(hwnd);
+        else if (IsWindowVisible(hwnd)) {
+            real_show(hwnd, SW_HIDE);
+            remember_show(hwnd, SW_SHOWNOACTIVATE);
+        }
     }
 }

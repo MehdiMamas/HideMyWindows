@@ -149,6 +149,9 @@ fn evaluate(
     // retains protection while an app has temporarily closed all its windows.
     if let Ok(processes) = list_processes() {
         for process in processes {
+            if !crate::process::in_current_session(process.pid) {
+                continue;
+            }
             for rule in &active {
                 let value = match rule.target {
                     RuleTarget::ProcessName => process.name.clone(),
