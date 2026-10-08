@@ -27,7 +27,15 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WINDOW_DISPLAY_AFFINITY,
 };
 
+mod gate;
 mod toasts;
+// Compile the same platform-independent rule types and decision logic in the
+// payload without bringing the controller's injector into every hooked app.
+#[path = "../../hmw-core/src/gate_policy.rs"]
+mod gate_policy;
+#[path = "../../hmw-core/src/model.rs"]
+#[allow(dead_code)]
+mod model;
 
 extern "C" {
     fn HmwInstallHooks() -> u32;
@@ -35,6 +43,10 @@ extern "C" {
     fn HmwRecoverProtection(hwnd: HWND);
     fn HmwReplayPendingShow(hwnd: HWND);
     fn HmwHookFailure() -> u32;
+    fn HmwStartNormalGate(bytes: *const u8, len: u32, excluded_pid: u32) -> u32;
+    fn HmwUpdateNormalGate(bytes: *const u8, len: u32) -> u32;
+    fn HmwStopNormalGate();
+    fn HmwRecoverNormalWindows();
 }
 
 /// Whether "hide all windows of this process" is currently active.
@@ -182,6 +194,9 @@ fn ensure_worker() {
     // Safe to spawn here: exported functions run on their own remote thread,
     // not under the loader lock.
     std::thread::spawn(|| loop {
+        unsafe {
+            HmwRecoverNormalWindows();
+        }
         if HIDING.load(Ordering::SeqCst) {
             apply_hiding_flag();
         }
@@ -190,6 +205,28 @@ fn ensure_worker() {
         }
         std::thread::sleep(std::time::Duration::from_millis(300));
     });
+}
+
+#[no_mangle]
+pub extern "C" fn HmwEnsureGateWorker() {
+    ensure_worker();
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn HmwGateStart(bytes: *const u8, len: u32, excluded_pid: u32) -> u32 {
+    HmwStartNormalGate(bytes, len, excluded_pid)
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn HmwGateUpdate(bytes: *const u8, len: u32) -> u32 {
+    HmwUpdateNormalGate(bytes, len)
+}
+
+#[no_mangle]
+pub extern "system" fn HmwGateStop() {
+    unsafe {
+        HmwStopNormalGate();
+    }
 }
 
 fn set_single(hwnd_param: *mut c_void, hidden: bool) {

@@ -11,6 +11,7 @@ fn main() {
         .define("WIN32_LEAN_AND_MEAN", None)
         .define("NOMINMAX", None)
         .file("native/protection.cpp");
+    build.file("native/normal_gate.cpp");
     for file in [
         "detours",
         "modules",
@@ -29,4 +30,5 @@ fn main() {
         .flag_if_supported("/std:c++17")
         .warnings(false)
         .compile("hmw_protection");
+    println!("cargo:rustc-link-lib=comctl32");
 }

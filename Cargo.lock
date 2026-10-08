@@ -1520,6 +1520,9 @@ name = "hmw-payload"
 version = "2.0.10"
 dependencies = [
  "cc",
+ "regex",
+ "serde",
+ "serde_json",
  "windows 0.58.0",
 ]
 

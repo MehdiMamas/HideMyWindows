@@ -40,6 +40,7 @@ public static class FrameTarget {
  [DllImport("user32.dll")] static extern bool EndDeferWindowPos(IntPtr batch);
  [DllImport("user32.dll")] static extern bool DestroyWindow(IntPtr h);
  [DllImport("user32.dll")] static extern bool UpdateWindow(IntPtr h);
+ [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
  [DllImport("gdi32.dll")] static extern IntPtr CreateSolidBrush(uint color);
  static bool expectHidden, bad;
  static Proc callback = (h,m,w,l) => {
@@ -69,6 +70,10 @@ public static class FrameTarget {
   IntPtr displayed=IntPtr.Zero;
   timer.Tick+=(s,e)=> { string cmd; while(commands.TryDequeue(out cmd)) {
    if(cmd=="visible") { expectHidden=false; displayed=Make(2); }
+   if(cmd=="blocked") {
+    expectHidden=false; displayed=Make(2);
+    Console.WriteLine(IsWindowVisible(displayed) ? "HMW_EXPOSED" : "HMW_BLOCKED"); Console.Out.Flush();
+   }
    if(cmd=="destroy") { DestroyWindow(displayed); displayed=IntPtr.Zero; }
    if(cmd=="burst") {
     expectHidden=true; bad=false;
@@ -204,6 +209,128 @@ fn resources() -> PathBuf {
         .parent()
         .unwrap()
         .join("src-tauri/resources")
+}
+
+#[test]
+fn ordinary_launches_are_gated_without_a_watcher_or_quick_launch() {
+    use hmw_core::{Config, RuleComparator, RuleTarget, WindowRule};
+    let resources = resources();
+    hmw_core::wow64::configure(
+        resources.join("hmw-release-x86.exe"),
+        resources.join("hmw_payload_x86.dll"),
+    );
+    let payload = resources
+        .join("hmw_payload.dll")
+        .to_string_lossy()
+        .into_owned();
+    let rule = WindowRule {
+        id: "normal-gate".into(),
+        target: RuleTarget::WindowClass,
+        comparator: RuleComparator::Equals,
+        value: "HmwFrameFixture".into(),
+        action: HideAction::HideWindow,
+        enabled: true,
+        persistent: false,
+    };
+    let config_path =
+        std::env::temp_dir().join(format!("hmw-normal-gate-{}.json", std::process::id()));
+    let mut config = Config::default();
+    config.save(&config_path).unwrap();
+    let mut gate =
+        hmw_core::normal_gate::WindowGate::start(&payload, &[], std::process::id()).unwrap();
+    let x86_gate = hmw_core::wow64::start_gate(&config_path).unwrap();
+    // Establish a visible control before introducing a rule.
+    {
+        let mut target = Target::start(false);
+        target.command("visible");
+        let until = Instant::now() + Duration::from_secs(3);
+        while !captured_secret() {
+            assert!(
+                Instant::now() < until,
+                "unmatched normal launch was not visible in capture"
+            );
+            std::thread::sleep(Duration::from_millis(15));
+        }
+        target.command("destroy");
+    }
+    config.window_rules = vec![rule];
+    config.save(&config_path).unwrap();
+    gate.update(&config.window_rules).unwrap();
+    // The helper acknowledges startup; subsequent on-disk updates poll at 200 ms.
+    std::thread::sleep(Duration::from_millis(450));
+    for x86 in [false, true] {
+        // An ordinary CreateProcess launch: no injection call and no watcher.
+        let mut target = Target::start(x86);
+        let stop = Arc::new(AtomicBool::new(false));
+        let leaked = Arc::new(AtomicBool::new(false));
+        let frames = Arc::new(AtomicUsize::new(0));
+        let (s, l, f) = (stop.clone(), leaked.clone(), frames.clone());
+        let recorder = std::thread::spawn(move || {
+            while !s.load(Ordering::SeqCst) {
+                if captured_secret() {
+                    l.store(true, Ordering::SeqCst);
+                }
+                f.fetch_add(1, Ordering::SeqCst);
+                std::thread::sleep(Duration::from_millis(8));
+            }
+        });
+        target.command("burst");
+        stop.store(true, Ordering::SeqCst);
+        recorder.join().unwrap();
+        assert!(frames.load(Ordering::SeqCst) > 50);
+        assert!(
+            !leaked.load(Ordering::SeqCst),
+            "ordinary launch leaked (x86={x86})"
+        );
+    }
+    // Simulate a corrupted/incomplete policy: a failed decision must keep the
+    // window locally invisible, and it must appear once the policy is repaired.
+    let mut target = Target::start(false);
+    unsafe {
+        use windows::core::{PCSTR, PCWSTR};
+        use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryW};
+        let path: Vec<u16> = payload.encode_utf16().chain(Some(0)).collect();
+        let module = LoadLibraryW(PCWSTR(path.as_ptr())).unwrap();
+        let update = GetProcAddress(module, PCSTR(c"HmwGateUpdate".as_ptr().cast())).unwrap();
+        let update: unsafe extern "system" fn(*const u8, u32) -> u32 = std::mem::transmute(update);
+        assert_eq!(update(b"[".as_ptr(), 1), 0);
+    }
+    target.send("blocked");
+    assert_eq!(
+        target.output.recv_timeout(Duration::from_secs(10)).unwrap(),
+        "HMW_BLOCKED"
+    );
+    target.ack();
+    assert!(
+        !hmw_core::normal_gate::blocked_windows().is_empty(),
+        "blocked window failure was not reported"
+    );
+    gate.update(&[]).unwrap();
+    let until = Instant::now() + Duration::from_secs(3);
+    while !captured_secret() {
+        assert!(
+            Instant::now() < until,
+            "repaired policy did not replay the blocked show"
+        );
+        std::thread::sleep(Duration::from_millis(15));
+    }
+    target.command("destroy");
+    // Stopping the controller releases normal-gate affinity in a surviving app.
+    gate.update(&config.window_rules).unwrap();
+    target.command("visible");
+    assert!(!captured_secret());
+    drop(gate);
+    drop(x86_gate);
+    let until = Instant::now() + Duration::from_secs(3);
+    while !captured_secret() {
+        assert!(
+            Instant::now() < until,
+            "stopping the gate did not restore recording"
+        );
+        std::thread::sleep(Duration::from_millis(15));
+    }
+    target.command("destroy");
+    let _ = std::fs::remove_file(config_path);
 }
 
 #[test]

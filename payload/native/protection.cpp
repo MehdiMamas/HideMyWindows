@@ -19,6 +19,10 @@ static auto real_show_async = ShowWindowAsync;
 static auto real_pos = SetWindowPos;
 static auto real_defer = DeferWindowPos;
 static auto real_affinity = SetWindowDisplayAffinity;
+extern "C" DWORD HmwInstallHooks();
+extern "C" int HmwNormalGateDecision(HWND);
+extern "C" void HmwRememberGateAffinity(HWND, DWORD);
+extern "C" void HmwRestoreGateAffinity(HWND);
 
 static bool top_level(HWND hwnd) {
     DWORD pid = 0;
@@ -29,13 +33,29 @@ static bool top_level(HWND hwnd) {
 
 // Called before visibility, not after a timer observes a painted window.
 static bool protect(HWND hwnd) {
-    if (!enabled.load(std::memory_order_acquire) || !top_level(hwnd)) return true;
+    if (!top_level(hwnd)) return true;
+    int normal = HmwNormalGateDecision(hwnd);
+    if (normal < 0) {
+        SetPropW(hwnd, failure, reinterpret_cast<HANDLE>(ERROR_RETRY));
+        return false;
+    }
+    // Initialize the lock and API trampolines before any synchronous decision.
+    if (!enabled.load(std::memory_order_acquire) && normal == 0) {
+        HmwRestoreGateAffinity(hwnd);
+        RemovePropW(hwnd, failure);
+        return true;
+    }
+    if (HmwInstallHooks() != NO_ERROR) {
+        SetPropW(hwnd, failure, reinterpret_cast<HANDLE>(static_cast<ULONG_PTR>(install_error)));
+        return false;
+    }
     EnterCriticalSection(&gate);
     bool ok = true;
-    if (enabled.load(std::memory_order_relaxed)) {
+    if (enabled.load(std::memory_order_relaxed) || normal > 0) {
         DWORD affinity = 0;
         ok = GetWindowDisplayAffinity(hwnd, &affinity) && affinity == WDA_EXCLUDEFROMCAPTURE;
         if (!ok) {
+            if (normal > 0) HmwRememberGateAffinity(hwnd, affinity);
             ok = real_affinity(hwnd, WDA_EXCLUDEFROMCAPTURE) &&
                 GetWindowDisplayAffinity(hwnd, &affinity) && affinity == WDA_EXCLUDEFROMCAPTURE;
         }
@@ -82,7 +102,7 @@ static HDWP WINAPI hook_defer(HDWP batch, HWND hwnd, HWND after, int x, int y, i
 }
 static BOOL WINAPI hook_affinity(HWND hwnd, DWORD affinity) {
     EnterCriticalSection(&gate);
-    if (enabled.load(std::memory_order_relaxed) && top_level(hwnd)) {
+    if (top_level(hwnd) && (enabled.load(std::memory_order_relaxed) || HmwNormalGateDecision(hwnd) > 0)) {
         affinity = WDA_EXCLUDEFROMCAPTURE;
         DWORD current = 0;
         if (GetWindowDisplayAffinity(hwnd, &current) && current == affinity) {
@@ -174,7 +194,7 @@ extern "C" BOOL HmwProtectBeforeShow(HWND hwnd) { return protect(hwnd); }
 extern "C" void HmwReplayPendingShow(HWND hwnd) {
     HANDLE queued = GetPropW(hwnd, pending);
     if (!queued) return;
-    if (enabled.load(std::memory_order_acquire) && !protect(hwnd)) return;
+    if (!protect(hwnd)) return;
     RemovePropW(hwnd, pending);
     RemovePropW(hwnd, failure);
     real_show(hwnd, static_cast<int>(reinterpret_cast<INT_PTR>(queued)) - 1);

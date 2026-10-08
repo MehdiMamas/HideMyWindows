@@ -11,6 +11,11 @@ crate-type = ["cdylib"]
 [build-dependencies]
 cc = "1"
 
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+regex = { version = "1", default-features = false, features = ["std", "unicode-perl"] }
+
 [target.'cfg(windows)'.dependencies.windows]
 workspace = true
 features = [

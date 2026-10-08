@@ -6,6 +6,7 @@
 //! type-checks and documents on other platforms.
 
 pub mod config;
+pub mod gate_policy;
 pub mod model;
 pub mod rule_status;
 
@@ -22,6 +23,8 @@ pub mod hider;
 pub mod inject;
 #[cfg(windows)]
 pub mod launch;
+#[cfg(windows)]
+pub mod normal_gate;
 #[cfg(windows)]
 pub mod notifications;
 #[cfg(windows)]

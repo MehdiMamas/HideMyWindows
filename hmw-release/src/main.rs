@@ -12,6 +12,15 @@ fn main() {
     #[cfg(windows)]
     {
         let args: Vec<String> = std::env::args().skip(1).collect();
+        if args.first().is_some_and(|arg| arg == "--normal-gate") {
+            match hmw_core::wow64::run_gate(&args[1..]) {
+                Ok(()) => std::process::exit(0),
+                Err(error) => {
+                    eprintln!("{error}");
+                    std::process::exit(1);
+                }
+            }
+        }
         if args.first().is_some_and(|arg| arg == "--call-export") {
             match hmw_core::wow64::run_call(&args[1..]) {
                 Ok(()) => std::process::exit(0),

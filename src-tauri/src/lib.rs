@@ -267,6 +267,17 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
         let mut notification_errors = Vec::new();
         let mut full_errors = Vec::new();
         let mut session = hmw_core::watcher::RuleSession::new();
+        let initial = app
+            .state::<AppState>()
+            .config
+            .lock()
+            .unwrap()
+            .window_rules
+            .clone();
+        let mut gate =
+            hmw_core::normal_gate::WindowGate::start(&payload, &initial, std::process::id());
+        #[cfg(target_arch = "x86_64")]
+        let mut x86_gate = hmw_core::wow64::start_gate(&app.state::<AppState>().config_path);
         // Startup applies every saved rule without waiting for the timer.
         let mut full = true;
         loop {
@@ -309,6 +320,26 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
                 errors
             };
             errors.extend(notification_errors.iter().cloned());
+            match &mut gate {
+                Ok(gate) => {
+                    if let Err(error) = gate.update(&rules) {
+                        errors.push(format!("Normal-launch gate: {error}"));
+                    }
+                }
+                Err(error) => errors.push(format!("Normal-launch gate unavailable: {error}")),
+            }
+            #[cfg(target_arch = "x86_64")]
+            match &mut x86_gate {
+                Ok(gate) => {
+                    if let Err(error) = gate.check() {
+                        errors.push(format!("32-bit normal-launch gate: {error}"));
+                    }
+                }
+                Err(error) => {
+                    errors.push(format!("32-bit normal-launch gate unavailable: {error}"))
+                }
+            }
+            errors.extend(hmw_core::normal_gate::blocked_windows());
             // A launch can pass readiness but later encounter an unsupported
             // window. Keep it invisible and report that failure too.
             let launched: Vec<u32> = {
