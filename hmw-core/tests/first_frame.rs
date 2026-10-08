@@ -356,6 +356,25 @@ fn inactive_minimize_and_restore_keep_x64_and_x86_windows_protected() {
                 !captured_secret(),
                 "tray restoration exposed protected pixels"
             );
+            if matches!(hide, HideAction::HideProcessWindows) {
+                // A single-window unhide cannot override an active process
+                // rule, including while the surface is locally invisible.
+                target.command("hide-local");
+                wait_for_local_cloak(hwnd, true);
+                hmw_core::hider::apply_to_window(
+                    hwnd.0 as isize,
+                    HideAction::UnhideWindow,
+                    &payload,
+                )
+                .unwrap();
+                assert!(
+                    !unsafe { GetPropW(hwnd, w!("HideMyWindows.CaptureTransitions")) }.is_invalid()
+                );
+                wait_for_local_cloak(hwnd, true);
+                target.command("restore");
+                wait_for_local_cloak(hwnd, false);
+                assert!(hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
+            }
             // Turning protection off while minimized must release our cloak;
             // the target remains minimized and can be restored normally.
             target.command("minimize");
@@ -366,6 +385,16 @@ fn inactive_minimize_and_restore_keep_x64_and_x86_windows_protected() {
             assert!(unsafe { GetPropW(hwnd, w!("HideMyWindows.CaptureTransitions")) }.is_invalid());
             assert!(unsafe { IsIconic(hwnd) }.as_bool());
             target.command("restore");
+            // An invisible HWND can report affinity zero even while it still
+            // retains protection for restoration. Explicit unhide must write
+            // the API rather than treating that query as a no-op.
+            hmw_core::hider::apply_to_window(hwnd.0 as isize, hide, &payload).unwrap();
+            target.command("hide-local");
+            wait_for_local_cloak(hwnd, true);
+            hmw_core::hider::apply_to_window(hwnd.0 as isize, unhide, &payload).unwrap();
+            wait_for_local_cloak(hwnd, false);
+            target.command("restore");
+            assert!(!hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
         }
     }
 }

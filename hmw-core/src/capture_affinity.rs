@@ -100,9 +100,8 @@ pub fn set_affinity(hwnd: HWND, affinity: u32) -> windows::core::Result<()> {
         // A process-hide hook can override an unhide request. Keep transitions
         // suppressed until exclusion actually ends, including no-op updates.
         if affinity != WDA_EXCLUDEFROMCAPTURE.0
-            && ((!IsWindowVisible(hwnd).as_bool())
-                || (GetWindowDisplayAffinity(hwnd, &mut current).is_ok()
-                    && current != WDA_EXCLUDEFROMCAPTURE.0))
+            && GetWindowDisplayAffinity(hwnd, &mut current).is_ok()
+            && current != WDA_EXCLUDEFROMCAPTURE.0
         {
             restore_transitions(hwnd);
         }
