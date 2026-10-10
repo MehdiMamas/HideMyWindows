@@ -3,6 +3,34 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] — 2026-10-10
+
+### Added
+- **Control protection before apps appear.** Settings now lets you turn the
+  global normal-launch gate on or off, or pause it for 15, 30, 60 or 120 minutes.
+  The default pause is 30 minutes; **Resume now** ends a pause early.
+- Both the native and bundled 32-bit global gates stop during a pause. Protection
+  resumes automatically at the saved deadline, including while the app is in
+  the tray. Restarting HideMyWindows preserves the remaining pause.
+- A visible status shows the remaining time and reflects actual gate shutdown,
+  startup and installation failures. New controls are translated into all five
+  supported languages. Existing installations keep protection enabled.
+- Regression coverage checks saved deadlines, permanent disabling, automatic
+  resume, both-gate teardown, failed saves, and native x64/x86 launches without
+  a global-hook DLL while paused.
+
+### Compatibility
+- Pause and wait for the paused status before launching a game. If the game
+  was already running, restart it: a pause cannot unload a DLL already loaded
+  into another application. Automatic resume reinstalls hooks even if the
+  game is still running; choose a suitable duration or turn protection off.
+- Rule polling, targeted hiding, notification protection and Quick Launch
+  remain available. Ordinary launches lose first-frame capture protection
+  while the global gate is off or paused. Avoid rules targeting the game or
+  its launcher. The exact reported anti-cheat conflict has not been reproduced.
+- Includes the stable 2.1.1 fixes; does not include the separate 2.1.2-rc.1
+  experimental minimized-window cloaking changes.
+
 ## [2.1.1] — 2026-10-08
 
 ### Fixed
