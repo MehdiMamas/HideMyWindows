@@ -23,6 +23,8 @@ extern "C" DWORD HmwInstallHooks();
 extern "C" int HmwNormalGateDecision(HWND);
 extern "C" void HmwRememberGateAffinity(HWND, DWORD);
 extern "C" void HmwRestoreGateAffinity(HWND);
+extern "C" BOOL HmwSuppressCaptureTransitions(HWND);
+extern "C" void HmwRestoreCaptureTransitions(HWND);
 
 static bool top_level(HWND hwnd) {
     DWORD pid = 0;
@@ -53,6 +55,9 @@ static bool protect(HWND hwnd) {
     bool ok = true;
     if (enabled.load(std::memory_order_relaxed) || normal > 0) {
         DWORD affinity = 0;
+        // Exclusion stays armed throughout minimize/restore. DWM must not
+        // animate a capture-excluded surface, especially behind another app.
+        BOOL transition_added = HmwSuppressCaptureTransitions(hwnd);
         ok = GetWindowDisplayAffinity(hwnd, &affinity) && affinity == WDA_EXCLUDEFROMCAPTURE;
         if (!ok) {
             if (normal > 0) HmwRememberGateAffinity(hwnd, affinity);
@@ -62,6 +67,7 @@ static bool protect(HWND hwnd) {
         if (ok) RemovePropW(hwnd, failure);
         else {
             DWORD error = GetLastError();
+            if (transition_added) HmwRestoreCaptureTransitions(hwnd);
             SetPropW(hwnd, failure, reinterpret_cast<HANDLE>(static_cast<ULONG_PTR>(error ? error : ERROR_ACCESS_DENIED)));
         }
     }
@@ -104,14 +110,17 @@ static BOOL WINAPI hook_affinity(HWND hwnd, DWORD affinity) {
     EnterCriticalSection(&gate);
     if (top_level(hwnd) && (enabled.load(std::memory_order_relaxed) || HmwNormalGateDecision(hwnd) > 0)) {
         affinity = WDA_EXCLUDEFROMCAPTURE;
-        DWORD current = 0;
-        if (GetWindowDisplayAffinity(hwnd, &current) && current == affinity) {
-            LeaveCriticalSection(&gate);
-            return TRUE; // Avoid rebuilding the compositor's redacted surface.
-        }
     }
-    BOOL result = real_affinity(hwnd, affinity);
+    BOOL transition_added = affinity == WDA_EXCLUDEFROMCAPTURE && HmwSuppressCaptureTransitions(hwnd);
+    DWORD current = 0;
+    // Avoid rebuilding the compositor's redacted surface for no-op updates.
+    BOOL result = GetWindowDisplayAffinity(hwnd, &current) && current == affinity;
+    if (!result) result = real_affinity(hwnd, affinity);
+    DWORD error = GetLastError();
+    if ((result && affinity != WDA_EXCLUDEFROMCAPTURE) || (!result && transition_added))
+        HmwRestoreCaptureTransitions(hwnd);
     LeaveCriticalSection(&gate);
+    SetLastError(error);
     return result;
 }
 

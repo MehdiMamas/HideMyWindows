@@ -34,6 +34,10 @@ public static class FrameTarget {
  [DllImport("user32.dll")] static extern bool SetWindowDisplayAffinity(IntPtr h,uint a);
  [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr h,int c);
  [DllImport("user32.dll")] static extern bool ShowWindowAsync(IntPtr h,int c);
+ [DllImport("user32.dll")] static extern IntPtr GetPropW(IntPtr h,[MarshalAs(UnmanagedType.LPWStr)] string name);
+ [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr h);
+ [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+ [DllImport("user32.dll")] static extern IntPtr SendMessageW(IntPtr h,uint m,IntPtr w,IntPtr l);
  [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h,IntPtr after,int x,int y,int w,int hh,uint flags);
  [DllImport("user32.dll")] static extern IntPtr BeginDeferWindowPos(int n);
  [DllImport("user32.dll")] static extern IntPtr DeferWindowPos(IntPtr batch,IntPtr h,IntPtr after,int x,int y,int w,int hh,uint flags);
@@ -46,6 +50,7 @@ public static class FrameTarget {
  static Proc callback = (h,m,w,l) => {
   if(m==0x18 && w!=IntPtr.Zero && expectHidden) {
    uint a; if(!GetWindowDisplayAffinity(h,out a) || a!=0x11) bad=true;
+   if(GetPropW(h,"HideMyWindows.CaptureTransitions")==IntPtr.Zero) bad=true;
   }
   return DefWindowProcW(h,m,w,l);
  };
@@ -70,6 +75,16 @@ public static class FrameTarget {
   IntPtr displayed=IntPtr.Zero;
   timer.Tick+=(s,e)=> { string cmd; while(commands.TryDequeue(out cmd)) {
    if(cmd=="visible") { expectHidden=false; displayed=Make(2); }
+   if(cmd=="handle") { Console.WriteLine("HMW_HWND:"+displayed.ToInt64()); Console.Out.Flush(); }
+   if(cmd=="focus") {
+    SetForegroundWindow(form.Handle);
+    Console.WriteLine(GetForegroundWindow()==form.Handle ? "HMW_FOCUSED" : "HMW_NO_FOCUS"); Console.Out.Flush();
+   }
+   if(cmd=="minimize") ShowWindow(displayed,6);
+   if(cmd=="minimize-noactivate") ShowWindow(displayed,7);
+   if(cmd=="minimize-async") ShowWindowAsync(displayed,6);
+   if(cmd=="minimize-system") SendMessageW(displayed,0x112,new IntPtr(0xf020),IntPtr.Zero);
+   if(cmd=="restore") ShowWindow(displayed,4);
    if(cmd=="blocked") {
     expectHidden=false; displayed=Make(2);
     Console.WriteLine(IsWindowVisible(displayed) ? "HMW_EXPOSED" : "HMW_BLOCKED"); Console.Out.Flush();
@@ -84,6 +99,7 @@ public static class FrameTarget {
      var until=DateTime.UtcNow.AddMilliseconds(45);
      while(DateTime.UtcNow<until) { Application.DoEvents(); Thread.Sleep(1); }
      uint a; if(!GetWindowDisplayAffinity(h,out a) || a!=0x11) bad=true;
+     if(GetPropW(h,"HideMyWindows.CaptureTransitions")==IntPtr.Zero) bad=true;
      DestroyWindow(h);
     }
     if(bad) throw new Exception("A window reached visibility without exclusion");
@@ -239,6 +255,85 @@ fn resources() -> PathBuf {
         .parent()
         .unwrap()
         .join("src-tauri/resources")
+}
+
+#[test]
+fn inactive_minimize_and_restore_keep_x64_and_x86_windows_protected() {
+    use windows::core::w;
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{GetPropW, IsIconic};
+    let resources = resources();
+    hmw_core::wow64::configure(
+        resources.join("hmw-release-x86.exe"),
+        resources.join("hmw_payload_x86.dll"),
+    );
+    let payload = resources
+        .join("hmw_payload.dll")
+        .to_string_lossy()
+        .into_owned();
+    // This second process supplies the foreground window while the protected
+    // target minimizes. Capture cannot see the local black artifact, so assert
+    // the DWM workaround is applied and affinity survives every state change.
+    let mut other_app = Target::start(false);
+    for x86 in [false, true] {
+        let mut target = Target::start(x86);
+        target.command("visible");
+        target.send("handle");
+        let line = target.output.recv_timeout(Duration::from_secs(10)).unwrap();
+        let hwnd = HWND(
+            line.strip_prefix("HMW_HWND:")
+                .unwrap()
+                .parse::<usize>()
+                .unwrap() as *mut _,
+        );
+        target.ack();
+        for (hide, unhide) in [
+            (HideAction::HideWindow, HideAction::UnhideWindow),
+            (
+                HideAction::HideProcessWindows,
+                HideAction::UnhideProcessWindows,
+            ),
+        ] {
+            hmw_core::hider::apply_to_window(hwnd.0 as isize, hide, &payload).unwrap();
+            // Reapplying a rule must not lose the transition-override marker.
+            hmw_core::hider::apply_to_window(hwnd.0 as isize, hide, &payload).unwrap();
+            for minimize in [
+                "minimize",
+                "minimize-noactivate",
+                "minimize-async",
+                "minimize-system",
+            ] {
+                other_app.send("focus");
+                assert_eq!(
+                    other_app
+                        .output
+                        .recv_timeout(Duration::from_secs(10))
+                        .unwrap(),
+                    "HMW_FOCUSED"
+                );
+                other_app.ack();
+                target.command(minimize);
+                let until = Instant::now() + Duration::from_secs(3);
+                while !unsafe { IsIconic(hwnd) }.as_bool() {
+                    assert!(
+                        Instant::now() < until,
+                        "target did not minimize (x86={x86}, {minimize})"
+                    );
+                    std::thread::sleep(Duration::from_millis(10));
+                }
+                assert!(hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
+                assert!(
+                    !unsafe { GetPropW(hwnd, w!("HideMyWindows.CaptureTransitions")) }.is_invalid()
+                );
+                target.command("restore");
+                assert!(!unsafe { IsIconic(hwnd) }.as_bool());
+                assert!(hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
+            }
+            hmw_core::hider::apply_to_window(hwnd.0 as isize, unhide, &payload).unwrap();
+            assert!(!hmw_core::window::is_capture_hidden(hwnd.0 as isize).unwrap());
+            assert!(unsafe { GetPropW(hwnd, w!("HideMyWindows.CaptureTransitions")) }.is_invalid());
+        }
+    }
 }
 
 #[test]

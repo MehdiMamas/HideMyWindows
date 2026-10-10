@@ -5,24 +5,21 @@ use crate::Result;
 use windows::Win32::Foundation::{BOOL, HWND, LPARAM, TRUE};
 use windows::Win32::UI::WindowsAndMessaging::{
     EnumWindows, GetClassNameW, GetWindowDisplayAffinity, GetWindowTextLengthW, GetWindowTextW,
-    GetWindowThreadProcessId, IsWindow, IsWindowVisible, SetWindowDisplayAffinity,
-    WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
+    GetWindowThreadProcessId, IsWindow, IsWindowVisible, WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
 };
 
 /// Hide or show a single window from screen capture.
 /// Returns an error if the OS rejected the call (e.g. unsupported build).
 pub fn set_capture_hidden(hwnd: isize, hidden: bool) -> Result<()> {
     let hwnd = HWND(hwnd as *mut core::ffi::c_void);
-    unsafe {
-        SetWindowDisplayAffinity(
-            hwnd,
-            if hidden {
-                WDA_EXCLUDEFROMCAPTURE
-            } else {
-                WDA_NONE
-            },
-        )?;
-    }
+    crate::capture_affinity::set_affinity(
+        hwnd,
+        if hidden {
+            WDA_EXCLUDEFROMCAPTURE.0
+        } else {
+            WDA_NONE.0
+        },
+    )?;
     Ok(())
 }
 
@@ -159,8 +156,8 @@ mod tests {
     use super::*;
     use windows::core::w;
     use windows::Win32::UI::WindowsAndMessaging::{
-        CreateWindowExW, DestroyWindow, CW_USEDEFAULT, WINDOW_EX_STYLE, WS_OVERLAPPEDWINDOW,
-        WS_VISIBLE,
+        CreateWindowExW, DestroyWindow, GetPropW, CW_USEDEFAULT, WINDOW_EX_STYLE,
+        WS_OVERLAPPEDWINDOW, WS_VISIBLE,
     };
 
     #[test]
@@ -197,18 +194,76 @@ mod tests {
             .expect("create test window")
         });
         let hwnd = window.0 .0 as isize;
+        let transition_marker = w!("HideMyWindows.CaptureTransitions");
         assert!(!is_capture_hidden(hwnd).unwrap());
+        assert!(unsafe { GetPropW(window.0, transition_marker) }.is_invalid());
         set_capture_hidden(hwnd, true).unwrap();
         assert!(is_capture_hidden(hwnd).unwrap());
+        assert!(!unsafe { GetPropW(window.0, transition_marker) }.is_invalid());
+        // A repeated hide must still restore cleanly with one unhide.
+        set_capture_hidden(hwnd, true).unwrap();
         assert_eq!(
             capture_snapshot().unwrap().windows.get(&hwnd),
             Some(&crate::model::CaptureStatus::Hidden)
         );
         set_capture_hidden(hwnd, false).unwrap();
         assert!(!is_capture_hidden(hwnd).unwrap());
+        assert!(unsafe { GetPropW(window.0, transition_marker) }.is_invalid());
         assert_eq!(
             capture_snapshot().unwrap().windows.get(&hwnd),
             Some(&crate::model::CaptureStatus::Visible)
+        );
+    }
+
+    #[test]
+    fn failed_child_window_hide_does_not_leave_a_transition_override() {
+        use windows::Win32::UI::WindowsAndMessaging::{GetPropW, WS_CHILD};
+        let parent = unsafe {
+            CreateWindowExW(
+                WINDOW_EX_STYLE(0),
+                w!("STATIC"),
+                w!("parent"),
+                WS_OVERLAPPEDWINDOW,
+                0,
+                0,
+                100,
+                100,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap()
+        };
+        let child = unsafe {
+            CreateWindowExW(
+                WINDOW_EX_STYLE(0),
+                w!("STATIC"),
+                w!("child"),
+                WS_CHILD,
+                0,
+                0,
+                50,
+                50,
+                parent,
+                None,
+                None,
+                None,
+            )
+            .unwrap()
+        };
+        let result = set_capture_hidden(child.0 as isize, true);
+        let marker = unsafe { GetPropW(child, w!("HideMyWindows.CaptureTransitions")) };
+        unsafe {
+            DestroyWindow(parent).unwrap();
+        }
+        assert!(
+            result.is_err(),
+            "child windows cannot have display affinity"
+        );
+        assert!(
+            marker.is_invalid(),
+            "failed exclusion must undo its transition hint"
         );
     }
 }

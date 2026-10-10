@@ -63,9 +63,14 @@ The installer lands in `src-tauri/target/release/bundle/nsis/`.
 
 ## Releases (CI)
 
-Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds x64, x86
-and ARM64 installers on GitHub's Windows runners and publishes them to a GitHub
-release automatically — so you don't need every toolchain locally.
+Pushing a `v*` tag or an explicit `release/v*` branch runs
+`.github/workflows/release.yml`. It first verifies the version and runs the
+complete Windows check workflow, then builds x64, x86 and ARM64 installers on
+GitHub's Windows runners. All three installers must succeed before publication.
+For example, a `release/v2.1.1` branch builds version 2.1.1 and creates its tag at
+the exact release commit. This also supports publishing through a GitHub
+connection that can create branches but cannot push tags. You do not need every
+toolchain locally.
 
 Installed copies check that release for updates. Signing uses a minisign key
 generated with `npm run tauri signer generate` and kept outside the repo. The

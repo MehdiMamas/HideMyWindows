@@ -1,12 +1,14 @@
 name: Release
 
 # Build Windows installers for x64, x86 and ARM64 and publish a GitHub release.
-# Triggered by pushing a version tag (e.g. v2.0.0) or run manually.
+# Triggered by a version tag, an explicit release/v* branch, or run manually.
 
 on:
   push:
     tags:
       - "v*"
+    branches:
+      - "release/v*"
   workflow_dispatch:
     inputs:
       tag:
@@ -17,8 +19,41 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify release version
+        id: version
+        env:
+          REQUESTED_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, tomllib
+          tag = os.environ['REQUESTED_TAG'].removeprefix('release/')
+          root = pathlib.Path('.')
+          version = json.loads((root / 'package.json').read_text())['version']
+          assert tag == f'v{version}', f'Tag {tag} does not match version {version}'
+          assert json.loads((root / 'src-tauri/tauri.conf.json').read_text())['version'] == version
+          assert tomllib.loads((root / 'Cargo.toml').read_text())['workspace']['package']['version'] == version
+          assert f'## [{version}]' in (root / 'CHANGELOG.md').read_text()
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'tag={tag}\n')
+          PY
+
+  validate:
+    needs: prepare
+    uses: ./.github/workflows/check.yml
+
   build:
+    needs: [prepare, validate]
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -78,8 +113,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.event.inputs.tag || github.ref_name }}
-          releaseName: "HideMyWindows ${{ github.event.inputs.tag || github.ref_name }}"
+          tagName: ${{ needs.prepare.outputs.tag }}
+          releaseCommitish: ${{ github.sha }}
+          releaseName: "HideMyWindows ${{ needs.prepare.outputs.tag }}"
           releaseBody: "See CHANGELOG.md for what changed. Download the installer for your architecture below."
           # Publish only after all three installers finish successfully.
           releaseDraft: true
@@ -87,14 +123,14 @@ jobs:
           args: --target ${{ matrix.target }}
 
   publish:
-    needs: build
+    needs: [prepare, build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Publish the complete release
         uses: actions/github-script@v7
         env:
-          RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
         with:
           script: |
             const fs = require('fs');
