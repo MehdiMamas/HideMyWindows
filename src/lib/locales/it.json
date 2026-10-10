@@ -172,5 +172,13 @@
       "error": "La protezione prima dell’apertura non è stata applicata completamente.",
       "unsupported": "La protezione prima dell’apertura richiede Windows."
     }
+  },
+  "tray": {
+    "show": "Mostra HideMyWindows",
+    "quit": "Esci",
+    "enable": "Attiva la protezione prima dell’apertura",
+    "disable": "Disattiva la protezione prima dell’apertura",
+    "pause": "Sospendi la protezione prima dell’apertura",
+    "remaining": "({minutes} min rimanenti)"
   }
 }

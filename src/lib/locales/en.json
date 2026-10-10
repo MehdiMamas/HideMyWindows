@@ -177,5 +177,13 @@
       "error": "Protection before apps appear could not be fully applied.",
       "unsupported": "Protection before apps appear requires Windows."
     }
+  },
+  "tray": {
+    "show": "Show HideMyWindows",
+    "quit": "Quit",
+    "enable": "Enable protection before apps appear",
+    "disable": "Disable protection before apps appear",
+    "pause": "Pause protection before apps appear",
+    "remaining": "({minutes} min remaining)"
   }
 }

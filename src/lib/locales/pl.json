@@ -172,5 +172,13 @@
       "error": "Nie udało się w pełni zastosować ochrony przed pojawieniem się aplikacji.",
       "unsupported": "Ochrona przed pojawieniem się aplikacji wymaga Windows."
     }
+  },
+  "tray": {
+    "show": "Pokaż HideMyWindows",
+    "quit": "Zakończ",
+    "enable": "Włącz ochronę przed pojawieniem się aplikacji",
+    "disable": "Wyłącz ochronę przed pojawieniem się aplikacji",
+    "pause": "Wstrzymaj ochronę przed pojawieniem się aplikacji",
+    "remaining": "(pozostało {minutes} min)"
   }
 }

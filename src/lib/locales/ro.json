@@ -172,5 +172,13 @@
       "error": "Protecția înainte de afișare nu a putut fi aplicată complet.",
       "unsupported": "Protecția înainte de afișare necesită Windows."
     }
+  },
+  "tray": {
+    "show": "Afișează HideMyWindows",
+    "quit": "Ieșire",
+    "enable": "Activează protecția înainte de afișare",
+    "disable": "Dezactivează protecția înainte de afișare",
+    "pause": "Suspendă protecția înainte de afișare",
+    "remaining": "({minutes} min rămase)"
   }
 }

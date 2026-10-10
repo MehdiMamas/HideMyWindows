@@ -1,11 +1,12 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { listen } from "@tauri-apps/api/event";
   import { t, locale, detectLocale } from "./lib/i18n.js";
   import { config, launchProtectionStatus, notify, applyTheme } from "./lib/stores.js";
   import { checkForUpdates } from "./lib/updater.js";
   import * as api from "./lib/api.js";
   import { updateRuleStatus } from "./lib/ruleStatus.js";
+  import { connectTrayEvents } from "./lib/trayEvents.js";
 
   import Dashboard from "./lib/pages/Dashboard.svelte";
   import QuickLaunch from "./lib/pages/QuickLaunch.svelte";
@@ -17,6 +18,9 @@
 
   let current = $state("home");
   let ready = $state(false);
+  let trayEvents;
+  let destroyed = false;
+  onDestroy(() => { destroyed = true; trayEvents?.stop(); });
 
   const nav = [
     { id: "home", key: "nav.home", comp: Dashboard, icon: "M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" },
@@ -30,10 +34,12 @@
 
   onMount(async () => {
     try {
+      trayEvents = await connectTrayEvents();
+      if (destroyed) { trayEvents.stop(); return; }
       const cfg = await api.getConfig();
-      config.set(cfg);
-      applyTheme(cfg.theme);
-      locale.set(detectLocale(cfg.language));
+      if (!trayEvents.receivedConfig()) config.set(cfg);
+      applyTheme($config.theme);
+      locale.set(detectLocale($config.language));
       checkForUpdates();
 
       // React to OS theme changes when following the system.

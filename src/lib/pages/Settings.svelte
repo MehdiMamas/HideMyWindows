@@ -11,6 +11,7 @@
   import TextField from "../components/TextField.svelte";
   import Button from "../components/Button.svelte";
   import LaunchProtectionStatus from "../components/LaunchProtectionStatus.svelte";
+  import { trayConfigRevision } from "../trayEvents.js";
 
   let pauseMinutes = $state("30");
   let savingProtection = $state(false);
@@ -28,12 +29,13 @@
     clearTimeout(timer);
     normalize();
     savingProtection = true;
+    const revision = trayConfigRevision();
     const next = { ...$config, normalLaunchProtection: enabled, normalLaunchPauseUntilMs: until };
     try {
       await api.saveConfig(next);
       // Publish only after a successful save. Runtime status comes from the
       // watcher, after both global gates have actually stopped or started.
-      config.set(next);
+      if (revision === trayConfigRevision()) config.set(next);
       notify($t("settings.saved"), "success");
     } catch (e) {
       notify(String(e), "error");

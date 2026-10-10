@@ -5,10 +5,13 @@ import Settings from "./Settings.svelte";
 import { config, launchProtectionStatus, toasts } from "../stores.js";
 import { locale } from "../i18n.js";
 import * as api from "../api.js";
+import { listen } from "@tauri-apps/api/event";
+import { connectTrayEvents } from "../trayEvents.js";
 
 vi.mock("../api.js", () => ({ saveConfig: vi.fn(), getConfigDir: vi.fn(), resetSettings: vi.fn() }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ ask: vi.fn() }));
 vi.mock("@tauri-apps/plugin-opener", () => ({ openPath: vi.fn() }));
+vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn() }));
 
 describe("ordinary-launch protection controls", () => {
   let component;
@@ -135,6 +138,27 @@ describe("ordinary-launch protection controls", () => {
     render();
     expect(target.textContent).toContain("could not be fully applied");
     expect(target.textContent).toContain("32-bit gate failed");
+  });
+
+  it("retains a newer tray change when a Settings save completes late", async () => {
+    let changed;
+    listen.mockImplementation(async (name, callback) => {
+      if (name === "config-changed") changed = callback;
+      return vi.fn();
+    });
+    const events = await connectTrayEvents();
+    let complete;
+    api.saveConfig.mockImplementation(() => new Promise((resolve) => { complete = resolve; }));
+    render();
+    button("Pause").click();
+    flushSync();
+    changed({ payload: { ...base, normalLaunchProtection: false, normalLaunchPauseUntilMs: 0 } });
+    complete();
+    await settle();
+    expect(get(config).normalLaunchProtection).toBe(false);
+    expect(get(config).normalLaunchPauseUntilMs).toBe(0);
+    expect(button("Pause").disabled).toBe(true);
+    events.stop();
   });
 
   it("translates the new controls and cleans up page timers", async () => {

@@ -3,6 +3,7 @@
 //! watcher loop.
 
 mod autostart;
+mod tray;
 
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::Mutex;
@@ -11,8 +12,6 @@ use std::time::Duration;
 use hmw_core::config::{Config, Theme};
 use hmw_core::model::{CaptureSnapshot, HideAction, ProcessInfo};
 use serde::Serialize;
-use tauri::menu::{MenuBuilder, MenuItemBuilder};
-use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 fn started_minimized<I, S>(args: I) -> bool
@@ -127,8 +126,11 @@ fn save_config(app: AppHandle, state: State<AppState>, config: Config) -> Result
     }
 
     let path = state.config_path.clone();
-    config.save(&path).map_err(|e| e.to_string())?;
-    *state.config.lock().unwrap() = config;
+    {
+        let mut current = state.config.lock().unwrap();
+        config.save(&path).map_err(|e| e.to_string())?;
+        *current = config;
+    }
     // Unbounded channel: ignore a send only if the watcher has already exited.
     let _ = state.rules_wake.send(());
     Ok(())
@@ -142,7 +144,12 @@ fn reset_settings(app: AppHandle, state: State<AppState>) -> Result<Config, Stri
         Some(dir) if !dir.as_os_str().is_empty() => dir.to_path_buf(),
         _ => std::path::PathBuf::from("."),
     };
-    let config = Config::reset_stored(&dir).map_err(|e| e.to_string())?;
+    let config = {
+        let mut current = state.config.lock().unwrap();
+        let config = Config::reset_stored(&dir).map_err(|e| e.to_string())?;
+        *current = config.clone();
+        config
+    };
 
     apply_self_visibility(&app, config.hide_self);
     #[cfg(windows)]
@@ -150,7 +157,6 @@ fn reset_settings(app: AppHandle, state: State<AppState>) -> Result<Config, Stri
         let _ = autostart::set_autostart(config.start_with_windows);
     }
 
-    *state.config.lock().unwrap() = config.clone();
     let _ = state.rules_wake.send(());
     Ok(config)
 }
@@ -410,35 +416,6 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
 // Tray
 // ---------------------------------------------------------------------------
 
-fn build_tray(app: &AppHandle) -> tauri::Result<()> {
-    let show = MenuItemBuilder::with_id("show", "Show HideMyWindows").build(app)?;
-    let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
-    let menu = MenuBuilder::new(app).items(&[&show, &quit]).build()?;
-
-    TrayIconBuilder::with_id("main")
-        .icon(app.default_window_icon().unwrap().clone())
-        .tooltip("HideMyWindows")
-        .menu(&menu)
-        .show_menu_on_left_click(false)
-        .on_menu_event(|app, event| match event.id().as_ref() {
-            "show" => show_main_window(app),
-            "quit" => app.exit(0),
-            _ => {}
-        })
-        .on_tray_icon_event(|tray, event| {
-            if let tauri::tray::TrayIconEvent::Click {
-                button: tauri::tray::MouseButton::Left,
-                button_state: tauri::tray::MouseButtonState::Up,
-                ..
-            } = event
-            {
-                show_main_window(tray.app_handle());
-            }
-        })
-        .build(app)?;
-    Ok(())
-}
-
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
@@ -534,7 +511,7 @@ pub fn run() {
         ])
         .setup(move |app| {
             let handle = app.handle().clone();
-            build_tray(&handle)?;
+            tray::build(&handle)?;
 
             // Apply initial self-visibility + autostart from saved config.
             // Rewriting the Run key picks up the minimized flag for installs

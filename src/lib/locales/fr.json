@@ -172,5 +172,13 @@
       "error": "La protection avant l’affichage n’a pas pu être entièrement appliquée.",
       "unsupported": "La protection avant l’affichage nécessite Windows."
     }
+  },
+  "tray": {
+    "show": "Afficher HideMyWindows",
+    "quit": "Quitter",
+    "enable": "Activer la protection avant l’affichage",
+    "disable": "Désactiver la protection avant l’affichage",
+    "pause": "Suspendre la protection avant l’affichage",
+    "remaining": "({minutes} min restantes)"
   }
 }

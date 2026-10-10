@@ -3,6 +3,20 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.1] — 2026-10-10
+
+### Added
+- **Protection controls in the tray right-click menu.** Enable or disable
+  protection before apps appear, pause for 15, 30, 60 or 120 minutes, or choose
+  **Resume now** without opening Settings. The tray shows the applied status
+  and remaining pause time, and disables pause controls when protection is off.
+- Tray actions share the existing saved settings and timer. The open Settings
+  page stays in sync without discarding unrelated unsaved edits; a late
+  Settings save does not overwrite a newer tray action in the UI.
+- Menu labels follow the saved language, with translations for all five
+  supported languages. Failed settings saves leave protection unchanged and
+  show an error in the app.
+
 ## [2.2.0] — 2026-10-10
 
 ### Added

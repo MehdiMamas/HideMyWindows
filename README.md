@@ -66,8 +66,10 @@ See [BUILDING.md](BUILDING.md).
 
 ### Game compatibility and timed pauses
 
-Before launching a game, you can pause **Protection before apps appear** in
-Settings. Wait until the status says **paused** before launching. Both the native
+Before launching a game, right-click the HideMyWindows tray icon and choose
+**Pause protection before apps appear**, then pick 15, 30, 60, or 120 minutes.
+The menu also offers enable/disable and **Resume now**, and shows the applied
+status and remaining pause time. The same controls remain in Settings. Wait until the status says **paused** before launching. Both the native
 and 32-bit global window hooks stop; the timer resumes them automatically even
 while HideMyWindows is in the tray. The pause deadline is saved, so restarting
 HideMyWindows preserves the remaining pause. Turning the setting off leaves it
