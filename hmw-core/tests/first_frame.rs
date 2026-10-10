@@ -159,6 +159,36 @@ impl Drop for Target {
     }
 }
 
+fn payload_loaded(pid: u32) -> bool {
+    use windows::Win32::System::Diagnostics::ToolHelp::*;
+    unsafe {
+        let snapshot = hmw_core::process::SafeHandle(
+            CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid).unwrap(),
+        );
+        let mut entry = MODULEENTRY32W {
+            dwSize: std::mem::size_of::<MODULEENTRY32W>() as u32,
+            ..Default::default()
+        };
+        Module32FirstW(snapshot.0, &mut entry).unwrap();
+        loop {
+            let length = entry
+                .szModule
+                .iter()
+                .position(|c| *c == 0)
+                .unwrap_or(entry.szModule.len());
+            if String::from_utf16_lossy(&entry.szModule[..length])
+                .to_lowercase()
+                .starts_with("hmw_payload")
+            {
+                return true;
+            }
+            if Module32NextW(snapshot.0, &mut entry).is_err() {
+                return false;
+            }
+        }
+    }
+}
+
 // Unlike a final affinity query, this samples the actual desktop image during
 // creation/showing. The visible control proves this capture detects the secret.
 fn captured_secret() -> bool {
@@ -330,6 +360,64 @@ fn ordinary_launches_are_gated_without_a_watcher_or_quick_launch() {
         std::thread::sleep(Duration::from_millis(15));
     }
     target.command("destroy");
+    // The same lifecycle used by the watcher must stop actual global DLL
+    // loading, not merely publish an empty rule list, on BOTH architectures.
+    let mut controller = hmw_core::launch_protection::GateController::new();
+    let start = || {
+        let native = hmw_core::normal_gate::WindowGate::start(
+            &payload,
+            &config.window_rules,
+            std::process::id(),
+        )?;
+        let x86 = hmw_core::wow64::start_gate(&config_path)?;
+        Ok((native, x86))
+    };
+    controller.reconcile(true, start);
+    controller.reconcile(false, || unreachable!());
+    for x86 in [false, true] {
+        let mut fresh = Target::start(x86);
+        fresh.command("visible");
+        assert!(
+            !payload_loaded(fresh.child.id()),
+            "paused gate injected a DLL (x86={x86})"
+        );
+        let until = Instant::now() + Duration::from_secs(3);
+        while !captured_secret() {
+            assert!(
+                Instant::now() < until,
+                "paused launch was still blocked (x86={x86})"
+            );
+            std::thread::sleep(Duration::from_millis(15));
+        }
+        fresh.command("destroy");
+    }
+    controller.reconcile(true, start);
+    for x86 in [false, true] {
+        let mut fresh = Target::start(x86);
+        fresh.command("visible");
+        assert!(
+            payload_loaded(fresh.child.id()),
+            "resumed gate did not load (x86={x86})"
+        );
+        let window = hmw_core::window::list_top_windows(true)
+            .unwrap()
+            .into_iter()
+            .find(|window| window.pid == fresh.child.id() && window.class == "HmwFrameFixture")
+            .expect("resumed matching window must be locally visible");
+        assert_eq!(
+            hmw_core::window::capture_snapshot()
+                .unwrap()
+                .windows
+                .get(&window.hwnd),
+            Some(&hmw_core::model::CaptureStatus::Hidden)
+        );
+        assert!(
+            !captured_secret(),
+            "resumed window exposed capture content (x86={x86})"
+        );
+        fresh.command("destroy");
+    }
+    drop(controller);
     let _ = std::fs::remove_file(config_path);
 }
 

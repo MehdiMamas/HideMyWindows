@@ -7,6 +7,7 @@
 
 pub mod config;
 pub mod gate_policy;
+pub mod launch_protection;
 pub mod model;
 pub mod rule_status;
 

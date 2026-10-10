@@ -23,6 +23,15 @@ fn default_interval() -> u64 {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
+    /// Intercept ordinary launches before their first visible frame.
+    #[serde(default = "default_true")]
+    pub normal_launch_protection: bool,
+
+    /// Absolute Unix deadline, in milliseconds. Zero means no timed pause.
+    /// Persisted so restarting the controller does not cancel a pause.
+    #[serde(default)]
+    pub normal_launch_pause_until_ms: u64,
+
     #[serde(default)]
     pub theme: Theme,
 
@@ -77,6 +86,8 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
+            normal_launch_protection: true,
+            normal_launch_pause_until_ms: 0,
             theme: Theme::default(),
             hide_self: false,
             hide_notification_toasts: false,
@@ -94,6 +105,19 @@ impl Default for Config {
 }
 
 impl Config {
+    pub fn normal_launch_active_at(&self, now_ms: u64) -> bool {
+        self.normal_launch_protection && self.normal_launch_pause_until_ms <= now_ms
+    }
+
+    /// Wake at the pause deadline even when the user chose a long poll interval.
+    pub fn normal_launch_wait_ms(&self, now_ms: u64, interval_ms: u64) -> u64 {
+        if self.normal_launch_protection && self.normal_launch_pause_until_ms > now_ms {
+            interval_ms.min(self.normal_launch_pause_until_ms - now_ms)
+        } else {
+            interval_ms
+        }
+    }
+
     /// Default on-disk location: `%APPDATA%\HideMyWindows\config.json`
     /// (falls back to the executable directory if APPDATA is unavailable).
     pub fn default_path() -> PathBuf {
@@ -148,6 +172,36 @@ mod tests {
         let cfg: Config = serde_json::from_str(r#"{"hideSelf":true}"#).unwrap();
         assert!(cfg.hide_self);
         assert!(!cfg.hide_notification_toasts);
+        assert!(cfg.normal_launch_protection);
+        assert_eq!(cfg.normal_launch_pause_until_ms, 0);
+    }
+
+    #[test]
+    fn timed_pause_survives_serialization_and_resumes_at_deadline() {
+        let cfg = Config {
+            normal_launch_pause_until_ms: 1_800_000,
+            ..Config::default()
+        };
+        let text = serde_json::to_string(&cfg).unwrap();
+        let cfg: Config = serde_json::from_str(&text).unwrap();
+        assert!(!cfg.normal_launch_active_at(1_799_999));
+        assert!(cfg.normal_launch_active_at(1_800_000));
+        assert!(cfg.normal_launch_active_at(1_800_001));
+        assert_eq!(cfg.normal_launch_wait_ms(1_799_000, 60_000), 1_000);
+        assert_eq!(cfg.normal_launch_wait_ms(1_798_000, 200), 200);
+    }
+
+    #[test]
+    fn permanent_disable_wins_over_expired_pause() {
+        let cfg = Config {
+            normal_launch_protection: false,
+            normal_launch_pause_until_ms: 100,
+            ..Config::default()
+        };
+        assert!(!cfg.normal_launch_active_at(99));
+        assert!(!cfg.normal_launch_active_at(100));
+        assert!(!cfg.normal_launch_active_at(101));
+        assert_eq!(cfg.normal_launch_wait_ms(99, 60_000), 60_000);
     }
 
     #[test]

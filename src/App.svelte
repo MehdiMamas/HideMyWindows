@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { listen } from "@tauri-apps/api/event";
   import { t, locale, detectLocale } from "./lib/i18n.js";
-  import { config, notify, applyTheme } from "./lib/stores.js";
+  import { config, launchProtectionStatus, notify, applyTheme } from "./lib/stores.js";
   import { checkForUpdates } from "./lib/updater.js";
   import * as api from "./lib/api.js";
   import { updateRuleStatus } from "./lib/ruleStatus.js";
@@ -13,6 +13,7 @@
   import Settings from "./lib/pages/Settings.svelte";
   import About from "./lib/pages/About.svelte";
   import Toasts from "./lib/components/Toasts.svelte";
+  import LaunchProtectionStatus from "./lib/components/LaunchProtectionStatus.svelte";
 
   let current = $state("home");
   let ready = $state(false);
@@ -51,6 +52,14 @@
       });
       const status = await api.getRuleStatus();
       if (!receivedStatus) updateRuleStatus(status);
+
+      let receivedProtectionStatus = false;
+      await listen("launch-protection-status", (event) => {
+        receivedProtectionStatus = true;
+        launchProtectionStatus.set(event.payload);
+      });
+      const protectionStatus = await api.getLaunchProtectionStatus();
+      if (!receivedProtectionStatus) launchProtectionStatus.set(protectionStatus);
     } catch (e) {
       notify(String(e), "error", 0);
     } finally {
@@ -88,6 +97,12 @@
 
   <main>
     {#if ready}
+      {#if $launchProtectionStatus && $launchProtectionStatus.phase !== "active"}
+        <div class="protection-banner">
+          <LaunchProtectionStatus status={$launchProtectionStatus} />
+          <button onclick={() => (current = "settings")}>{$t("launchProtection.manage")}</button>
+        </div>
+      {/if}
       <CurrentPage />
     {/if}
   </main>
@@ -96,6 +111,12 @@
 <Toasts />
 
 <style>
+  .protection-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px; margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg-elevated);
+  }
+  .protection-banner button { color: var(--accent); background: transparent; border: none; cursor: pointer; }
   .shell { display: flex; height: 100vh; }
   .sidebar {
     width: 230px; flex: none; background: var(--bg-elevated); border-right: 1px solid var(--border);

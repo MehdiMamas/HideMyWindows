@@ -102,6 +102,23 @@ of an architecture's bounded 64 KiB policy; reader retries never block apps on
 the controller. Hook callbacks and subclasses are outside DllMain, and target
 modules are pinned until process exit to keep outstanding callbacks valid.
 
+`normalLaunchProtection` defaults to true, including for older configs.
+`normalLaunchPauseUntilMs` stores a Unix millisecond deadline; zero means no
+pause. The watcher owns native and x86 gate handles together through
+`GateController`. Turning protection off or starting a pause drops both handles
+before other rule work: native shutdown clears its shared owner and unhooks;
+the x86 helper is terminated and waited for, removing its global hook. Paused
+startup installs neither hook. Expiry reinstalls both using current rules,
+including while the app is in the tray; the watcher's timeout is bounded by the
+deadline. Installation failures are reported rather than marked active.
+
+The frontend reads and subscribes to `launch-protection-status`, reflecting
+applied gate state rather than assuming a config save completed hook shutdown.
+Rule polling, explicit hiding, notification protection and Quick Launch are
+independent of this switch. DLLs and subclasses already installed in targets
+remain until those processes exit, so pausing before starting a game is necessary.
+Resuming reinstalls global hooks even if a game is still running.
+
 Coverage is limited to hookable desktop apps of the gate's architecture on the
 current desktop and at accessible integrity levels. Existing windows, titles
 assigned after visibility, protected apps, alternative renderers and native API

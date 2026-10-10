@@ -149,5 +149,28 @@
     "downloading": "Se descarcă {version}…",
     "updateFailed": "Nu s-au putut căuta actualizări. {error}",
     "updateDev": "Căutarea actualizărilor funcționează în versiunile instalate."
+  },
+  "launchProtection": {
+    "title": "Protecție înainte de afișarea aplicațiilor",
+    "description": "Protejează ferestrele potrivite de la primul cadru când aplicațiile sunt deschise normal. Poate intra în conflict cu jocurile și programele anti-cheat.",
+    "enable": "Protejează pornirile normale de la primul cadru",
+    "on": "Activată",
+    "off": "Dezactivată",
+    "pauseFor": "Suspendă pentru",
+    "duration": "{minutes} minute",
+    "pause": "Suspendă",
+    "resume": "Reia acum",
+    "manage": "Gestionează protecția",
+    "remaining": "Se reia la {time} (aproximativ {minutes} min rămase).",
+    "pauseHint": "Când protecția este dezactivată sau suspendată, regulile sunt verificate în continuare periodic, dar ferestrele noi pot apărea pentru scurt timp în înregistrări. Ascunderea țintită și lansarea rapidă rămân disponibile.",
+    "gameHint": "Suspendă înainte de a porni jocul. Dacă era deja deschis, repornește-l: suspendarea nu descarcă protecția deja încărcată în alte aplicații. Protecția se reia automat la expirarea timpului, chiar dacă jocul rulează încă.",
+    "status": {
+      "active": "Protecția înainte de afișare este activă.",
+      "off": "Protecția înainte de afișare este dezactivată.",
+      "paused": "Protecția înainte de afișare este suspendată.",
+      "starting": "Se aplică setările de protecție…",
+      "error": "Protecția înainte de afișare nu a putut fi aplicată complet.",
+      "unsupported": "Protecția înainte de afișare necesită Windows."
+    }
   }
 }

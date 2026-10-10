@@ -154,5 +154,28 @@
   "errors": {
     "generic": "Something went wrong",
     "ruleFailures": "{count} rule action(s) failed."
+  },
+  "launchProtection": {
+    "title": "Protection before apps appear",
+    "description": "Protect matching windows before their first frame when apps are opened normally. This can conflict with games and anti-cheat software.",
+    "enable": "Protect ordinary launches before the first frame",
+    "on": "On",
+    "off": "Off",
+    "pauseFor": "Pause for",
+    "duration": "{minutes} minutes",
+    "pause": "Pause",
+    "resume": "Resume now",
+    "manage": "Manage protection",
+    "remaining": "Resumes at {time} (about {minutes} min remaining).",
+    "pauseHint": "When off or paused, rule polling still works, but newly opened windows may briefly appear in recordings. Targeted hiding and Quick Launch remain available.",
+    "gameHint": "Pause and wait for the paused status before launching your game. If it was already open, restart it: pausing cannot unload protection already loaded into other apps. Protection resumes automatically when the timer ends, even if the game is still running.",
+    "status": {
+      "active": "Protection before apps appear is active.",
+      "off": "Protection before apps appear is off.",
+      "paused": "Protection before apps appear is paused.",
+      "starting": "Applying protection settings…",
+      "error": "Protection before apps appear could not be fully applied.",
+      "unsupported": "Protection before apps appear requires Windows."
+    }
   }
 }

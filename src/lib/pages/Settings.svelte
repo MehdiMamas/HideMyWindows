@@ -1,14 +1,46 @@
 <script>
+  import { onMount } from "svelte";
   import { ask } from "@tauri-apps/plugin-dialog";
   import { openPath } from "@tauri-apps/plugin-opener";
   import { t, locale, detectLocale, tr, LOCALES } from "../i18n.js";
-  import { config, notify, applyTheme } from "../stores.js";
+  import { config, launchProtectionStatus, notify, applyTheme } from "../stores.js";
   import * as api from "../api.js";
   import Card from "../components/Card.svelte";
   import Toggle from "../components/Toggle.svelte";
   import Select from "../components/Select.svelte";
   import TextField from "../components/TextField.svelte";
   import Button from "../components/Button.svelte";
+  import LaunchProtectionStatus from "../components/LaunchProtectionStatus.svelte";
+
+  let pauseMinutes = $state("30");
+  let savingProtection = $state(false);
+  let now = $state(Date.now());
+  onMount(() => {
+    const clock = setInterval(() => { now = Date.now(); }, 1000);
+    return () => { clearInterval(clock); clearTimeout(timer); };
+  });
+  const pauseOptions = $derived([15, 30, 60, 120].map((minutes) => ({
+    value: String(minutes), label: $t("launchProtection.duration", { minutes }),
+  })));
+
+  async function saveProtection(enabled, until = 0) {
+    if (savingProtection) return;
+    clearTimeout(timer);
+    normalize();
+    savingProtection = true;
+    const next = { ...$config, normalLaunchProtection: enabled, normalLaunchPauseUntilMs: until };
+    try {
+      await api.saveConfig(next);
+      // Publish only after a successful save. Runtime status comes from the
+      // watcher, after both global gates have actually stopped or started.
+      config.set(next);
+      notify($t("settings.saved"), "success");
+    } catch (e) {
+      notify(String(e), "error");
+    } finally {
+      savingProtection = false;
+    }
+  }
 
   const themeOptions = $derived([
     { value: "system", label: $t("settings.themeSystem") },
@@ -124,6 +156,36 @@
     />
   </Card>
 
+  <Card title={$t("launchProtection.title")}>
+    <p class="protection-description">{$t("launchProtection.description")}</p>
+    <div class="field-row">
+      <span id="launch-protection-label">{$t("launchProtection.enable")}</span>
+      <button
+        class="protection-switch"
+        role="switch"
+        aria-labelledby="launch-protection-label"
+        aria-checked={$config.normalLaunchProtection}
+        disabled={savingProtection}
+        onclick={() => saveProtection(!$config.normalLaunchProtection)}
+      >{$t($config.normalLaunchProtection ? "launchProtection.on" : "launchProtection.off")}</button>
+    </div>
+    <LaunchProtectionStatus status={$launchProtectionStatus} />
+    <div class="pause-controls">
+      <label for="pause-duration">{$t("launchProtection.pauseFor")}</label>
+      <select id="pause-duration" bind:value={pauseMinutes} disabled={savingProtection}>
+        {#each pauseOptions as option}<option value={option.value}>{option.label}</option>{/each}
+      </select>
+      <Button disabled={savingProtection || !$config.normalLaunchProtection}
+        onclick={() => saveProtection(true, Date.now() + Number(pauseMinutes) * 60000)}
+      >{$t("launchProtection.pause")}</Button>
+      {#if $config.normalLaunchPauseUntilMs > now && $config.normalLaunchProtection}
+        <Button disabled={savingProtection} onclick={() => saveProtection(true)}>{$t("launchProtection.resume")}</Button>
+      {/if}
+    </div>
+    <p class="hint">{$t("launchProtection.pauseHint")}</p>
+    <p class="hint">{$t("launchProtection.gameHint")}</p>
+  </Card>
+
   <Card title={$t("settings.advanced")}>
     <div class="num-row">
       <TextField type="number" bind:value={$config.ruleReapplyIntervalMs} label={$t("settings.reapplyInterval")} oninput={schedulePersist} />
@@ -138,6 +200,14 @@
 {/if}
 
 <style>
+  .protection-description { color: var(--text-dim); margin: 0 0 10px; font-size: 13px; }
+  .pause-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+  .pause-controls select, .protection-switch {
+    padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: var(--bg-elevated); color: var(--text); cursor: pointer;
+  }
+  .protection-switch[aria-checked="true"] { color: var(--accent); }
+  .protection-switch:disabled { opacity: 0.45; cursor: default; }
   .page-head { margin-bottom: 14px; }
   .field-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
   .num-row { display: flex; gap: 14px; margin-bottom: 12px; }

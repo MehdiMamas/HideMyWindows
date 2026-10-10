@@ -52,7 +52,7 @@ See [BUILDING.md](BUILDING.md).
 1. **Home** — pick a running process (or a specific window) and click **Hide all windows** / **Hide this window**.
 2. **Quick launch** — add the apps you hide most often and start them already hidden with one click.
 3. **Window rules** — create and enable a process-name rule, then open that app normally. New supported windows are checked before showing, even without **Keep re-applying**. That option also reconciles existing windows on a timer. Process-name rules are preferable when a title is set after the window appears.
-4. **Settings** — hide HideMyWindows itself, run in the tray, start with Windows, pick a theme and language.
+4. **Settings** — hide HideMyWindows itself, run in the tray, start with Windows, pick a theme and language. Under **Protection before apps appear**, turn ordinary-launch protection off or pause it for 15, 30, 60, or 120 minutes. **Resume now** ends a pause early.
 
 ![Thumbnail](Assets/Thumbnail.png)
 
@@ -63,6 +63,22 @@ See [BUILDING.md](BUILDING.md).
 - HideMyWindows applies the Windows **`SetWindowDisplayAffinity`** capture-protection flag to the windows you choose. The same mechanism is used by password managers and DRM-protected apps to keep their own windows out of screen captures.
 - Its **own** windows are protected with a direct call. To protect **another** app's windows, a small helper library (`hmw_payload.dll`) is loaded into that app so the flag can be set from inside it — because Windows only lets a window's own process set this flag.
 - Automatic rules use a synchronous desktop window hook plus events and polling for existing or unsupported windows. The app must already be running. Elevated targets require an elevated controller; Windows can prevent interception of protected apps. A title that changes after visibility can only be discovered afterward.
+
+### Game compatibility and timed pauses
+
+Before launching a game, you can pause **Protection before apps appear** in
+Settings. Wait until the status says **paused** before launching. Both the native
+and 32-bit global window hooks stop; the timer resumes them automatically even
+while HideMyWindows is in the tray. The pause deadline is saved, so restarting
+HideMyWindows preserves the remaining pause. Turning the setting off leaves it
+off until you enable it again.
+
+While off or paused, rule polling, targeted hiding, notification protection, and
+Quick Launch still work. Ordinary launches no longer have a first-frame capture
+protection guarantee. Avoid rules that target the game or its launcher. A pause
+cannot unload a DLL already loaded into another app; restart the game if it was
+already running. Resuming reinstalls desktop hooks even if a game is still open,
+so choose a pause long enough for your session or turn the setting off.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full picture.
 

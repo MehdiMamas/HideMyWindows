@@ -40,6 +40,7 @@ struct AppState {
     rules_wake: Sender<()>,
     rule_status: Mutex<hmw_core::rule_status::RuleStatus>,
     protected_launches: Mutex<std::collections::HashMap<u32, u64>>,
+    launch_protection_status: Mutex<hmw_core::launch_protection::LaunchProtectionStatus>,
 }
 
 #[derive(Serialize, Clone)]
@@ -79,6 +80,13 @@ fn get_config(state: State<AppState>) -> Config {
 #[tauri::command]
 fn get_rule_status(state: State<AppState>) -> hmw_core::rule_status::RuleStatus {
     state.rule_status.lock().unwrap().clone()
+}
+
+#[tauri::command]
+fn get_launch_protection_status(
+    state: State<AppState>,
+) -> hmw_core::launch_protection::LaunchProtectionStatus {
+    state.launch_protection_status.lock().unwrap().clone()
 }
 
 #[tauri::command]
@@ -267,32 +275,60 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
         let mut notification_errors = Vec::new();
         let mut full_errors = Vec::new();
         let mut session = hmw_core::watcher::RuleSession::new();
-        let initial = app
-            .state::<AppState>()
-            .config
-            .lock()
-            .unwrap()
-            .window_rules
-            .clone();
-        let mut gate =
-            hmw_core::normal_gate::WindowGate::start(&payload, &initial, std::process::id());
-        #[cfg(target_arch = "x86_64")]
-        let mut x86_gate = hmw_core::wow64::start_gate(&app.state::<AppState>().config_path);
+        let mut gates = hmw_core::launch_protection::GateController::new();
         // Startup applies every saved rule without waiting for the timer.
         let mut full = true;
         loop {
-            let (rules, reapply_ms, poll_ms, hide_toasts) = {
+            let state = app.state::<AppState>();
+            let cfg = state.config.lock().unwrap().clone();
+            let rules = &cfg.window_rules;
+            let reapply_ms = cfg.rule_reapply_interval_ms.max(200);
+            let poll_ms = cfg.process_poll_interval_ms.max(200);
+            let now = hmw_core::launch_protection::now_ms();
+            // Drop BOTH gates before reporting a pause or doing slower rule work.
+            // An empty policy alone would still inject the global hook DLL.
+            gates.reconcile(cfg.normal_launch_active_at(now), || {
+                let native =
+                    hmw_core::normal_gate::WindowGate::start(&payload, rules, std::process::id())?;
+                #[cfg(target_arch = "x86_64")]
+                let x86 = hmw_core::wow64::start_gate(&app.state::<AppState>().config_path)?;
+                #[cfg(not(target_arch = "x86_64"))]
+                let x86 = ();
+                Ok((native, x86))
+            });
+            let mut gate_errors = Vec::new();
+            if let Some(result) = gates.gate_mut() {
+                match result {
+                    Ok((native, _x86)) => {
+                        if let Err(error) = native.update(rules) {
+                            gate_errors.push(format!("Normal-launch gate: {error}"));
+                        }
+                        #[cfg(target_arch = "x86_64")]
+                        if let Err(error) = _x86.check() {
+                            gate_errors.push(format!("32-bit normal-launch gate: {error}"));
+                        }
+                    }
+                    Err(error) => {
+                        gate_errors.push(format!("Normal-launch gate unavailable: {error}"))
+                    }
+                }
+            }
+            let gate_status = gates.status(
+                &cfg,
+                now,
+                (!gate_errors.is_empty()).then(|| gate_errors.join("\n")),
+            );
+            {
                 let state = app.state::<AppState>();
-                let cfg = state.config.lock().unwrap();
-                (
-                    cfg.window_rules.clone(),
-                    cfg.rule_reapply_interval_ms.max(200),
-                    cfg.process_poll_interval_ms.max(200),
-                    cfg.hide_notification_toasts,
-                )
-            };
+                let mut previous = state.launch_protection_status.lock().unwrap();
+                if *previous != gate_status {
+                    *previous = gate_status.clone();
+                    drop(previous);
+                    let _ = app.emit("launch-protection-status", gate_status);
+                }
+            }
 
-            if hide_toasts {
+            if cfg.hide_notification_toasts {
                 notification_errors =
                     hmw_core::notifications::apply_notification_toasts(true, &payload);
                 if notification_errors.is_empty() {
@@ -311,34 +347,16 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
             // Run one pass per tick. Retain full-pass issues between discovery
             // passes, since a persistent-only pass cannot clear other rules.
             let mut errors = if full || tick.is_multiple_of((poll_ms / reapply_ms).max(1)) {
-                full_errors = session.apply(&rules, &payload, false);
+                full_errors = session.apply(rules, &payload, false);
                 full = false;
                 full_errors.clone()
             } else {
                 let mut errors = full_errors.clone();
-                errors.extend(session.apply(&rules, &payload, true));
+                errors.extend(session.apply(rules, &payload, true));
                 errors
             };
             errors.extend(notification_errors.iter().cloned());
-            match &mut gate {
-                Ok(gate) => {
-                    if let Err(error) = gate.update(&rules) {
-                        errors.push(format!("Normal-launch gate: {error}"));
-                    }
-                }
-                Err(error) => errors.push(format!("Normal-launch gate unavailable: {error}")),
-            }
-            #[cfg(target_arch = "x86_64")]
-            match &mut x86_gate {
-                Ok(gate) => {
-                    if let Err(error) = gate.check() {
-                        errors.push(format!("32-bit normal-launch gate: {error}"));
-                    }
-                }
-                Err(error) => {
-                    errors.push(format!("32-bit normal-launch gate unavailable: {error}"))
-                }
-            }
+            errors.extend(gate_errors);
             errors.extend(hmw_core::normal_gate::blocked_windows());
             // A launch can pass readiness but later encounter an unsupported
             // window. Keep it invisible and report that failure too.
@@ -357,7 +375,7 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
                     }
                 }
             }
-            let observed = session.status(&rules);
+            let observed = session.status(rules);
             errors.extend(observed.errors.iter().cloned());
             let report = observed.with_errors(errors);
             let state = app.state::<AppState>();
@@ -369,7 +387,14 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
             }
             tick = tick.wrapping_add(1);
 
-            match rules_rx.recv_timeout(Duration::from_millis(reapply_ms)) {
+            let after = hmw_core::launch_protection::now_ms();
+            let wait_ms = if cfg.normal_launch_active_at(now) != cfg.normal_launch_active_at(after)
+            {
+                0 // The pause expired during rule work; reconcile immediately.
+            } else {
+                cfg.normal_launch_wait_ms(after, reapply_ms)
+            };
+            match rules_rx.recv_timeout(Duration::from_millis(wait_ms)) {
                 Ok(()) => {
                     while rules_rx.try_recv().is_ok() {}
                     full = true;
@@ -490,10 +515,12 @@ pub fn run() {
             rules_wake: rules_tx,
             rule_status: Mutex::default(),
             protected_launches: Mutex::default(),
+            launch_protection_status: Mutex::default(),
         })
         .invoke_handler(tauri::generate_handler![
             get_config,
             get_rule_status,
+            get_launch_protection_status,
             get_config_dir,
             app_version,
             capture_statuses,

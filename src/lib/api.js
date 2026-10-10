@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 export const getConfig = () => invoke("get_config");
 export const getRuleStatus = () => invoke("get_rule_status");
+export const getLaunchProtectionStatus = () => invoke("get_launch_protection_status");
 export const getConfigDir = () => invoke("get_config_dir");
 export const appVersion = () => invoke("app_version");
 export const captureStatuses = () => invoke("capture_statuses");

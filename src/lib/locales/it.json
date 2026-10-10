@@ -149,5 +149,28 @@
     "downloading": "Download di {version}…",
     "updateFailed": "Impossibile cercare aggiornamenti. {error}",
     "updateDev": "Il controllo aggiornamenti funziona nelle build installate."
+  },
+  "launchProtection": {
+    "title": "Protezione prima che le app appaiano",
+    "description": "Protegge le finestre corrispondenti dal primo fotogramma quando le app vengono aperte normalmente. Può entrare in conflitto con giochi e software anti-cheat.",
+    "enable": "Proteggi gli avvii normali dal primo fotogramma",
+    "on": "Attiva",
+    "off": "Disattiva",
+    "pauseFor": "Sospendi per",
+    "duration": "{minutes} minuti",
+    "pause": "Sospendi",
+    "resume": "Riprendi ora",
+    "manage": "Gestisci protezione",
+    "remaining": "Riprende alle {time} (circa {minutes} min rimanenti).",
+    "pauseHint": "Quando è disattivata o sospesa, le regole continuano a essere controllate periodicamente, ma le nuove finestre possono apparire brevemente nelle registrazioni. Il nascondimento mirato e l’avvio rapido restano disponibili.",
+    "gameHint": "Sospendi prima di avviare il gioco. Se era già aperto, riavvialo: la sospensione non scarica la protezione già caricata in altre app. La protezione riprende automaticamente alla scadenza, anche se il gioco è ancora in esecuzione.",
+    "status": {
+      "active": "La protezione prima dell’apertura è attiva.",
+      "off": "La protezione prima dell’apertura è disattivata.",
+      "paused": "La protezione prima dell’apertura è sospesa.",
+      "starting": "Applicazione delle impostazioni di protezione…",
+      "error": "La protezione prima dell’apertura non è stata applicata completamente.",
+      "unsupported": "La protezione prima dell’apertura richiede Windows."
+    }
   }
 }

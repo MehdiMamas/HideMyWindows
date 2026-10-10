@@ -149,5 +149,28 @@
     "downloading": "Téléchargement de {version}…",
     "updateFailed": "Impossible de rechercher les mises à jour. {error}",
     "updateDev": "La recherche de mises à jour fonctionne dans les versions installées."
+  },
+  "launchProtection": {
+    "title": "Protection avant l’affichage des applications",
+    "description": "Protège les fenêtres correspondantes dès leur première image lors d’un lancement normal. Peut entrer en conflit avec les jeux et les logiciels anti-triche.",
+    "enable": "Protéger les lancements normaux dès la première image",
+    "on": "Activée",
+    "off": "Désactivée",
+    "pauseFor": "Suspendre pendant",
+    "duration": "{minutes} minutes",
+    "pause": "Suspendre",
+    "resume": "Reprendre maintenant",
+    "manage": "Gérer la protection",
+    "remaining": "Reprise à {time} (environ {minutes} min restantes).",
+    "pauseHint": "Lorsque la protection est désactivée ou suspendue, les règles restent vérifiées périodiquement, mais les nouvelles fenêtres peuvent apparaître brièvement dans les enregistrements. Le masquage ciblé et le lancement rapide restent disponibles.",
+    "gameHint": "Suspendez avant de lancer votre jeu. S’il était déjà ouvert, redémarrez-le : la suspension ne décharge pas la protection déjà chargée dans d’autres applications. La protection reprend automatiquement à la fin du délai, même si le jeu est encore ouvert.",
+    "status": {
+      "active": "La protection avant l’affichage est active.",
+      "off": "La protection avant l’affichage est désactivée.",
+      "paused": "La protection avant l’affichage est suspendue.",
+      "starting": "Application des paramètres de protection…",
+      "error": "La protection avant l’affichage n’a pas pu être entièrement appliquée.",
+      "unsupported": "La protection avant l’affichage nécessite Windows."
+    }
   }
 }

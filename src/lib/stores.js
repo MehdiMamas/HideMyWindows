@@ -2,6 +2,7 @@ import { writable } from "svelte/store";
 
 /** The live config object (mirrors hmw_core::config::Config). */
 export const config = writable(null);
+export const launchProtectionStatus = writable(null);
 
 /** Transient toast notifications shown bottom-right. */
 export const toasts = writable([]);

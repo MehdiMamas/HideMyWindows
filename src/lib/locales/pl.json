@@ -149,5 +149,28 @@
     "downloading": "Pobieranie {version}…",
     "updateFailed": "Nie udało się sprawdzić aktualizacji. {error}",
     "updateDev": "Sprawdzanie aktualizacji działa w zainstalowanych kompilacjach."
+  },
+  "launchProtection": {
+    "title": "Ochrona przed pojawieniem się aplikacji",
+    "description": "Chroni pasujące okna od pierwszej klatki podczas zwykłego uruchamiania aplikacji. Może powodować konflikty z grami i oprogramowaniem antycheat.",
+    "enable": "Chroń zwykłe uruchomienia od pierwszej klatki",
+    "on": "Włączona",
+    "off": "Wyłączona",
+    "pauseFor": "Wstrzymaj na",
+    "duration": "{minutes} min",
+    "pause": "Wstrzymaj",
+    "resume": "Wznów teraz",
+    "manage": "Zarządzaj ochroną",
+    "remaining": "Wznowienie o {time} (pozostało około {minutes} min).",
+    "pauseHint": "Po wyłączeniu lub wstrzymaniu ochrony reguły są nadal sprawdzane okresowo, ale nowe okna mogą na chwilę pojawić się w nagraniach. Ukrywanie wybranych aplikacji i szybkie uruchamianie pozostają dostępne.",
+    "gameHint": "Wstrzymaj ochronę przed uruchomieniem gry. Jeśli gra była już otwarta, uruchom ją ponownie: wstrzymanie nie usuwa ochrony już załadowanej do innych aplikacji. Ochrona wznawia się automatycznie po upływie czasu, nawet jeśli gra nadal działa.",
+    "status": {
+      "active": "Ochrona przed pojawieniem się aplikacji jest aktywna.",
+      "off": "Ochrona przed pojawieniem się aplikacji jest wyłączona.",
+      "paused": "Ochrona przed pojawieniem się aplikacji jest wstrzymana.",
+      "starting": "Stosowanie ustawień ochrony…",
+      "error": "Nie udało się w pełni zastosować ochrony przed pojawieniem się aplikacji.",
+      "unsupported": "Ochrona przed pojawieniem się aplikacji wymaga Windows."
+    }
   }
 }
