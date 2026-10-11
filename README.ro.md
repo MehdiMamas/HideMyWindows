@@ -85,10 +85,11 @@ Licențiat sub **MIT cu Commons Clause** — poți folosi, modifica și distribu
 
 ## 🙏 Credite
 
-- **Aplicația originală** de [Cristian Gambino (@zCri)](https://github.com/zCri) — ideea, numele și primele versiuni.
+- **Aplicația originală** de [Cristian Gambino (@zCri)](https://github.com/zCri) — ideea, numele și primele versiuni ([zCri/HideMyWindows](https://github.com/zCri/HideMyWindows)).
 - Ajutor la dezvoltarea inițială de la [@ad2017gd](https://github.com/ad2017gd) și contribuții de la [@minhprovjp](https://github.com/minhprovjp) și alții.
 - Corecturile pentru fereastra albă și pictograma din zona de notificare din proiectul original sunt păstrate în spirit.
 - **Reconstruit și îmbunătățit de [Mehdi](https://github.com/mehdimamas)** cu [Tauri](https://tauri.app) și [Svelte](https://svelte.dev).
+- Acest depozit a pornit ca fork al proiectului original și își păstrează întregul istoric de commituri.
 
 Acest proiect există datorită muncii autorului original. Mulțumim. 💙
 
