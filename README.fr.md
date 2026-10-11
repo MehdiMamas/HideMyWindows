@@ -85,10 +85,11 @@ Sous licence **MIT avec la Commons Clause** — vous pouvez l’utiliser, la mod
 
 ## 🙏 Crédits
 
-- **Application originale** de [Cristian Gambino (@zCri)](https://github.com/zCri) — l’idée, le nom et les premières versions.
+- **Application originale** de [Cristian Gambino (@zCri)](https://github.com/zCri) — l’idée, le nom et les premières versions ([zCri/HideMyWindows](https://github.com/zCri/HideMyWindows)).
 - Aide au développement initial de [@ad2017gd](https://github.com/ad2017gd), et contributions de [@minhprovjp](https://github.com/minhprovjp) et d’autres.
 - Les correctifs de la fenêtre blanche et de l’icône de zone de notification du projet original sont repris dans l’esprit.
 - **Reconstruit et amélioré par [Mehdi](https://github.com/mehdimamas)** avec [Tauri](https://tauri.app) et [Svelte](https://svelte.dev).
+- Ce dépôt a commencé comme un fork de l’original et conserve tout son historique de commits.
 
 Ce projet n’existe que grâce au travail de l’auteur original. Merci. 💙
 

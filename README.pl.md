@@ -85,10 +85,11 @@ Na licencji **MIT z klauzulą Commons Clause** — możesz używać, zmieniać i
 
 ## 🙏 Podziękowania
 
-- **Oryginalna aplikacja** [Cristiana Gambino (@zCri)](https://github.com/zCri) — pomysł, nazwa i pierwsze wersje.
+- **Oryginalna aplikacja** [Cristiana Gambino (@zCri)](https://github.com/zCri) — pomysł, nazwa i pierwsze wersje ([zCri/HideMyWindows](https://github.com/zCri/HideMyWindows)).
 - Pomoc przy wczesnym rozwoju od [@ad2017gd](https://github.com/ad2017gd) oraz wkład [@minhprovjp](https://github.com/minhprovjp) i innych.
 - Poprawki białego okna i ikony w zasobniku z oryginalnego projektu są zachowane w duchu.
 - **Odbudowane i ulepszone przez [Mehdiego](https://github.com/mehdimamas)** na [Tauri](https://tauri.app) i [Svelte](https://svelte.dev).
+- To repozytorium powstało jako fork oryginału i zachowuje pełną historię commitów.
 
 Ten projekt istnieje dzięki pracy oryginalnego autora. Dziękujemy. 💙
 

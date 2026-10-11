@@ -85,10 +85,11 @@ Con licenza **MIT con Commons Clause** — puoi usarla, modificarla e condivider
 
 ## 🙏 Crediti
 
-- **App originale** di [Cristian Gambino (@zCri)](https://github.com/zCri) — l'idea, il nome e le prime versioni.
+- **App originale** di [Cristian Gambino (@zCri)](https://github.com/zCri) — l'idea, il nome e le prime versioni ([zCri/HideMyWindows](https://github.com/zCri/HideMyWindows)).
 - Aiuto allo sviluppo iniziale di [@ad2017gd](https://github.com/ad2017gd) e contributi di [@minhprovjp](https://github.com/minhprovjp) e altri.
 - Le correzioni della finestra bianca e dell'icona nell'area di notifica del progetto originale sono portate avanti nello spirito.
 - **Ricostruito e migliorato da [Mehdi](https://github.com/mehdimamas)** con [Tauri](https://tauri.app) e [Svelte](https://svelte.dev).
+- Questo repository è nato come fork dell'originale e ne conserva l'intera cronologia dei commit.
 
 Questo progetto esiste solo grazie al lavoro dell'autore originale. Grazie. 💙
 

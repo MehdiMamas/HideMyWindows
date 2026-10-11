@@ -22,3 +22,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Local worktrees and graphify output
+.worktrees/
+graphify-out/
