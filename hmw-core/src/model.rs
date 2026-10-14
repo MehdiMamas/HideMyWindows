@@ -119,9 +119,16 @@ pub struct QuickLaunchEntry {
     pub id: String,
     #[serde(default)]
     pub name: String,
+    #[serde(default)]
     pub path: String,
     #[serde(default)]
     pub arguments: String,
+    /// AppUserModelID of a Store app. When set, it is launched instead of `path`.
+    #[serde(default)]
+    pub app_id: String,
+    /// Start menu shortcut created for this entry, if any.
+    #[serde(default)]
+    pub shortcut: String,
 }
 
 /// Information about a running process (sent to the UI).

@@ -63,6 +63,28 @@ a target restart. Capture tests include pre-visibility affinity checks and actua
 GDI desktop frames, with visible controls, on x64/x86. This does not guarantee
 all capture/rendering APIs or separately launched child processes.
 
+Microsoft Store (packaged) apps cannot be created suspended by another
+process, so Quick Launch uses `IPackageDebugSettings` instead
+(`hmw_core::package_launch`). For one activation it registers HideMyWindows
+itself as the package's "debugger" (`--protect-launch <token>`); Windows starts
+the app with its primary thread suspended and runs that helper with `-p <pid>
+-tid <tid>`. The helper injects the payload, runs the same readiness exports,
+resumes the thread, and reports `ok <pid>` or `error <message>` through a
+token file in `%TEMP%\HideMyWindows\launches`. The payload path also travels
+through that folder, because Windows rejects debugger commands of 260
+characters or more. Debugging is turned off again as soon as activation
+returns, and at startup, so ordinary launches stay unaffected. Windows of an
+already running instance are protected in place before activation.
+
+The app picker lists `FOLDERID_AppsFolder` (Start's "All apps"): desktop
+shortcuts that resolve to an existing `.exe`, and installed Store apps by
+AppUserModelID (`hmw_core::apps`). Start menu shortcuts
+(`hmw_core::shortcut`) are `.lnk` files named "*App* HideMyWindows" in the
+user's Programs folder. They run HideMyWindows with `--launch-app <AUMID>` or
+`--launch-exe <path>`; a running instance receives the request through the
+single-instance plugin and launches without showing its window. A launcher
+`.exe` that starts a different process only protects the launcher.
+
 The x64 controller routes x86 targets through its bundled x86 helper and x86
 payload. Each injector still runs in the same architecture as its target.
 The x86 and ARM64 builds handle their native targets. Resolving exports from

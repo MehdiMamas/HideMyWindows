@@ -754,6 +754,16 @@ fn remove_leftovers(report: &mut ReleaseReport) {
     let mut config_dir = None;
     if let Ok(appdata) = std::env::var("APPDATA") {
         let dir = PathBuf::from(appdata).join("HideMyWindows");
+        // Start menu launchers would point at the removed app.
+        let icons = dir.join("shortcut-icons");
+        for entry in crate::Config::load(&dir.join("config.json")).quick_launch {
+            if !entry.shortcut.is_empty() {
+                crate::shortcut::remove(&entry.shortcut, &icons);
+                report.removed.push(entry.shortcut);
+            }
+            crate::package_launch::clear_launch_debugging(&entry.app_id);
+        }
+        let _ = std::fs::remove_dir_all(&icons);
         try_remove_file(&dir.join("config.json"), report);
         try_remove_file(&dir.join("HideMyWindows.json"), report);
         config_dir = Some(dir);

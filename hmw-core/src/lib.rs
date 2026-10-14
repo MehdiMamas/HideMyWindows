@@ -20,6 +20,8 @@ pub mod indicator;
 mod indicator_position;
 
 #[cfg(windows)]
+pub mod apps;
+#[cfg(windows)]
 pub mod cleanup;
 #[cfg(windows)]
 pub mod hider;
@@ -32,9 +34,13 @@ pub mod normal_gate;
 #[cfg(windows)]
 pub mod notifications;
 #[cfg(windows)]
+pub mod package_launch;
+#[cfg(windows)]
 pub mod process;
 #[cfg(windows)]
 pub mod rule_events;
+#[cfg(windows)]
+pub mod shortcut;
 #[cfg(windows)]
 pub mod watcher;
 #[cfg(windows)]

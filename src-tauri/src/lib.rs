@@ -223,28 +223,146 @@ fn hide_window(app: AppHandle, hwnd: i64, action: HideAction) -> Result<(), Stri
     }
 }
 
+/// Start a desktop executable or a Store app protected from its first frame,
+/// and keep checking that protection while it runs.
+#[cfg(windows)]
+fn launch_protected(
+    app: &AppHandle,
+    request: &hmw_core::shortcut::LaunchRequest,
+) -> Result<u32, String> {
+    let payload = payload_path(app)?;
+    let pid = if request.app_id.is_empty() {
+        hmw_core::launch::launch_hidden(&request.path, &request.arguments, &payload)
+    } else {
+        hmw_core::package_launch::launch_packaged(
+            &request.app_id,
+            &request.arguments,
+            &payload,
+            &self_exe()?,
+        )
+    }
+    .map_err(|e| e.0)?;
+    if let Some(created) = hmw_core::process::process_started_at(pid) {
+        let state = app.state::<AppState>();
+        state
+            .protected_launches
+            .lock()
+            .unwrap()
+            .insert(pid, created);
+        let _ = state.rules_wake.send(());
+    }
+    Ok(pid)
+}
+
+#[cfg(windows)]
+fn self_exe() -> Result<String, String> {
+    std::env::current_exe()
+        .map(|p| p.to_string_lossy().into_owned())
+        .map_err(|e| e.to_string())
+}
+
+/// Run a launch asked for by a Start menu shortcut. Failures open the window,
+/// since the app may otherwise be only in the tray.
+#[cfg(windows)]
+fn launch_from_shortcut(app: AppHandle, request: hmw_core::shortcut::LaunchRequest) {
+    std::thread::spawn(move || {
+        if let Err(error) = launch_protected(&app, &request) {
+            show_main_window(&app);
+            let _ = app.emit("tray-action-error", error);
+        }
+    });
+}
+
 #[tauri::command]
-fn quick_launch(app: AppHandle, path: String, arguments: String) -> Result<u32, String> {
+async fn quick_launch(
+    app: AppHandle,
+    path: String,
+    arguments: String,
+    app_id: Option<String>,
+) -> Result<u32, String> {
     #[cfg(windows)]
     {
-        let payload = payload_path(&app)?;
-        let pid = hmw_core::launch::launch_hidden(&path, &arguments, &payload).map_err(|e| e.0)?;
-        if let Some(created) = hmw_core::process::process_started_at(pid) {
-            let state = app.state::<AppState>();
-            state
-                .protected_launches
-                .lock()
-                .unwrap()
-                .insert(pid, created);
-            let _ = state.rules_wake.send(());
-        }
-        Ok(pid)
+        let request = hmw_core::shortcut::LaunchRequest {
+            app_id: app_id.unwrap_or_default(),
+            path,
+            arguments,
+        };
+        tauri::async_runtime::spawn_blocking(move || launch_protected(&app, &request))
+            .await
+            .map_err(|e| e.to_string())?
     }
     #[cfg(not(windows))]
     {
-        let _ = (app, path, arguments);
+        let _ = (app, path, arguments, app_id);
         Err("Windows only".into())
     }
+}
+
+/// Apps from Start's "All apps" list, for the Quick Launch picker.
+#[tauri::command]
+async fn list_installed_apps(with_icons: bool) -> Result<serde_json::Value, String> {
+    #[cfg(windows)]
+    {
+        tauri::async_runtime::spawn_blocking(move || {
+            let apps =
+                hmw_core::apps::list_installed_apps(&self_exe()?, with_icons).map_err(|e| e.0)?;
+            serde_json::to_value(apps).map_err(|e| e.to_string())
+        })
+        .await
+        .map_err(|e| e.to_string())?
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = with_icons;
+        Ok(serde_json::Value::Array(Vec::new()))
+    }
+}
+
+/// Folder for the icons of Start menu shortcuts this app creates.
+fn shortcut_icon_dir(state: &AppState) -> std::path::PathBuf {
+    state
+        .config_path
+        .parent()
+        .map(|dir| dir.join("shortcut-icons"))
+        .unwrap_or_else(|| std::path::PathBuf::from("shortcut-icons"))
+}
+
+/// Add "<name> HideMyWindows" to the Start menu. Returns the shortcut path.
+#[tauri::command]
+async fn create_launch_shortcut(
+    app: AppHandle,
+    name: String,
+    path: String,
+    arguments: String,
+    app_id: Option<String>,
+) -> Result<String, String> {
+    #[cfg(windows)]
+    {
+        let icons = shortcut_icon_dir(&app.state::<AppState>());
+        tauri::async_runtime::spawn_blocking(move || {
+            let request = hmw_core::shortcut::LaunchRequest {
+                app_id: app_id.unwrap_or_default(),
+                path,
+                arguments,
+            };
+            hmw_core::shortcut::create(&name, &request, &self_exe()?, &icons).map_err(|e| e.0)
+        })
+        .await
+        .map_err(|e| e.to_string())?
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (app, name, path, arguments, app_id);
+        Err("Windows only".into())
+    }
+}
+
+#[tauri::command]
+fn remove_launch_shortcut(state: State<AppState>, shortcut: String) {
+    #[cfg(windows)]
+    hmw_core::shortcut::remove(&shortcut, &shortcut_icon_dir(&state));
+    #[cfg(not(windows))]
+    let _ = (state, shortcut);
 }
 
 /// Apply this app's own "hide from capture" state to its visible windows.
@@ -464,6 +582,14 @@ pub fn run() {
     configure_wow64_actions();
     // Before the single-instance plugin: uninstall must release hides even
     // while another copy of the app is still running.
+    // Windows starts this helper, with a Store app suspended, for a launch
+    // that `package_launch` prepared. It must not wait for the running copy.
+    #[cfg(windows)]
+    if let Some(helper) =
+        hmw_core::package_launch::parse_helper_args(&std::env::args().collect::<Vec<_>>())
+    {
+        std::process::exit(hmw_core::package_launch::run_helper(&helper));
+    }
     #[cfg(windows)]
     if std::env::args().any(|arg| arg == "--release-all") {
         let helper = materialize_wow64_helper();
@@ -477,6 +603,11 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            #[cfg(windows)]
+            if let Some(request) = hmw_core::shortcut::LaunchRequest::from_args(&args) {
+                launch_from_shortcut(app.clone(), request);
+                return;
+            }
             // A second sign-in launch should leave the running copy in the tray.
             if !started_minimized(args) {
                 show_main_window(app);
@@ -508,6 +639,9 @@ pub fn run() {
             hide_process,
             hide_window,
             quick_launch,
+            list_installed_apps,
+            create_launch_shortcut,
+            remove_launch_shortcut,
         ])
         .setup(move |app| {
             let handle = app.handle().clone();
@@ -534,9 +668,37 @@ pub fn run() {
             }
 
             // The window is created hidden. A normal launch opens it; sign-in
-            // (`--minimized` from the Run key) leaves only the tray icon.
-            if !started_minimized(std::env::args()) {
+            // (`--minimized` from the Run key) and Start menu shortcuts leave
+            // only the tray icon.
+            let args: Vec<String> = std::env::args().collect();
+            #[cfg(windows)]
+            let shortcut_launch = hmw_core::shortcut::LaunchRequest::from_args(&args);
+            #[cfg(not(windows))]
+            let shortcut_launch: Option<()> = None;
+            if !started_minimized(&args) && shortcut_launch.is_none() {
                 show_main_window(&handle);
+            }
+            #[cfg(windows)]
+            {
+                // A crash mid-launch could leave a Store app's helper registered.
+                let store_apps: Vec<String> = {
+                    let state = handle.state::<AppState>();
+                    let cfg = state.config.lock().unwrap();
+                    cfg.quick_launch
+                        .iter()
+                        .map(|entry| entry.app_id.clone())
+                        .filter(|id| !id.is_empty())
+                        .collect()
+                };
+                let launch_handle = handle.clone();
+                std::thread::spawn(move || {
+                    for app_id in store_apps {
+                        hmw_core::package_launch::clear_launch_debugging(&app_id);
+                    }
+                    if let Some(request) = shortcut_launch {
+                        launch_from_shortcut(launch_handle, request);
+                    }
+                });
             }
 
             #[cfg(windows)]
