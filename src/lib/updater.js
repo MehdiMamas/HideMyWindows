@@ -1,5 +1,4 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ask } from "@tauri-apps/plugin-dialog";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 import { writable } from "svelte/store";
@@ -14,7 +13,27 @@ export const updateStatus = writable({
   total: 0,
 });
 
+/**
+ * The open install question, or null. UpdatePrompt.svelte shows it and calls
+ * `answer(true)` to install or `answer(false)` for later.
+ */
+export const updatePrompt = writable(null);
+
 let busy = false;
+
+/** Ask before installing. Nothing is installed unless the user says yes. */
+export function askToInstall(version, notes) {
+  return new Promise((resolve) => {
+    updatePrompt.set({
+      version,
+      notes,
+      answer(yes) {
+        updatePrompt.set(null);
+        resolve(yes === true);
+      },
+    });
+  });
+}
 
 function setStatus(patch) {
   updateStatus.update((current) => ({ ...current, ...patch }));
@@ -54,14 +73,8 @@ export async function checkForUpdates({ interactive = false } = {}) {
     }
 
     await revealWindow();
-    const notes = (update.body || "").trim();
-    const body = notes
-      ? tr("about.updatePrompt", { version: update.version, notes })
-      : tr("about.updatePromptNoNotes", { version: update.version });
-    const yes = await ask(body, {
-      title: tr("about.updateTitle"),
-      kind: "info",
-    });
+    // Startup only asks. Installing restarts HideMyWindows and nothing else.
+    const yes = await askToInstall(update.version, (update.body || "").trim());
     if (!yes) return;
 
     accepted = true;

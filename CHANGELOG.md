@@ -3,6 +3,32 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.2] — 2026-10-14
+
+**Save your work before updating.** The update to 2.3.1 could close other
+open apps (browsers, File Explorer, chat apps). This version removes the
+cause and installing it should only restart HideMyWindows, but save your
+work in other apps first to be safe. Restarting Windows before updating
+rules the problem out completely.
+
+### Fixed
+- **Updating no longer crashes other apps.** Apps keep the HideMyWindows
+  helper loaded after it hides their windows. Up to 2.3.1 every version put
+  its helper at the same file path, so after an update Windows handed those
+  apps the old helper at a spot where only the new one makes sense, and the
+  apps crashed. Each build now lives in its own folder, so a path never holds
+  different code.
+- **The helper can no longer bring an app down.** Any failure inside the
+  helper is caught and the app carries on unprotected instead of closing. It
+  also copes with HideMyWindows quitting and with several versions loaded in
+  the same app.
+- **Update prompt asks clearly.** It says HideMyWindows will close, install
+  and start again and that other apps are not affected, shows what's new,
+  and has **Later** selected, so pressing Enter does not install.
+- **Installer and uninstaller tidy up.** Old helper files that no app is
+  using are removed; ones still in use are renamed and removed by a later
+  update, uninstall or restart. Nothing closes another app.
+
 ## [2.3.1] — 2026-10-14
 
 ### Fixed

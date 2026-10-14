@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.version.outputs.tag }}
+      notes: ${{ steps.version.outputs.notes }}
     steps:
       - uses: actions/checkout@v4
       - name: Verify release version
@@ -43,9 +44,17 @@ jobs:
           assert tag == f'v{version}', f'Tag {tag} does not match version {version}'
           assert json.loads((root / 'src-tauri/tauri.conf.json').read_text())['version'] == version
           assert tomllib.loads((root / 'Cargo.toml').read_text())['workspace']['package']['version'] == version
-          assert f'## [{version}]' in (root / 'CHANGELOG.md').read_text()
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+          changelog = (root / 'CHANGELOG.md').read_text(encoding='utf-8')
+          marker = f'## [{version}]'
+          assert marker in changelog
+          # The section without its heading, as plain text: the running app
+          # shows it in the update prompt, so it starts with what matters most.
+          section = changelog.split(marker, 1)[1].split('\n', 1)[1]
+          notes = section.split('\n## [', 1)[0].replace('**', '').strip()
+          assert notes, f'Empty changelog for {version}'
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
               output.write(f'tag={tag}\n')
+              output.write(f'notes<<HMW_NOTES_EOF\n{notes}\nHMW_NOTES_EOF\n')
           PY
 
   validate:
@@ -91,18 +100,19 @@ jobs:
       - name: Build the injected payload (${{ matrix.arch }})
         shell: bash
         run: |
-          cargo build -p hmw-payload --release --target ${{ matrix.target }}
+          cargo build -p hmw-payload --profile payload --target ${{ matrix.target }}
           mkdir -p src-tauri/resources
-          cp "target/${{ matrix.target }}/release/hmw_payload.dll" src-tauri/resources/hmw_payload.dll
+          cp "target/${{ matrix.target }}/payload/hmw_payload.dll" src-tauri/resources/hmw_payload.dll
 
       - name: Build the 32-bit helper and payload
         if: matrix.arch == 'x64'
         shell: bash
         run: |
           rustup target add i686-pc-windows-msvc
-          cargo build -p hmw-release -p hmw-payload --release --target i686-pc-windows-msvc
+          cargo build -p hmw-release --release --target i686-pc-windows-msvc
+          cargo build -p hmw-payload --profile payload --target i686-pc-windows-msvc
           cp target/i686-pc-windows-msvc/release/hmw-release.exe src-tauri/resources/hmw-release-x86.exe
-          cp target/i686-pc-windows-msvc/release/hmw_payload.dll src-tauri/resources/hmw_payload_x86.dll
+          cp target/i686-pc-windows-msvc/payload/hmw_payload.dll src-tauri/resources/hmw_payload_x86.dll
 
       - name: Build app + installer and publish release
         uses: tauri-apps/tauri-action@v0
@@ -116,7 +126,8 @@ jobs:
           tagName: ${{ needs.prepare.outputs.tag }}
           releaseCommitish: ${{ github.sha }}
           releaseName: "HideMyWindows ${{ needs.prepare.outputs.tag }}"
-          releaseBody: "See CHANGELOG.md for what changed. Download the installer for your architecture below."
+          # Also the `notes` in latest.json, which the running app shows when it offers the update.
+          releaseBody: ${{ needs.prepare.outputs.notes }}
           # Publish only after all three installers finish successfully.
           releaseDraft: true
           prerelease: false

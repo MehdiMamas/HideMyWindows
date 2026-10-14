@@ -40,9 +40,9 @@ jobs:
       - name: Build payload (x64)
         shell: bash
         run: |
-          cargo build -p hmw-payload --release --target x86_64-pc-windows-msvc
+          cargo build -p hmw-payload --profile payload --target x86_64-pc-windows-msvc
           mkdir -p src-tauri/resources
-          cp target/x86_64-pc-windows-msvc/release/hmw_payload.dll src-tauri/resources/hmw_payload.dll
+          cp target/x86_64-pc-windows-msvc/payload/hmw_payload.dll src-tauri/resources/hmw_payload.dll
 
       - name: Rust format check
         run: cargo fmt --all -- --check
@@ -51,9 +51,10 @@ jobs:
         shell: bash
         run: |
           rustup target add i686-pc-windows-msvc
-          cargo build -p hmw-release -p hmw-payload --release --target i686-pc-windows-msvc
+          cargo build -p hmw-release --release --target i686-pc-windows-msvc
+          cargo build -p hmw-payload --profile payload --target i686-pc-windows-msvc
           cp target/i686-pc-windows-msvc/release/hmw-release.exe src-tauri/resources/hmw-release-x86.exe
-          cp target/i686-pc-windows-msvc/release/hmw_payload.dll src-tauri/resources/hmw_payload_x86.dll
+          cp target/i686-pc-windows-msvc/payload/hmw_payload.dll src-tauri/resources/hmw_payload_x86.dll
 
       - name: Test core and Windows capture status
         shell: pwsh
@@ -71,7 +72,7 @@ jobs:
         shell: pwsh
         run: |
           rustup target add aarch64-pc-windows-msvc
-          cargo build --locked -p hmw-payload --release --target aarch64-pc-windows-msvc 2>&1 | Tee-Object -Variable armBuildOutput
+          cargo build --locked -p hmw-payload --profile payload --target aarch64-pc-windows-msvc 2>&1 | Tee-Object -Variable armBuildOutput
           $armBuildExit = $LASTEXITCODE
           if ($armBuildExit -ne 0) {
             $details = (($armBuildOutput | Select-Object -Last 30) -join "`n").Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')

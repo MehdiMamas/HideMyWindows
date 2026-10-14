@@ -157,8 +157,11 @@
     "checking": "Se caută actualizări…",
     "upToDate": "Ești la zi.",
     "updateTitle": "Actualizare disponibilă",
-    "updatePrompt": "Versiunea {version} este disponibilă. O descarci și o instalezi acum?\n\n{notes}",
-    "updatePromptNoNotes": "Versiunea {version} este disponibilă. O descarci și o instalezi acum?",
+    "updateIntro": "HideMyWindows {version} este gata de instalare.",
+    "updateWhat": "HideMyWindows se va închide, va instala actualizarea și va porni din nou. Celelalte aplicații rămân deschise și nu sunt afectate.",
+    "updateNotes": "Noutăți",
+    "updateInstall": "Instalează și repornește",
+    "updateLater": "Mai târziu",
     "downloading": "Se descarcă {version}…",
     "updateFailed": "Nu s-au putut căuta actualizări. {error}",
     "updateDev": "Căutarea actualizărilor funcționează în versiunile instalate."

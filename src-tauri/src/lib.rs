@@ -52,14 +52,72 @@ struct WindowDto {
 }
 
 /// Resolve the bundled payload DLL (matching this build's architecture).
+///
+/// Each build has its own folder, so this path never holds different code
+/// (see build.rs). Apps keep an older payload loaded after an update, and a
+/// global hook from a reused path would run new offsets in that old code.
 #[cfg(windows)]
 fn payload_path(app: &AppHandle) -> Result<String, String> {
     use tauri::path::BaseDirectory;
     let p = app
         .path()
-        .resolve("resources/hmw_payload.dll", BaseDirectory::Resource)
+        .resolve(
+            format!(
+                "resources/payload/{}/hmw_payload.dll",
+                env!("HMW_PAYLOAD_ID")
+            ),
+            BaseDirectory::Resource,
+        )
         .map_err(|e| e.to_string())?;
     Ok(p.to_string_lossy().into_owned())
+}
+
+/// Delete payload files from earlier builds. Windows refuses to delete a DLL
+/// that any process still has loaded, so those stay until a later start.
+#[cfg(windows)]
+fn remove_stale_payloads(app: &AppHandle) {
+    use tauri::path::BaseDirectory;
+    let Ok(resources) = app.path().resolve("resources", BaseDirectory::Resource) else {
+        return;
+    };
+    remove_stale_dirs(&resources.join("payload"), env!("HMW_PAYLOAD_ID"));
+    // Up to 2.3.1 the payload lived here and updates renamed it to *.old.
+    for entry in std::fs::read_dir(&resources)
+        .into_iter()
+        .flatten()
+        .flatten()
+    {
+        let name = entry.file_name().to_string_lossy().to_ascii_lowercase();
+        if name.starts_with("hmw_payload.dll") {
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
+}
+
+/// Remove build folders under `root` other than `keep`, and stray files inside
+/// `keep`. Build folders are named by content id (or, up to 2.3.1, by version);
+/// anything else there, such as Quick Launch's `launches`, is left alone.
+#[cfg(windows)]
+fn remove_stale_dirs(root: &std::path::Path, keep: &str) {
+    for entry in std::fs::read_dir(root).into_iter().flatten().flatten() {
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let is_build = (name.len() == 16 && name.chars().all(|c| c.is_ascii_hexdigit()))
+            || (name.contains('.') && name.chars().all(|c| c.is_ascii_digit() || c == '.'));
+        if !is_build || !path.is_dir() {
+            continue;
+        }
+        if !name.eq_ignore_ascii_case(keep) {
+            let _ = std::fs::remove_dir_all(&path);
+            continue;
+        }
+        for file in std::fs::read_dir(&path).into_iter().flatten().flatten() {
+            let name = file.file_name().to_string_lossy().to_ascii_lowercase();
+            if name != "hmw_payload.dll" && name != "hmw-release-x86.exe" {
+                let _ = std::fs::remove_file(file.path());
+            }
+        }
+    }
 }
 
 #[cfg(not(windows))]
@@ -546,13 +604,13 @@ mod wow64_helper {
 
 /// Write the bundled 32-bit cleanup helper under `%TEMP%\HideMyWindows` so an
 /// x64 `--release-all` can reach WOW64 processes. Absent when this build did
-/// not embed one.
+/// not embed one. The folder is named by content, like the x64 payload's.
 #[cfg(windows)]
 fn materialize_wow64_helper() -> Option<std::path::PathBuf> {
     let bytes = wow64_helper::WOW64_HELPER?;
     let dir = std::env::temp_dir()
         .join("HideMyWindows")
-        .join(env!("CARGO_PKG_VERSION"));
+        .join(env!("HMW_WOW64_ID"));
     std::fs::create_dir_all(&dir).ok()?;
     let path = dir.join("hmw-release-x86.exe");
     if std::fs::write(&path, bytes).is_err() && !path.is_file() {
@@ -646,6 +704,16 @@ pub fn run() {
         .setup(move |app| {
             let handle = app.handle().clone();
             tray::build(&handle)?;
+            #[cfg(windows)]
+            {
+                remove_stale_payloads(&handle);
+                if wow64_helper::WOW64_HELPER.is_some() {
+                    remove_stale_dirs(
+                        &std::env::temp_dir().join("HideMyWindows"),
+                        env!("HMW_WOW64_ID"),
+                    );
+                }
+            }
 
             // Apply initial self-visibility + autostart from saved config.
             // Rewriting the Run key picks up the minimized flag for installs
@@ -752,5 +820,29 @@ mod tests {
         assert!(started_minimized(["hidemywindows.exe", "--minimized"]));
         assert!(!started_minimized(["hidemywindows.exe"]));
         assert!(!started_minimized(["hidemywindows.exe", "--release-all"]));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn stale_builds_go_and_everything_else_stays() {
+        let root = std::env::temp_dir().join(format!("hmw-stale-test-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        for dir in ["0123456789abcdef", "fedcba9876543210", "2.3.1", "launches"] {
+            std::fs::create_dir_all(root.join(dir)).unwrap();
+            std::fs::write(root.join(dir).join("hmw_payload.dll"), b"x").unwrap();
+        }
+        std::fs::write(root.join("0123456789abcdef").join("stray.tmp"), b"x").unwrap();
+
+        super::remove_stale_dirs(&root, "0123456789ABCDEF");
+
+        assert!(root
+            .join("0123456789abcdef")
+            .join("hmw_payload.dll")
+            .exists());
+        assert!(!root.join("0123456789abcdef").join("stray.tmp").exists());
+        assert!(!root.join("fedcba9876543210").exists());
+        assert!(!root.join("2.3.1").exists());
+        assert!(root.join("launches").join("hmw_payload.dll").exists());
+        std::fs::remove_dir_all(&root).unwrap();
     }
 }

@@ -11,6 +11,7 @@ src-tauri/gen/schemas/
 # Built payload and the 32-bit uninstall helper (produced during build / by CI)
 src-tauri/resources/*.dll
 src-tauri/resources/hmw-release-x86.exe
+src-tauri/resources/payload/
 
 # Updater signing keys (the private key must stay out of the repo)
 *.key

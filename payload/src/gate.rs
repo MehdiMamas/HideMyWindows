@@ -16,12 +16,24 @@ unsafe fn wide(ptr: *const u16) -> String {
 
 /// The native hook supplies a consistent, bounded snapshot from shared memory.
 /// A malformed policy blocks showing rather than silently allowing a match.
+/// A panic allows the window: this runs inside other apps and must not stop them.
 ///
 /// # Safety
 /// `bytes` must point to `len` readable bytes; the three text pointers must
 /// point to bounded, NUL-terminated UTF-16 strings for the duration of the call.
 #[no_mangle]
 pub unsafe extern "C" fn HmwGateDecision(
+    bytes: *const u8,
+    len: u32,
+    pid: u32,
+    process: *const u16,
+    title: *const u16,
+    class: *const u16,
+) -> i32 {
+    crate::guard(0, || decision(bytes, len, pid, process, title, class))
+}
+
+unsafe fn decision(
     bytes: *const u8,
     len: u32,
     pid: u32,

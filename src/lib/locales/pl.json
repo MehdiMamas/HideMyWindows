@@ -157,8 +157,11 @@
     "checking": "Sprawdzanie aktualizacji…",
     "upToDate": "Masz najnowszą wersję.",
     "updateTitle": "Dostępna aktualizacja",
-    "updatePrompt": "Wersja {version} jest dostępna. Pobrać i zainstalować teraz?\n\n{notes}",
-    "updatePromptNoNotes": "Wersja {version} jest dostępna. Pobrać i zainstalować teraz?",
+    "updateIntro": "HideMyWindows {version} jest gotowy do instalacji.",
+    "updateWhat": "HideMyWindows zamknie się, zainstaluje aktualizację i uruchomi się ponownie. Pozostałe aplikacje zostają otwarte i nic się z nimi nie dzieje.",
+    "updateNotes": "Co nowego",
+    "updateInstall": "Zainstaluj i uruchom ponownie",
+    "updateLater": "Później",
     "downloading": "Pobieranie {version}…",
     "updateFailed": "Nie udało się sprawdzić aktualizacji. {error}",
     "updateDev": "Sprawdzanie aktualizacji działa w zainstalowanych kompilacjach."
