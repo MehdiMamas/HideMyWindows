@@ -48,7 +48,7 @@ Vedi [BUILDING.md](BUILDING.md).
 ## 🚀 Uso
 
 1. **Home** — scegli un processo in esecuzione (o una finestra) e fai clic su **Nascondi tutte le finestre** / **Nascondi questa finestra**.
-2. **Avvio rapido** — aggiungi le app che nascondi più spesso e avviale già nascoste con un clic.
+2. **Avvio rapido** — fai clic su **Aggiungi app**, cerca tra le app installate (incluse quelle di Microsoft Store) e scegline una; **Avanzate: scegli un file .exe** copre tutto il resto. Ogni app può avere anche un collegamento “*App* HideMyWindows” nel menu Start: cercalo da Start oppure fai clic destro per aggiungerlo a Start o alla barra delle applicazioni. Apre l'app già nascosta, anche quando HideMyWindows è chiuso.
 3. **Regole finestre** — crea regole (es. *il nome del processo contiene "obs"* → *nascondi tutte le finestre*) per nascondere le app all'avvio. Attiva **Continua a riapplicare** per le app che aprono nuove finestre nel tempo.
 4. **Impostazioni** — nascondi HideMyWindows stesso, esegui nell'area di notifica, avvia con Windows, scegli tema e lingua.
 

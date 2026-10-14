@@ -50,7 +50,7 @@ See [BUILDING.md](BUILDING.md).
 ## 🚀 Usage
 
 1. **Home** — pick a running process (or a specific window) and click **Hide all windows** / **Hide this window**.
-2. **Quick launch** — add the apps you hide most often and start them already hidden with one click.
+2. **Quick launch** — click **Add app**, search your installed apps (Microsoft Store apps included) and pick one; **Advanced: choose an .exe file** covers anything not listed. Each app can also get a Start menu shortcut named “*App* HideMyWindows”: search for it from Start, or right-click it to pin it to Start or the taskbar. It opens the app already hidden, even when HideMyWindows is closed.
 3. **Window rules** — create and enable a process-name rule, then open that app normally. New supported windows are checked before showing, even without **Keep re-applying**. That option also reconciles existing windows on a timer. Process-name rules are preferable when a title is set after the window appears.
 4. **Settings** — hide HideMyWindows itself, run in the tray, start with Windows, pick a theme and language. Under **Protection before apps appear**, turn ordinary-launch protection off or pause it for 15, 30, 60, or 120 minutes. **Resume now** ends a pause early.
 

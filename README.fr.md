@@ -48,7 +48,7 @@ Voir [BUILDING.md](BUILDING.md).
 ## 🚀 Utilisation
 
 1. **Accueil** — choisissez un processus en cours (ou une fenêtre) et cliquez sur **Masquer toutes les fenêtres** / **Masquer cette fenêtre**.
-2. **Lancement rapide** — ajoutez les applications que vous masquez le plus souvent et démarrez-les déjà masquées en un clic.
+2. **Lancement rapide** — cliquez sur **Ajouter une application**, recherchez parmi vos applications installées (y compris celles du Microsoft Store) et choisissez-en une ; **Avancé : choisir un fichier .exe** couvre le reste. Chaque application peut aussi avoir un raccourci « *Application* HideMyWindows » dans le menu Démarrer : recherchez-le depuis Démarrer, ou faites un clic droit pour l’épingler à Démarrer ou à la barre des tâches. Il ouvre l’application déjà masquée, même quand HideMyWindows est fermé.
 3. **Règles de fenêtres** — créez des règles (ex. *le nom du processus contient « obs »* → *masquer toutes les fenêtres*) pour masquer automatiquement les applications à leur lancement. Activez **Continuer à réappliquer** pour les applications qui ouvrent de nouvelles fenêtres.
 4. **Paramètres** — masquer HideMyWindows lui-même, rester dans la zone de notification, démarrer avec Windows, choisir un thème et une langue.
 

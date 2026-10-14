@@ -3,6 +3,26 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.0] — 2026-10-13
+
+### Added
+- **Pick apps instead of typing paths.** Quick Launch's **Add app** lists the
+  apps from Start's "All apps" with their icons and a search box. Microsoft
+  Store apps such as WhatsApp work too. **Advanced: choose an .exe file**
+  keeps the manual form for anything not listed.
+- **Start menu shortcuts.** Each Quick Launch app can get a “*App*
+  HideMyWindows” shortcut (on by default when adding). Search for it from
+  Start or pin it to Start or the taskbar; it opens the app already hidden,
+  starting HideMyWindows in the tray if needed. Removing the entry, or
+  uninstalling, removes its shortcut.
+- **Protected launch for Microsoft Store apps.** The app starts suspended and
+  is resumed only after capture exclusion is in place. If the app is already
+  running, its windows are protected before it is brought forward.
+
+### Notes
+- A launcher `.exe` that starts a different process (some updaters do) only
+  protects the launcher. Use a process-name rule for those apps.
+
 ## [2.2.1] — 2026-10-10
 
 ### Added

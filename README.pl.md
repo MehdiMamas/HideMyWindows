@@ -48,7 +48,7 @@ Zobacz [BUILDING.md](BUILDING.md).
 ## 🚀 Użycie
 
 1. **Start** — wybierz działający proces (albo konkretne okno) i kliknij **Ukryj wszystkie okna** / **Ukryj to okno**.
-2. **Szybkie uruchamianie** — dodaj aplikacje, które ukrywasz najczęściej, i uruchamiaj je już ukryte jednym kliknięciem.
+2. **Szybkie uruchamianie** — kliknij **Dodaj aplikację**, wyszukaj wśród zainstalowanych aplikacji (także ze Sklepu Microsoft) i wybierz jedną; **Zaawansowane: wybierz plik .exe** obejmuje resztę. Każda aplikacja może też mieć skrót „*Aplikacja* HideMyWindows” w menu Start: wyszukaj go w Start albo kliknij prawym przyciskiem, aby przypiąć do Start lub paska zadań. Otwiera aplikację już ukrytą, nawet gdy HideMyWindows jest zamknięty.
 3. **Reguły okien** — twórz reguły (np. *nazwa procesu zawiera „obs”* → *ukryj wszystkie okna*), żeby ukrywać aplikacje przy starcie. Włącz **Stosuj ponownie**, gdy aplikacja otwiera nowe okna z czasem.
 4. **Ustawienia** — ukryj samo HideMyWindows, działaj w zasobniku, uruchamiaj z Windows, wybierz motyw i język.
 

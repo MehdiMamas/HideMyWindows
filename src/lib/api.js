@@ -13,5 +13,16 @@ export const listWindows = () => invoke("list_windows");
 
 export const hideProcess = (pid, action) => invoke("hide_process", { pid, action });
 export const hideWindow = (hwnd, action) => invoke("hide_window", { hwnd, action });
-export const quickLaunch = (path, args) =>
-  invoke("quick_launch", { path, arguments: args });
+export const quickLaunch = (path, args, appId = "") =>
+  invoke("quick_launch", { path, arguments: args, appId });
+
+// Apps from Start's "All apps" list; icons make it a few seconds slower.
+export const listInstalledApps = (withIcons) =>
+  invoke("list_installed_apps", { withIcons });
+
+// Returns the path of the new "<name> HideMyWindows" Start menu shortcut.
+export const createLaunchShortcut = (name, path, args, appId = "") =>
+  invoke("create_launch_shortcut", { name, path, arguments: args, appId });
+
+export const removeLaunchShortcut = (shortcut) =>
+  invoke("remove_launch_shortcut", { shortcut });

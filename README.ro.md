@@ -48,7 +48,7 @@ Vezi [BUILDING.md](BUILDING.md).
 ## 🚀 Utilizare
 
 1. **Acasă** — alege un proces pornit (sau o fereastră) și apasă **Ascunde toate ferestrele** / **Ascunde această fereastră**.
-2. **Lansare rapidă** — adaugă aplicațiile pe care le ascunzi cel mai des și pornește-le deja ascunse dintr-un clic.
+2. **Lansare rapidă** — apasă **Adaugă aplicație**, caută printre aplicațiile instalate (inclusiv cele din Microsoft Store) și alege una; **Avansat: alege un fișier .exe** acoperă restul. Fiecare aplicație poate primi și o comandă rapidă „*Aplicație* HideMyWindows” în meniul Start: caut-o din Start sau dă clic dreapta pentru a o fixa în Start ori pe bara de activități. Deschide aplicația deja ascunsă, chiar și când HideMyWindows este închis.
 3. **Reguli pentru ferestre** — creează reguli (ex. *numele procesului conține „obs”* → *ascunde toate ferestrele*) ca să ascunzi aplicațiile la pornire. Activează **Continuă să reaplici** pentru aplicațiile care deschid ferestre noi.
 4. **Setări** — ascunde HideMyWindows însuși, rulează în zona de notificare, pornește cu Windows, alege tema și limba.
 
