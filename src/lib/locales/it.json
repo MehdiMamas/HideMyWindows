@@ -157,8 +157,11 @@
     "checking": "Ricerca aggiornamenti…",
     "upToDate": "Sei aggiornato.",
     "updateTitle": "Aggiornamento disponibile",
-    "updatePrompt": "La versione {version} è disponibile. Scaricarla e installarla ora?\n\n{notes}",
-    "updatePromptNoNotes": "La versione {version} è disponibile. Scaricarla e installarla ora?",
+    "updateIntro": "HideMyWindows {version} è pronto per essere installato.",
+    "updateWhat": "HideMyWindows si chiuderà, installerà l'aggiornamento e si riavvierà. Le altre app restano aperte e non vengono toccate.",
+    "updateNotes": "Novità",
+    "updateInstall": "Installa e riavvia",
+    "updateLater": "Più tardi",
     "downloading": "Download di {version}…",
     "updateFailed": "Impossibile cercare aggiornamenti. {error}",
     "updateDev": "Il controllo aggiornamenti funziona nelle build installate."

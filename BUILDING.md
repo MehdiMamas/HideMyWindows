@@ -24,25 +24,29 @@ processes. Build it for your architecture and copy it where the app expects it:
 
 ```bash
 # x64 (most PCs)
-cargo build -p hmw-payload --release --target x86_64-pc-windows-msvc
-copy target\x86_64-pc-windows-msvc\release\hmw_payload.dll src-tauri\resources\hmw_payload.dll
+cargo build -p hmw-payload --profile payload --target x86_64-pc-windows-msvc
+copy target\x86_64-pc-windows-msvc\payload\hmw_payload.dll src-tauri\resources\hmw_payload.dll
 ```
 
 For other architectures use `i686-pc-windows-msvc` (x86) or
 `aarch64-pc-windows-msvc` (ARM64) and the matching `target\…` path.
+
+The `payload` profile is the release profile with `panic = "unwind"`. The DLL
+runs inside other apps, so it catches its own panics instead of aborting them.
 
 For the x64 app, also build the bundled x86 helper and payload. These are
 required for release builds and for the native WOW64 integration test:
 
 ```bat
 rustup target add i686-pc-windows-msvc
-cargo build -p hmw-release -p hmw-payload --release --target i686-pc-windows-msvc
+cargo build -p hmw-release --release --target i686-pc-windows-msvc
+cargo build -p hmw-payload --profile payload --target i686-pc-windows-msvc
 copy target\i686-pc-windows-msvc\release\hmw-release.exe src-tauri\resources\hmw-release-x86.exe
-copy target\i686-pc-windows-msvc\release\hmw_payload.dll src-tauri\resources\hmw_payload_x86.dll
+copy target\i686-pc-windows-msvc\payload\hmw_payload.dll src-tauri\resources\hmw_payload_x86.dll
 cargo test -p hmw-core -- --test-threads=1
 ```
 
-The x64 app embeds both x86 files and extracts them into a version-specific
+The x64 app embeds both x86 files and extracts them into a content-named
 temporary directory. The helper runs without a console and shares the app's
 permissions; elevated targets still require an elevated controller. The x86
 helper also runs a separate message-pumping desktop window gate while the x64

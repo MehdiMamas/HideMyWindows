@@ -395,7 +395,9 @@ fn open_target(pid: u32) -> windows::core::Result<SafeHandle> {
 
 struct LoadedModules {
     legacy: Option<usize>,
-    payload: Option<usize>,
+    /// Every payload build in the process. After an update one process can
+    /// hold several, and each keeps its own hides until told to stop.
+    payload: Vec<usize>,
 }
 
 fn release_one(
@@ -417,7 +419,7 @@ fn release_one(
             None,
         )?;
     }
-    if let Some(base) = modules.payload {
+    for &base in &modules.payload {
         call_payload(
             handle.0,
             export_remote(handle.0, base, "HmwUnhideAll")?,
@@ -435,7 +437,8 @@ fn release_one(
         .collect();
     let payload_tray = modules
         .payload
-        .and_then(|base| export_remote(handle.0, base, "HmwUnhideTray").ok());
+        .iter()
+        .find_map(|&base| export_remote(handle.0, base, "HmwUnhideTray").ok());
     let legacy_tray = modules
         .legacy
         .and_then(|base| export_remote(handle.0, base, "UnhideTrayIcon").ok());
@@ -458,7 +461,7 @@ fn release_one(
     if modules.legacy.is_some() {
         what.push("original hooks");
     }
-    if modules.payload.is_some() {
+    if !modules.payload.is_empty() {
         what.push("capture exclusion");
     }
     what.push("taskbar buttons");
@@ -479,7 +482,7 @@ fn loaded_modules(pid: u32) -> Result<Option<LoadedModules>> {
     };
     let mut found = LoadedModules {
         legacy: None,
-        payload: None,
+        payload: Vec::new(),
     };
     let mut any = false;
     unsafe {
@@ -499,7 +502,7 @@ fn loaded_modules(pid: u32) -> Result<Option<LoadedModules>> {
                 }
                 Some(InjectedKind::Payload) => {
                     any = true;
-                    found.payload = Some(entry.modBaseAddr as usize);
+                    found.payload.push(entry.modBaseAddr as usize);
                 }
                 None => {}
             }

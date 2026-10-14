@@ -158,8 +158,11 @@
     "checking": "Checking for updates…",
     "upToDate": "You're up to date.",
     "updateTitle": "Update available",
-    "updatePrompt": "Version {version} is available. Download and install it now?\n\n{notes}",
-    "updatePromptNoNotes": "Version {version} is available. Download and install it now?",
+    "updateIntro": "HideMyWindows {version} is ready to install.",
+    "updateWhat": "HideMyWindows will close, install the update and start again. Your other apps stay open and are not affected.",
+    "updateNotes": "What's new",
+    "updateInstall": "Install and restart",
+    "updateLater": "Later",
     "downloading": "Downloading {version}…",
     "updateFailed": "Couldn't check for updates. {error}",
     "updateDev": "Update checks run in installed builds."

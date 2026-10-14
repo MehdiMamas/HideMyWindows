@@ -157,8 +157,11 @@
     "checking": "Recherche de mises à jour…",
     "upToDate": "Vous êtes à jour.",
     "updateTitle": "Mise à jour disponible",
-    "updatePrompt": "La version {version} est disponible. La télécharger et l'installer maintenant ?\n\n{notes}",
-    "updatePromptNoNotes": "La version {version} est disponible. La télécharger et l'installer maintenant ?",
+    "updateIntro": "HideMyWindows {version} est prêt à être installé.",
+    "updateWhat": "HideMyWindows va se fermer, installer la mise à jour puis redémarrer. Vos autres applications restent ouvertes et ne sont pas affectées.",
+    "updateNotes": "Nouveautés",
+    "updateInstall": "Installer et redémarrer",
+    "updateLater": "Plus tard",
     "downloading": "Téléchargement de {version}…",
     "updateFailed": "Impossible de rechercher les mises à jour. {error}",
     "updateDev": "La recherche de mises à jour fonctionne dans les versions installées."

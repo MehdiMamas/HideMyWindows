@@ -60,6 +60,18 @@ static WORKER_STARTED: AtomicBool = AtomicBool::new(false);
 /// `HmwUnhideAll` has already cleared the flag.
 static APPLY_LOCK: Mutex<()> = Mutex::new(());
 
+/// Returned by an action whose Rust code panicked.
+const ERROR_INTERNAL_ERROR: u32 = 1359;
+
+/// Run payload code without ever unwinding into the host app.
+///
+/// This DLL runs inside other people's processes. The payload profile builds
+/// it with `panic = "unwind"` so a bug here returns `fallback` instead of
+/// aborting the app it was loaded into.
+pub(crate) fn guard<T>(fallback: T, f: impl FnOnce() -> T) -> T {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).unwrap_or(fallback)
+}
+
 #[no_mangle]
 #[allow(non_snake_case)]
 extern "system" fn DllMain(hinst: HMODULE, reason: u32, _reserved: *mut c_void) -> BOOL {
@@ -106,12 +118,14 @@ fn set_affinity(hwnd: HWND, affinity: u32) {
 // Native pre-show hooks call these before using the affinity API trampoline.
 #[no_mangle]
 pub extern "C" fn HmwSuppressCaptureTransitions(hwnd: HWND) -> BOOL {
-    BOOL::from(capture_affinity::suppress_transitions(hwnd))
+    guard(BOOL(0), || {
+        BOOL::from(capture_affinity::suppress_transitions(hwnd))
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn HmwRestoreCaptureTransitions(hwnd: HWND) {
-    capture_affinity::restore_transitions(hwnd);
+    guard((), || capture_affinity::restore_transitions(hwnd));
 }
 
 fn set_all_windows(hidden: bool) {
@@ -199,44 +213,50 @@ fn ensure_worker() {
     }
     // Safe to spawn here: exported functions run on their own remote thread,
     // not under the loader lock.
-    std::thread::spawn(|| loop {
-        unsafe {
-            HmwRecoverNormalWindows();
-        }
-        if HIDING.load(Ordering::SeqCst) {
-            apply_hiding_flag();
-        }
-        if HIDE_TOASTS.load(Ordering::SeqCst) {
-            apply_toast_flag();
-        }
+    let spawned = std::thread::Builder::new().spawn(|| loop {
+        guard((), || {
+            unsafe {
+                HmwRecoverNormalWindows();
+            }
+            if HIDING.load(Ordering::SeqCst) {
+                apply_hiding_flag();
+            }
+            if HIDE_TOASTS.load(Ordering::SeqCst) {
+                apply_toast_flag();
+            }
+        });
         std::thread::sleep(std::time::Duration::from_millis(300));
     });
+    if spawned.is_err() {
+        // Try again on the next call rather than panicking in the host.
+        WORKER_STARTED.store(false, Ordering::SeqCst);
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn HmwEnsureGateWorker() {
-    ensure_worker();
+    guard((), ensure_worker);
 }
 
 #[no_mangle]
 /// # Safety
 /// `bytes` must reference `len` readable policy bytes until this call returns.
 pub unsafe extern "system" fn HmwGateStart(bytes: *const u8, len: u32, excluded_pid: u32) -> u32 {
-    HmwStartNormalGate(bytes, len, excluded_pid)
+    guard(ERROR_INTERNAL_ERROR, || {
+        HmwStartNormalGate(bytes, len, excluded_pid)
+    })
 }
 
 #[no_mangle]
 /// # Safety
 /// `bytes` must reference `len` readable policy bytes until this call returns.
 pub unsafe extern "system" fn HmwGateUpdate(bytes: *const u8, len: u32) -> u32 {
-    HmwUpdateNormalGate(bytes, len)
+    guard(ERROR_INTERNAL_ERROR, || HmwUpdateNormalGate(bytes, len))
 }
 
 #[no_mangle]
 pub extern "system" fn HmwGateStop() {
-    unsafe {
-        HmwStopNormalGate();
-    }
+    guard((), || unsafe { HmwStopNormalGate() });
 }
 
 fn set_single(hwnd_param: *mut c_void, hidden: bool) {
@@ -280,77 +300,93 @@ fn set_tray(hwnd_param: *mut c_void, visible: bool) {
 
 #[no_mangle]
 pub extern "system" fn HmwHideAll(_param: *mut c_void) -> u32 {
-    let error = unsafe { HmwInstallHooks() };
-    if error != 0 {
-        return error;
-    }
-    unsafe {
-        HmwEnableHooks(TRUE);
-    }
-    HIDING.store(true, Ordering::SeqCst);
-    ensure_worker();
-    apply_hiding_flag();
-    0
+    guard(ERROR_INTERNAL_ERROR, || {
+        let error = unsafe { HmwInstallHooks() };
+        if error != 0 {
+            return error;
+        }
+        unsafe {
+            HmwEnableHooks(TRUE);
+        }
+        HIDING.store(true, Ordering::SeqCst);
+        ensure_worker();
+        apply_hiding_flag();
+        0
+    })
 }
 
 #[no_mangle]
 pub extern "system" fn HmwUnhideAll(_param: *mut c_void) -> u32 {
-    // Initialization can be absent when cleanup only loaded this DLL. The
-    // native helper is a no-op until its installation succeeds.
-    unsafe {
-        HmwEnableHooks(BOOL(0));
-    }
-    HIDING.store(false, Ordering::SeqCst);
-    apply_hiding_flag();
-    0
+    guard(ERROR_INTERNAL_ERROR, || {
+        // Initialization can be absent when cleanup only loaded this DLL. The
+        // native helper is a no-op until its installation succeeds.
+        unsafe {
+            HmwEnableHooks(BOOL(0));
+        }
+        HIDING.store(false, Ordering::SeqCst);
+        apply_hiding_flag();
+        0
+    })
 }
 
 /// Readiness is explicit: a polling-only payload is not sufficient for launch.
 #[no_mangle]
 pub extern "system" fn HmwPrepareProtection(_param: *mut c_void) -> u32 {
-    unsafe { HmwInstallHooks() }
+    guard(ERROR_INTERNAL_ERROR, || unsafe { HmwInstallHooks() })
 }
 
 #[no_mangle]
 pub extern "system" fn HmwCheckProtection(_param: *mut c_void) -> u32 {
-    unsafe { HmwHookFailure() }
+    guard(ERROR_INTERNAL_ERROR, || unsafe { HmwHookFailure() })
 }
 
 #[no_mangle]
 pub extern "system" fn HmwHideToasts(_param: *mut c_void) -> u32 {
-    HIDE_TOASTS.store(true, Ordering::SeqCst);
-    ensure_worker();
-    apply_toast_flag();
-    0
+    guard(ERROR_INTERNAL_ERROR, || {
+        HIDE_TOASTS.store(true, Ordering::SeqCst);
+        ensure_worker();
+        apply_toast_flag();
+        0
+    })
 }
 
 #[no_mangle]
 pub extern "system" fn HmwUnhideToasts(_param: *mut c_void) -> u32 {
-    HIDE_TOASTS.store(false, Ordering::SeqCst);
-    apply_toast_flag();
-    0
+    guard(ERROR_INTERNAL_ERROR, || {
+        HIDE_TOASTS.store(false, Ordering::SeqCst);
+        apply_toast_flag();
+        0
+    })
 }
 
 #[no_mangle]
 pub extern "system" fn HmwHideWindow(param: *mut c_void) -> u32 {
-    set_single(param, true);
-    0
+    guard(ERROR_INTERNAL_ERROR, || {
+        set_single(param, true);
+        0
+    })
 }
 
 #[no_mangle]
 pub extern "system" fn HmwUnhideWindow(param: *mut c_void) -> u32 {
-    set_single(param, false);
-    0
+    guard(ERROR_INTERNAL_ERROR, || {
+        set_single(param, false);
+        0
+    })
 }
 
 #[no_mangle]
 pub extern "system" fn HmwHideTray(param: *mut c_void) -> u32 {
-    set_tray(param, false);
-    0
+    guard(ERROR_INTERNAL_ERROR, || {
+        set_tray(param, false);
+        0
+    })
 }
 
 #[no_mangle]
 pub extern "system" fn HmwUnhideTray(param: *mut c_void) -> u32 {
-    set_tray(param, true);
-    0
+    guard(ERROR_INTERNAL_ERROR, || {
+        set_tray(param, true);
+        0
+    })
 }

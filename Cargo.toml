@@ -3,7 +3,7 @@ resolver = "2"
 members = ["hmw-core", "hmw-release", "payload", "src-tauri"]
 
 [workspace.package]
-version = "2.3.1"
+version = "2.3.2"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/mehdimamas/hidemywindows"
@@ -20,3 +20,9 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
+
+# The payload runs inside other apps. Unwinding lets it catch its own panics
+# and fail open instead of aborting the app it was loaded into.
+[profile.payload]
+inherits = "release"
+panic = "unwind"

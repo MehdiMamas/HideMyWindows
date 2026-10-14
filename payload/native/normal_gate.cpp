@@ -64,7 +64,12 @@ static int decide(HWND hwnd) {
         reader.owner_pid = owner;
     }
     // A controller that exited must not leave apps permanently locally hidden.
-    if (!reader.owner) return -1;
+    // An update or crash can end it without clearing `owner`.
+    if (!reader.owner) {
+        DWORD error = GetLastError();
+        reader.owner_pid = 0;
+        return error == ERROR_INVALID_PARAMETER ? 0 : -1;
+    }
     DWORD state = WaitForSingleObject(reader.owner, 0);
     if (state == WAIT_OBJECT_0) return 0;
     if (state != WAIT_TIMEOUT) return -1;
@@ -81,17 +86,21 @@ static int decide(HWND hwnd) {
         if (before == view->sequence) { consistent = true; break; }
     }
     if (!consistent) return -1;
-    wchar_t path[32768]{}, title[32768]{}, cls[256]{};
-    if (!GetModuleFileNameW(nullptr, path, 32768)) return -1;
-    const wchar_t* process = wcsrchr(path, L'\\');
-    process = process ? process + 1 : path;
-    GetWindowTextW(hwnd, title, 32768);
+    // On the heap: this runs on the host's threads, whose stacks can be small.
+    std::vector<wchar_t> path(32768), title(32768);
+    wchar_t cls[256]{};
+    if (!GetModuleFileNameW(nullptr, path.data(), 32768)) return -1;
+    const wchar_t* process = wcsrchr(path.data(), L'\\');
+    process = process ? process + 1 : path.data();
+    GetWindowTextW(hwnd, title.data(), 32768);
     GetClassNameW(hwnd, cls, 256);
-    return HmwGateDecision(bytes.data(), static_cast<DWORD>(bytes.size()), GetCurrentProcessId(), process, title, cls);
+    return HmwGateDecision(bytes.data(), static_cast<DWORD>(bytes.size()), GetCurrentProcessId(), process, title.data(), cls);
 }
 
 extern "C" int HmwNormalGateDecision(HWND hwnd) {
-    return GetPropW(hwnd, tracked) ? decide(hwnd) : 0;
+    if (!GetPropW(hwnd, tracked)) return 0;
+    // Never let an exception leave this DLL into the host app; allow the window.
+    try { return decide(hwnd); } catch (...) { return 0; }
 }
 extern "C" void HmwRememberGateAffinity(HWND hwnd, DWORD affinity) {
     if (GetPropW(hwnd, tracked) && !GetPropW(hwnd, owned))
@@ -197,7 +206,9 @@ extern "C" DWORD HmwStartNormalGate(const unsigned char* bytes, DWORD length, DW
     writer = static_cast<SharedPolicy*>(MapViewOfFile(writer_mapping, FILE_MAP_WRITE, 0, 0, sizeof(SharedPolicy)));
     if (!writer) { DWORD error = GetLastError(); HmwStopNormalGate(); return error; }
     writer->owner = 0;
-    writer->sequence = 0;
+    // Never move `sequence` backwards: a reader of a reused mapping may be
+    // mid-copy. A writer that died mid-update left it odd; make it even.
+    if (writer->sequence & 1) InterlockedIncrement(&writer->sequence);
     writer->excluded = excluded_pid;
     HmwUpdateNormalGate(bytes, length);
     writer->owner = GetCurrentProcessId();

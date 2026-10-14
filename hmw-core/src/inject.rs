@@ -55,10 +55,20 @@ fn open_target(pid: u32) -> Result<SafeHandle> {
     Ok(SafeHandle(handle))
 }
 
-/// Find the base address of `module_file_name` (e.g. `hmw_payload_x64.dll`)
-/// within process `pid`, retrying briefly for freshly started processes.
-fn remote_module_base(pid: u32, module_file_name: &str) -> Option<isize> {
-    let wanted = module_file_name.to_lowercase();
+/// Compare module paths the way the loader does: case-insensitively, with or
+/// without the `\\?\` prefix that path resolution sometimes adds.
+fn same_path(a: &str, b: &str) -> bool {
+    let trim = |p: &str| p.trim_start_matches(r"\\?\").replace('/', "\\");
+    trim(a).eq_ignore_ascii_case(&trim(b))
+}
+
+/// Every module named like the payload in `pid`, as (base, registered path).
+///
+/// After an update a process can hold several payload builds at once. The
+/// registered path is the one the DLL was loaded from, even if an installer
+/// renamed the file since. Retries briefly while a fresh process cannot be
+/// snapshotted yet.
+fn remote_payload_modules(pid: u32, module_file_name: &str) -> Vec<(isize, String)> {
     for _ in 0..10 {
         unsafe {
             if let Ok(snapshot) =
@@ -69,33 +79,51 @@ fn remote_module_base(pid: u32, module_file_name: &str) -> Option<isize> {
                     dwSize: std::mem::size_of::<MODULEENTRY32W>() as u32,
                     ..Default::default()
                 };
+                let mut found = Vec::new();
                 if Module32FirstW(snapshot.0, &mut entry).is_ok() {
                     loop {
-                        let name = wide_to_string(&entry.szModule).to_lowercase();
-                        if name == wanted {
-                            return Some(entry.modBaseAddr as isize);
+                        let name = wide_to_string(&entry.szModule);
+                        if name.eq_ignore_ascii_case(module_file_name) {
+                            found.push((
+                                entry.modBaseAddr as isize,
+                                wide_to_string(&entry.szExePath),
+                            ));
                         }
                         if Module32NextW(snapshot.0, &mut entry).is_err() {
                             break;
                         }
                     }
                 }
+                return found;
             }
         }
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
-    None
+    Vec::new()
+}
+
+/// The payload loaded from exactly `payload_path`. A same-named DLL from
+/// another build has different code and is never used in its place.
+fn remote_module_base(pid: u32, file_name: &str, payload_path: &str) -> Option<isize> {
+    remote_payload_modules(pid, file_name)
+        .into_iter()
+        .find(|(_, path)| same_path(path, payload_path))
+        .map(|(base, _)| base)
+}
+
+fn payload_file_name(payload_path: &str) -> Result<String> {
+    std::path::Path::new(payload_path)
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .ok_or_else(|| Error("Invalid payload path".into()))
 }
 
 /// Inject the payload into `pid` if it is not already present, returning the
 /// remote base address of the payload module.
 fn ensure_loaded(handle: &SafeHandle, pid: u32, payload_path: &str) -> Result<isize> {
-    let file_name = std::path::Path::new(payload_path)
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .ok_or_else(|| Error("Invalid payload path".into()))?;
+    let file_name = payload_file_name(payload_path)?;
 
-    if let Some(base) = remote_module_base(pid, &file_name) {
+    if let Some(base) = remote_module_base(pid, &file_name, payload_path) {
         return Ok(base);
     }
 
@@ -115,6 +143,7 @@ fn ensure_loaded(handle: &SafeHandle, pid: u32, payload_path: &str) -> Result<is
         return Err(Error("VirtualAllocEx failed".into()));
     }
     let mut safe_to_free = true;
+    let mut loaded = 0u32;
     let result = (|| -> Result<()> {
         unsafe {
             WriteProcessMemory(
@@ -147,6 +176,7 @@ fn ensure_loaded(handle: &SafeHandle, pid: u32, payload_path: &str) -> Result<is
         }
         let mut exit = 0u32;
         unsafe { GetExitCodeThread(thread.0, &mut exit)? };
+        loaded = exit;
         if exit == 0 {
             return Err(Error(
                 "LoadLibraryW failed in the target process. It may be protected, a different architecture, or unable to read the payload.".into(),
@@ -162,12 +192,20 @@ fn ensure_loaded(handle: &SafeHandle, pid: u32, payload_path: &str) -> Result<is
     }
     result?;
 
-    remote_module_base(pid, &file_name).ok_or_else(|| {
-        Error(format!(
-            "Payload did not appear in the target process. The target may be a different \
+    // The thread exit code holds the low 32 bits of the module handle, which
+    // identifies our module if the loader reports its path in another form.
+    let modules = remote_payload_modules(pid, &file_name);
+    modules
+        .iter()
+        .find(|(_, path)| same_path(path, payload_path))
+        .or_else(|| modules.iter().find(|(base, _)| *base as u32 == loaded))
+        .map(|(base, _)| *base)
+        .ok_or_else(|| {
+            Error(format!(
+                "Payload did not appear in the target process. The target may be a different \
              architecture than HideMyWindows, protected, or elevated. ({file_name})"
-        ))
-    })
+            ))
+        })
 }
 
 /// Run one of the payload's exported functions in the target process,
@@ -194,7 +232,29 @@ pub fn call_export(pid: u32, payload_path: &str, export: &str, hwnd: isize) -> R
         )));
     }
 
+    // Turning a hide off must reach every build loaded in the process: an
+    // older one keeps re-applying its own hide until it is told to stop.
+    if matches!(export, "HmwUnhideAll" | "HmwUnhideToasts") {
+        let loaded = remote_payload_modules(pid, &payload_file_name(payload_path)?);
+        if !loaded.is_empty() {
+            let mut result = Ok(());
+            let mut any = false;
+            for (base, _) in loaded {
+                match run_export(&handle, base, export, hwnd) {
+                    Ok(()) => any = true,
+                    Err(error) => result = Err(error),
+                }
+            }
+            return if any { Ok(()) } else { result };
+        }
+    }
+
     let base = ensure_loaded(&handle, pid, payload_path)?;
+    run_export(&handle, base, export, hwnd)
+}
+
+/// Start `export` of the payload at `base` in the target and wait for it.
+fn run_export(handle: &SafeHandle, base: isize, export: &str, hwnd: isize) -> Result<()> {
     let func_addr =
         crate::cleanup::export_remote(handle.0, base as usize, export)? as *const core::ffi::c_void;
 

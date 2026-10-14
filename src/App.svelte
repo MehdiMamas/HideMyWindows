@@ -14,6 +14,7 @@
   import Settings from "./lib/pages/Settings.svelte";
   import About from "./lib/pages/About.svelte";
   import Toasts from "./lib/components/Toasts.svelte";
+  import UpdatePrompt from "./lib/components/UpdatePrompt.svelte";
   import LaunchProtectionStatus from "./lib/components/LaunchProtectionStatus.svelte";
 
   let current = $state("home");
@@ -115,6 +116,7 @@
 </div>
 
 <Toasts />
+<UpdatePrompt />
 
 <style>
   .protection-banner {
