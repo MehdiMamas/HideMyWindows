@@ -1,6 +1,12 @@
 <script module>
   // The app list takes seconds to build; keep it while the app runs.
   const cache = { apps: null, icons: {} };
+
+  /** Forget the cached app list (tests). */
+  export function clearAppCache() {
+    cache.apps = null;
+    cache.icons = {};
+  }
 </script>
 
 <script>
@@ -20,7 +26,11 @@
   let addToStart = $state(true);
   let busy = $state(false);
 
-  const appKey = (app) => app.appId || app.path.toLowerCase();
+  // What an app launches. Start can list one exe several times with
+  // different arguments (Java, EA, Command Prompt), so arguments count.
+  const appKey = (app) => app.appId || `${app.path.toLowerCase()} ${app.arguments || ""}`;
+  // One picker row; the backend drops exact duplicates, so this is unique.
+  const rowKey = (app) => [app.name, app.appId, app.path, app.arguments].join("|");
 
   let matches = $derived.by(() => {
     const q = query.trim().toLowerCase();
@@ -66,7 +76,7 @@
 
   async function pick(app) {
     if (busy) return;
-    const existing = $config.quickLaunch.find((e) => entryKey(e) === appKey(app));
+    const existing = $config.quickLaunch.find((e) => appKey(e) === appKey(app));
     if (existing) {
       picking = false;
       notify($t("quickLaunch.alreadyAdded", { name: displayName(existing) }), "info");
@@ -185,12 +195,8 @@
     return `${displayName(entry)} HideMyWindows`;
   }
 
-  function entryKey(entry) {
-    return entry.appId || entry.path.toLowerCase();
-  }
-
   function entryIcon(entry) {
-    return icons[entryKey(entry)];
+    return icons[appKey(entry)];
   }
 
   $effect(() => {
@@ -249,7 +255,7 @@
         {:else if !matches.length}
           <p class="muted">{$t("common.noResults")}</p>
         {:else}
-          {#each matches as app (appKey(app))}
+          {#each matches as app (rowKey(app))}
             <button class="app" disabled={busy} onclick={() => pick(app)}>
               {#if icons[appKey(app)]}
                 <img class="icon" src={icons[appKey(app)]} alt="" />

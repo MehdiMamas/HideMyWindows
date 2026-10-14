@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { flushSync, mount, unmount } from "svelte";
 import { get } from "svelte/store";
-import QuickLaunch from "./QuickLaunch.svelte";
+import QuickLaunch, { clearAppCache } from "./QuickLaunch.svelte";
 import { config, toasts } from "../stores.js";
 import { locale } from "../i18n.js";
 import * as api from "../api.js";
@@ -28,6 +28,7 @@ describe("quick launch app picker", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    clearAppCache();
     api.saveConfig.mockResolvedValue();
     api.listInstalledApps.mockResolvedValue(APPS);
     api.createLaunchShortcut.mockResolvedValue(SHORTCUT);
@@ -109,6 +110,29 @@ describe("quick launch app picker", () => {
     await settle();
     expect(get(config).quickLaunch).toHaveLength(1);
     expect(get(toasts).at(-1).message).toContain("already in the list");
+  });
+
+  it("lists one exe several times when Start does, with different arguments", async () => {
+    const java = "C:\Java\bin\javacpl.exe";
+    api.listInstalledApps.mockResolvedValue([
+      { name: "About Java", appId: "", path: java, arguments: "-tab about", icon: null },
+      { name: "Check For Updates", appId: "", path: java, arguments: "-tab update", icon: null },
+      { name: "Configure Java", appId: "", path: java, arguments: "", icon: null },
+    ]);
+    await render();
+    button("+ Add app").click();
+    await settle();
+    expect(target.querySelectorAll(".picker .app")).toHaveLength(3);
+
+    pickerApp("Check For Updates").click();
+    await settle();
+    expect(get(config).quickLaunch[0]).toMatchObject({ path: java, arguments: "-tab update" });
+
+    button("+ Add app").click();
+    await settle();
+    pickerApp("Configure Java").click();
+    await settle();
+    expect(get(config).quickLaunch).toHaveLength(2);
   });
 
   it("removes the Start menu shortcut with the entry", async () => {
