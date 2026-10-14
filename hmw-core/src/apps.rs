@@ -95,7 +95,16 @@ pub fn list_installed_apps(self_exe: &str, with_icons: bool) -> Result<Vec<Insta
         }
     }
     apps.sort_by_key(|app| app.name.to_lowercase());
-    apps.dedup_by(|a, b| a.name == b.name && a.app_id == b.app_id && a.path == b.path);
+    // Start can list the same shortcut twice; keep one of each.
+    let mut seen = std::collections::HashSet::new();
+    apps.retain(|app| {
+        seen.insert((
+            app.name.clone(),
+            app.app_id.clone(),
+            app.path.clone(),
+            app.arguments.clone(),
+        ))
+    });
     Ok(apps)
 }
 

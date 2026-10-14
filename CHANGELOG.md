@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.1] — 2026-10-14
+
+### Fixed
+- **Add app no longer gets stuck on "Loading your apps…".** Start lists some
+  programs several times with different arguments (Java's settings pages,
+  EA App Recovery, Command Prompt variants), which crashed the picker. Each
+  of those now shows as its own entry and can be added separately.
+
 ## [2.3.0] — 2026-10-13
 
 ### Added
