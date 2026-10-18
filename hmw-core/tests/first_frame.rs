@@ -37,6 +37,7 @@ public static class FrameTarget {
  [DllImport("user32.dll")] static extern IntPtr GetPropW(IntPtr h,[MarshalAs(UnmanagedType.LPWStr)] string name);
  [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr h);
  [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+ [DllImport("user32.dll")] static extern void keybd_event(byte vk,byte scan,uint flags,UIntPtr extra);
  [DllImport("user32.dll")] static extern IntPtr SendMessageW(IntPtr h,uint m,IntPtr w,IntPtr l);
  [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h,IntPtr after,int x,int y,int w,int hh,uint flags);
  [DllImport("user32.dll")] static extern IntPtr BeginDeferWindowPos(int n);
@@ -77,7 +78,12 @@ public static class FrameTarget {
    if(cmd=="visible") { expectHidden=false; displayed=Make(2); }
    if(cmd=="handle") { Console.WriteLine("HMW_HWND:"+displayed.ToInt64()); Console.Out.Flush(); }
    if(cmd=="focus") {
-    SetForegroundWindow(form.Handle);
+    // A background process may not take the foreground; a synthetic Alt tap lifts the foreground lock.
+    for(int i=0;i<20 && GetForegroundWindow()!=form.Handle;i++) {
+     keybd_event(0x12,0,0,UIntPtr.Zero); keybd_event(0x12,0,2,UIntPtr.Zero);
+     SetForegroundWindow(form.Handle);
+     System.Threading.Thread.Sleep(50);
+    }
     Console.WriteLine(GetForegroundWindow()==form.Handle ? "HMW_FOCUSED" : "HMW_NO_FOCUS"); Console.Out.Flush();
    }
    if(cmd=="minimize") ShowWindow(displayed,6);
