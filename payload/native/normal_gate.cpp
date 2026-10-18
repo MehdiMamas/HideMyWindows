@@ -33,6 +33,9 @@ struct SharedPolicy {
 static HANDLE writer_mapping = nullptr, writer_lock = nullptr;
 static SharedPolicy* writer = nullptr;
 static HHOOK hook = nullptr;
+// Set once this process has a window the gate intercepted. Until then the
+// worker has nothing to recover and skips the EnumWindows pass.
+static volatile LONG tracked_any = 0;
 
 struct Reader {
     HANDLE mapping = nullptr, owner = nullptr;
@@ -73,7 +76,9 @@ static int decide(HWND hwnd) {
     DWORD state = WaitForSingleObject(reader.owner, 0);
     if (state == WAIT_OBJECT_0) return 0;
     if (state != WAIT_TIMEOUT) return -1;
-    std::vector<unsigned char> bytes;
+    // Reused per thread: no allocation per window event.
+    static thread_local std::vector<unsigned char> bytes;
+    bytes.clear();
     bool consistent = false;
     for (int attempt = 0; attempt < 3; ++attempt) {
         LONG before = view->sequence;
@@ -86,15 +91,21 @@ static int decide(HWND hwnd) {
         if (before == view->sequence) { consistent = true; break; }
     }
     if (!consistent) return -1;
-    // On the heap: this runs on the host's threads, whose stacks can be small.
-    std::vector<wchar_t> path(32768), title(32768);
+    // The executable name never changes: resolve it once (on the heap, since
+    // the host's threads can have small stacks).
+    static const std::wstring process_name = [] {
+        std::vector<wchar_t> path(32768);
+        if (!GetModuleFileNameW(nullptr, path.data(), 32768)) return std::wstring();
+        const wchar_t* base = wcsrchr(path.data(), L'\\');
+        return std::wstring(base ? base + 1 : path.data());
+    }();
+    if (process_name.empty()) return -1;
+    // Titles go into a bounded stack buffer; longer ones are truncated.
+    wchar_t title[2048]{};
     wchar_t cls[256]{};
-    if (!GetModuleFileNameW(nullptr, path.data(), 32768)) return -1;
-    const wchar_t* process = wcsrchr(path.data(), L'\\');
-    process = process ? process + 1 : path.data();
-    GetWindowTextW(hwnd, title.data(), 32768);
+    GetWindowTextW(hwnd, title, 2048);
     GetClassNameW(hwnd, cls, 256);
-    return HmwGateDecision(bytes.data(), static_cast<DWORD>(bytes.size()), GetCurrentProcessId(), process, title.data(), cls);
+    return HmwGateDecision(bytes.data(), static_cast<DWORD>(bytes.size()), GetCurrentProcessId(), process_name.c_str(), title, cls);
 }
 
 extern "C" int HmwNormalGateDecision(HWND hwnd) {
@@ -160,6 +171,7 @@ static LRESULT CALLBACK gate_callback(int code, WPARAM w, LPARAM l) {
                 reinterpret_cast<LPCWSTR>(gate_callback), &module);
             if (SetPropW(hwnd, tracked, reinterpret_cast<HANDLE>(1)) &&
                 SetWindowSubclass(hwnd, window_proc, 0x484d57, 0)) {
+                InterlockedExchange(&tracked_any, 1);
                 if (create->style & WS_VISIBLE) {
                     int cmd = (create->style & WS_MINIMIZE) ? SW_SHOWMINNOACTIVE :
                         (create->style & WS_MAXIMIZE) ? SW_SHOWMAXIMIZED :
@@ -228,4 +240,7 @@ static BOOL CALLBACK recover(HWND hwnd, LPARAM) {
     }
     return TRUE;
 }
-extern "C" void HmwRecoverNormalWindows() { EnumWindows(recover, 0); }
+extern "C" void HmwRecoverNormalWindows() {
+    if (!tracked_any) return;
+    EnumWindows(recover, 0);
+}

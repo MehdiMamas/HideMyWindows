@@ -81,6 +81,17 @@ pub struct Config {
 
     #[serde(default)]
     pub quick_launch: Vec<QuickLaunchEntry>,
+
+    /// Periodically re-verify capture exclusion on already-hidden processes.
+    /// Off means hiding still happens (at launch and via the in-process
+    /// payload worker), but the controller stops re-checking from outside.
+    #[serde(default = "default_true")]
+    pub protection_checker: bool,
+
+    /// When on, the window-rule watcher does no listing, no rule passes and
+    /// no injection; only Quick Launch entries are hidden at launch.
+    #[serde(default)]
+    pub quick_launch_only: bool,
 }
 
 impl Default for Config {
@@ -100,6 +111,8 @@ impl Default for Config {
             tour_completed: false,
             window_rules: Vec::new(),
             quick_launch: Vec::new(),
+            protection_checker: true,
+            quick_launch_only: false,
         }
     }
 }
@@ -174,6 +187,22 @@ mod tests {
         assert!(!cfg.hide_notification_toasts);
         assert!(cfg.normal_launch_protection);
         assert_eq!(cfg.normal_launch_pause_until_ms, 0);
+    }
+
+    #[test]
+    fn new_fields_default_on_old_config() {
+        // An old config file, saved before these fields existed, must load
+        // with the checker on and Quick Launch only off.
+        let cfg: Config = serde_json::from_str(r#"{"hideSelf":true}"#).unwrap();
+        assert!(cfg.protection_checker);
+        assert!(!cfg.quick_launch_only);
+    }
+
+    #[test]
+    fn defaults_match_documented_behavior() {
+        let cfg = Config::default();
+        assert!(cfg.protection_checker);
+        assert!(!cfg.quick_launch_only);
     }
 
     #[test]

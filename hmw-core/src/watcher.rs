@@ -85,6 +85,7 @@ impl RuleSession {
         rules: &[WindowRule],
         payload_path: &str,
         persistent_only: bool,
+        protection_checker: bool,
     ) -> Vec<String> {
         let windows = match list_top_windows(true) {
             Ok(w) => w,
@@ -116,20 +117,22 @@ impl RuleSession {
         let outcome = apply_hides(&desired, &self.applied, payload_path);
         errors.extend(outcome.errors);
         self.applied = outcome.kept;
-        let now = std::time::Instant::now();
-        let processes = &self.applied.processes;
-        self.throttle.retain(|pid| processes.contains(&pid));
-        for &pid in processes {
-            let signature = crate::hider::window_signature(
-                windows.iter().filter(|w| w.pid == pid).map(|w| w.hwnd),
-            );
-            if !self.throttle.due(pid, signature, now) {
-                continue;
-            }
-            if let Err(error) = crate::hider::check_protection(pid, payload_path) {
-                self.throttle.forget(pid);
-                if process_is_alive(pid) {
-                    errors.push(format!("Process {pid}: {}", error.0));
+        if protection_checker {
+            let now = std::time::Instant::now();
+            let processes = &self.applied.processes;
+            self.throttle.retain(|pid| processes.contains(&pid));
+            for &pid in processes {
+                let signature = crate::hider::window_signature(
+                    windows.iter().filter(|w| w.pid == pid).map(|w| w.hwnd),
+                );
+                if !self.throttle.due(pid, signature, now) {
+                    continue;
+                }
+                if let Err(error) = crate::hider::check_protection(pid, payload_path) {
+                    self.throttle.forget(pid);
+                    if process_is_alive(pid) {
+                        errors.push(format!("Process {pid}: {}", error.0));
+                    }
                 }
             }
         }

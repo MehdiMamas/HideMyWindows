@@ -156,7 +156,7 @@ fn x64_controller_hides_and_restores_x86_windows_and_rules_cover_later_windows()
     };
     let mut session = hmw_core::watcher::RuleSession::new();
     assert!(session
-        .apply(std::slice::from_ref(&rule), &own_payload, false)
+        .apply(std::slice::from_ref(&rule), &own_payload, false, true)
         .is_empty());
     eventually(target.hwnd, true);
     let later = target.new_window();
@@ -170,7 +170,7 @@ fn x64_controller_hides_and_restores_x86_windows_and_rules_cover_later_windows()
         ),
         (2, 2, 0)
     );
-    assert!(session.apply(&[], &own_payload, false).is_empty());
+    assert!(session.apply(&[], &own_payload, false, true).is_empty());
     eventually(target.hwnd, false);
     eventually(later, false);
     std::thread::sleep(Duration::from_millis(400));
