@@ -249,8 +249,49 @@ pub fn call_export(pid: u32, payload_path: &str, export: &str, hwnd: isize) -> R
         }
     }
 
+    // A loaded payload keeps its base for the life of the process. Remember it
+    // per (pid, start time, path) so steady targets skip the module snapshot.
+    let started = crate::process::process_started_at(pid);
+    if let Some(started) = started {
+        if let Some(base) = cached_base(pid, started, payload_path) {
+            match run_export(&handle, base, export, hwnd) {
+                Ok(()) => return Ok(()),
+                Err(_) => forget_base(pid),
+            }
+        }
+    }
     let base = ensure_loaded(&handle, pid, payload_path)?;
-    run_export(&handle, base, export, hwnd)
+    let result = run_export(&handle, base, export, hwnd);
+    match (&result, started) {
+        (Ok(()), Some(started)) => remember_base(pid, started, payload_path, base),
+        _ => forget_base(pid),
+    }
+    result
+}
+
+type BaseCache = std::collections::HashMap<u32, (u64, String, isize)>;
+
+fn base_cache() -> std::sync::MutexGuard<'static, BaseCache> {
+    static CACHE: std::sync::OnceLock<std::sync::Mutex<BaseCache>> = std::sync::OnceLock::new();
+    CACHE
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap_or_else(|p| p.into_inner())
+}
+
+fn cached_base(pid: u32, started: u64, payload_path: &str) -> Option<isize> {
+    match base_cache().get(&pid) {
+        Some((s, path, base)) if *s == started && path == payload_path => Some(*base),
+        _ => None,
+    }
+}
+
+fn remember_base(pid: u32, started: u64, payload_path: &str, base: isize) {
+    base_cache().insert(pid, (started, payload_path.to_string(), base));
+}
+
+fn forget_base(pid: u32) {
+    base_cache().remove(&pid);
 }
 
 /// Start `export` of the payload at `base` in the target and wait for it.

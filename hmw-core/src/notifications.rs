@@ -34,6 +34,12 @@ fn staged_payload(payload_path: &str) -> Result<String> {
     if dest.parent().is_none_or(|dir| !dir.is_dir()) {
         return Ok(payload_path.to_string());
     }
+    // Steady state: the staged copy is current, so leave the file alone.
+    if let (Ok(src), Ok(dst)) = (std::fs::metadata(payload_path), std::fs::metadata(&dest)) {
+        if src.len() == dst.len() && src.modified().ok() == dst.modified().ok() {
+            return Ok(dest.to_string_lossy().into_owned());
+        }
+    }
     match std::fs::copy(payload_path, &dest) {
         Ok(_) => Ok(dest.to_string_lossy().into_owned()),
         Err(_) if dest.is_file() => Ok(dest.to_string_lossy().into_owned()),
@@ -80,9 +86,44 @@ pub fn apply_notification_toasts(hidden: bool, payload_path: &str) -> Vec<String
 
     let mut errors = Vec::new();
     for pid in pids {
+        // The payload keeps toast exclusion on by itself. Re-send "hide" only
+        // when the host is new (pid or start time) or on the health interval.
+        let started = crate::process::process_started_at(pid).unwrap_or(0);
+        if hidden && !toast_send_due(pid, started) {
+            continue;
+        }
         if let Err(e) = call_export(pid, &payload_path, export, 0) {
+            toast_sent().remove(&pid);
             errors.push(format!("Notifications: {e}"));
         }
     }
+    if !hidden {
+        toast_sent().clear();
+    }
     errors
+}
+
+type ToastSent = std::collections::HashMap<u32, (u64, std::time::Instant)>;
+
+fn toast_sent() -> std::sync::MutexGuard<'static, ToastSent> {
+    static SENT: std::sync::OnceLock<std::sync::Mutex<ToastSent>> = std::sync::OnceLock::new();
+    SENT.get_or_init(Default::default)
+        .lock()
+        .unwrap_or_else(|p| p.into_inner())
+}
+
+/// True, and recorded, when `pid` has not been sent "hide" for this process
+/// instance within `PROTECTION_RECHECK`.
+fn toast_send_due(pid: u32, started: u64) -> bool {
+    let now = std::time::Instant::now();
+    let mut sent = toast_sent();
+    match sent.get(&pid) {
+        Some(&(s, at)) if s == started && now.duration_since(at) < crate::hider::PROTECTION_RECHECK => {
+            false
+        }
+        _ => {
+            sent.insert(pid, (started, now));
+            true
+        }
+    }
 }

@@ -454,6 +454,7 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
         let mut tick: u64 = 0;
         // True after a successful hide, so turning the option off restores toasts once.
         let mut toasts_hidden = false;
+        let mut launch_throttle = hmw_core::hider::ProtectionThrottle::default();
         let mut notification_errors = Vec::new();
         let mut full_errors = Vec::new();
         let mut session = hmw_core::watcher::RuleSession::new();
@@ -550,8 +551,22 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
                 });
                 launched.keys().copied().collect()
             };
+            launch_throttle.retain(|pid| launched.contains(&pid));
+            let launch_windows = if launched.is_empty() {
+                Vec::new()
+            } else {
+                hmw_core::window::list_top_windows(true).unwrap_or_default()
+            };
+            let launch_now = std::time::Instant::now();
             for pid in launched {
+                let signature = hmw_core::hider::window_signature(
+                    launch_windows.iter().filter(|w| w.pid == pid).map(|w| w.hwnd),
+                );
+                if !launch_throttle.due(pid, signature, launch_now) {
+                    continue;
+                }
                 if let Err(error) = hmw_core::hider::check_protection(pid, &payload) {
+                    launch_throttle.forget(pid);
                     if hmw_core::process::process_is_alive(pid) {
                         errors.push(format!("Quick Launch process {pid}: {}", error.0));
                     }

@@ -37,6 +37,7 @@ enum UnhideOp {
 #[derive(Debug, Default)]
 pub struct RuleSession {
     applied: HideSet,
+    throttle: crate::hider::ProtectionThrottle,
 }
 
 impl RuleSession {
@@ -65,6 +66,7 @@ impl RuleSession {
     pub fn new() -> Self {
         Self {
             applied: HideSet::default(),
+            throttle: Default::default(),
         }
     }
 
@@ -114,8 +116,18 @@ impl RuleSession {
         let outcome = apply_hides(&desired, &self.applied, payload_path);
         errors.extend(outcome.errors);
         self.applied = outcome.kept;
-        for &pid in &self.applied.processes {
+        let now = std::time::Instant::now();
+        let processes = &self.applied.processes;
+        self.throttle.retain(|pid| processes.contains(&pid));
+        for &pid in processes {
+            let signature = crate::hider::window_signature(
+                windows.iter().filter(|w| w.pid == pid).map(|w| w.hwnd),
+            );
+            if !self.throttle.due(pid, signature, now) {
+                continue;
+            }
             if let Err(error) = crate::hider::check_protection(pid, payload_path) {
+                self.throttle.forget(pid);
                 if process_is_alive(pid) {
                     errors.push(format!("Process {pid}: {}", error.0));
                 }
