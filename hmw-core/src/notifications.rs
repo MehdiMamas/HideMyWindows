@@ -118,7 +118,9 @@ fn toast_send_due(pid: u32, started: u64) -> bool {
     let now = std::time::Instant::now();
     let mut sent = toast_sent();
     match sent.get(&pid) {
-        Some(&(s, at)) if s == started && now.duration_since(at) < crate::hider::PROTECTION_RECHECK => {
+        Some(&(s, at))
+            if s == started && now.duration_since(at) < crate::hider::PROTECTION_RECHECK =>
+        {
             false
         }
         _ => {

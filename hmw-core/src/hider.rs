@@ -102,7 +102,9 @@ impl ProtectionThrottle {
     /// True when `pid` should be checked now; records the check when it is.
     pub fn due(&mut self, pid: u32, signature: u64, now: std::time::Instant) -> bool {
         match self.seen.get(&pid) {
-            Some(&(last, at)) if last == signature && now.duration_since(at) < PROTECTION_RECHECK => {
+            Some(&(last, at))
+                if last == signature && now.duration_since(at) < PROTECTION_RECHECK =>
+            {
                 false
             }
             _ => {
@@ -126,6 +128,10 @@ impl ProtectionThrottle {
 /// Order-independent fingerprint of a set of window handles.
 pub fn window_signature(hwnds: impl IntoIterator<Item = isize>) -> u64 {
     hwnds.into_iter().fold(0u64, |acc, h| {
-        acc.wrapping_add((h as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15).rotate_left(17))
+        acc.wrapping_add(
+            (h as u64)
+                .wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                .rotate_left(17),
+        )
     })
 }
