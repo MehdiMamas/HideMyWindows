@@ -71,6 +71,10 @@
   <p>{$t("rules.subtitle")}</p>
 </header>
 
+{#if $config?.quickLaunchOnly}
+  <p class="paused-notice">{$t("rules.quickLaunchOnlyPaused")}</p>
+{/if}
+
 {#if $ruleStatus}
   <section class="rule-result" class:has-issues={$ruleStatus.errors.length > 0} aria-label={$t("rules.resultTitle")}>
     <strong>{$t("rules.resultTitle")}</strong>
@@ -118,6 +122,10 @@
   .page-head { margin-bottom: 14px; }
   .page-head p { color: var(--text-dim); margin: 0; }
   .bar { margin-bottom: 14px; }
+  .paused-notice {
+    background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--warning);
+    border-radius: var(--radius); padding: 10px 16px; margin-bottom: 14px; color: var(--text-dim);
+  }
   .rule-result { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
   .rule-result.has-issues { border-left: 3px solid var(--warning); }
   .rule-result p { margin: 6px 0; color: var(--text-dim); }

@@ -23,6 +23,7 @@ describe("ordinary-launch protection controls", () => {
     normalLaunchPauseUntilMs: 0, ruleReapplyIntervalMs: 1000,
     processPollIntervalMs: 1000, windowRules: [{ id: "keep-rule" }],
     quickLaunch: [{ id: "keep-launch" }],
+    protectionChecker: true, quickLaunchOnly: false,
   };
 
   beforeEach(() => {

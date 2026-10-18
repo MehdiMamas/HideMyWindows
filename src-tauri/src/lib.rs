@@ -454,12 +454,16 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
         let mut tick: u64 = 0;
         // True after a successful hide, so turning the option off restores toasts once.
         let mut toasts_hidden = false;
+        let mut launch_throttle = hmw_core::hider::ProtectionThrottle::default();
         let mut notification_errors = Vec::new();
         let mut full_errors = Vec::new();
         let mut session = hmw_core::watcher::RuleSession::new();
         let mut gates = hmw_core::launch_protection::GateController::new();
         // Startup applies every saved rule without waiting for the timer.
         let mut full = true;
+        // Set once the window-rule release pass has run after entering
+        // Quick Launch only mode; cleared again when that mode turns off.
+        let mut quick_launch_idle = false;
         loop {
             let state = app.state::<AppState>();
             let cfg = state.config.lock().unwrap().clone();
@@ -528,14 +532,28 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
 
             // Run one pass per tick. Retain full-pass issues between discovery
             // passes, since a persistent-only pass cannot clear other rules.
-            let mut errors = if full || tick.is_multiple_of((poll_ms / reapply_ms).max(1)) {
-                full_errors = session.apply(rules, &payload, false);
-                full = false;
-                full_errors.clone()
+            let mut errors = if cfg.quick_launch_only {
+                if !quick_launch_idle {
+                    // Release everything window rules currently hold, then do
+                    // no further listing/apply passes while the mode is on.
+                    full_errors = session.apply(&[], &payload, false, cfg.protection_checker);
+                    quick_launch_idle = true;
+                    full = true; // Re-seed a full pass when the mode turns off.
+                    full_errors.clone()
+                } else {
+                    Vec::new()
+                }
             } else {
-                let mut errors = full_errors.clone();
-                errors.extend(session.apply(rules, &payload, true));
-                errors
+                quick_launch_idle = false;
+                if full || tick.is_multiple_of((poll_ms / reapply_ms).max(1)) {
+                    full_errors = session.apply(rules, &payload, false, cfg.protection_checker);
+                    full = false;
+                    full_errors.clone()
+                } else {
+                    let mut errors = full_errors.clone();
+                    errors.extend(session.apply(rules, &payload, true, cfg.protection_checker));
+                    errors
+                }
             };
             errors.extend(notification_errors.iter().cloned());
             errors.extend(gate_errors);
@@ -550,14 +568,37 @@ fn spawn_watcher(app: AppHandle, rules_rx: Receiver<()>) {
                 });
                 launched.keys().copied().collect()
             };
+            launch_throttle.retain(|pid| launched.contains(&pid));
+            let launch_windows = if launched.is_empty() {
+                Vec::new()
+            } else {
+                hmw_core::window::list_top_windows(true).unwrap_or_default()
+            };
+            let launch_now = std::time::Instant::now();
             for pid in launched {
-                if let Err(error) = hmw_core::hider::check_protection(pid, &payload) {
-                    if hmw_core::process::process_is_alive(pid) {
-                        errors.push(format!("Quick Launch process {pid}: {}", error.0));
+                let signature = hmw_core::hider::window_signature(
+                    launch_windows
+                        .iter()
+                        .filter(|w| w.pid == pid)
+                        .map(|w| w.hwnd),
+                );
+                if !launch_throttle.due(pid, signature, launch_now) {
+                    continue;
+                }
+                if cfg.protection_checker {
+                    if let Err(error) = hmw_core::hider::check_protection(pid, &payload) {
+                        launch_throttle.forget(pid);
+                        if hmw_core::process::process_is_alive(pid) {
+                            errors.push(format!("Quick Launch process {pid}: {}", error.0));
+                        }
                     }
                 }
             }
-            let observed = session.status(rules);
+            let observed = if cfg.quick_launch_only {
+                hmw_core::rule_status::RuleStatus::default()
+            } else {
+                session.status(rules)
+            };
             errors.extend(observed.errors.iter().cloned());
             let report = observed.with_errors(errors);
             let state = app.state::<AppState>();

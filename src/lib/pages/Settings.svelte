@@ -156,6 +156,18 @@
       hint={$t("settings.startWithWindowsHint")}
       onchange={persist}
     />
+    <Toggle
+      bind:checked={$config.protectionChecker}
+      label={$t("settings.protectionChecker")}
+      hint={$t("settings.protectionCheckerHint")}
+      onchange={persist}
+    />
+    <Toggle
+      bind:checked={$config.quickLaunchOnly}
+      label={$t("settings.quickLaunchOnly")}
+      hint={$t("settings.quickLaunchOnlyHint")}
+      onchange={persist}
+    />
   </Card>
 
   <Card title={$t("launchProtection.title")}>

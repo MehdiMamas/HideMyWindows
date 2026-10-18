@@ -22,8 +22,8 @@ use windows::Win32::System::Com::{
 use windows::Win32::System::LibraryLoader::DisableThreadLibraryCalls;
 use windows::Win32::UI::Shell::{ITaskbarList, TaskbarList};
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetClassNameW, GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible,
-    WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
+    EnumWindows, GetClassNameW, GetPropW, GetWindowDisplayAffinity, GetWindowTextW,
+    GetWindowThreadProcessId, IsWindowVisible, WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
 };
 
 #[path = "../../hmw-core/src/capture_affinity.rs"]
@@ -90,12 +90,29 @@ struct EnumCtx {
     affinity: u32,
 }
 
+/// True unless the window is already capture-excluded with no pending show
+/// and no recorded failure.
+unsafe fn needs_recover(hwnd: HWND) -> bool {
+    let mut current = 0u32;
+    if GetWindowDisplayAffinity(hwnd, &mut current).is_err() || current != WDA_EXCLUDEFROMCAPTURE.0
+    {
+        return true;
+    }
+    !GetPropW(hwnd, windows::core::w!("HideMyWindows.PendingShow")).is_invalid()
+        || !GetPropW(hwnd, windows::core::w!("HideMyWindows.ProtectionFailure")).is_invalid()
+}
+
 unsafe extern "system" fn apply_cb(hwnd: HWND, lparam: LPARAM) -> BOOL {
     let ctx = &*(lparam.0 as *const EnumCtx);
     let mut pid = 0u32;
     GetWindowThreadProcessId(hwnd, Some(&mut pid));
     if pid == ctx.pid {
         if ctx.affinity == WDA_EXCLUDEFROMCAPTURE.0 {
+            // Fast path: already excluded with nothing queued or failed, so the
+            // full protect()/decide() path would change nothing.
+            if !needs_recover(hwnd) {
+                return TRUE;
+            }
             HmwRecoverProtection(hwnd);
         } else {
             set_affinity(hwnd, ctx.affinity);

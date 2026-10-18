@@ -86,3 +86,52 @@ pub fn check_protection(pid: u32, payload_path: &str) -> Result<()> {
         ))
     })
 }
+
+/// How long a steady target goes without a protection health check.
+pub const PROTECTION_RECHECK: std::time::Duration = std::time::Duration::from_secs(15);
+
+/// Decides when `check_protection` is worth a remote thread. A target is
+/// checked when its visible window set changed since the last check, or when
+/// the last check is older than `PROTECTION_RECHECK`.
+#[derive(Debug, Default)]
+pub struct ProtectionThrottle {
+    seen: std::collections::HashMap<u32, (u64, std::time::Instant)>,
+}
+
+impl ProtectionThrottle {
+    /// True when `pid` should be checked now; records the check when it is.
+    pub fn due(&mut self, pid: u32, signature: u64, now: std::time::Instant) -> bool {
+        match self.seen.get(&pid) {
+            Some(&(last, at))
+                if last == signature && now.duration_since(at) < PROTECTION_RECHECK =>
+            {
+                false
+            }
+            _ => {
+                self.seen.insert(pid, (signature, now));
+                true
+            }
+        }
+    }
+
+    /// Forget a pid, so its next check is immediate.
+    pub fn forget(&mut self, pid: u32) {
+        self.seen.remove(&pid);
+    }
+
+    /// Drop entries for pids no longer being tracked.
+    pub fn retain(&mut self, keep: impl Fn(u32) -> bool) {
+        self.seen.retain(|&pid, _| keep(pid));
+    }
+}
+
+/// Order-independent fingerprint of a set of window handles.
+pub fn window_signature(hwnds: impl IntoIterator<Item = isize>) -> u64 {
+    hwnds.into_iter().fold(0u64, |acc, h| {
+        acc.wrapping_add(
+            (h as u64)
+                .wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                .rotate_left(17),
+        )
+    })
+}
