@@ -76,9 +76,11 @@ static int decide(HWND hwnd) {
     DWORD state = WaitForSingleObject(reader.owner, 0);
     if (state == WAIT_OBJECT_0) return 0;
     if (state != WAIT_TIMEOUT) return -1;
-    // Reused per thread: no allocation per window event.
-    static thread_local std::vector<unsigned char> bytes;
-    bytes.clear();
+    // A plain local, not thread_local: GetWindowTextW below can synchronously
+    // re-enter this function on the same thread (same-thread WM_GETTEXT ->
+    // window proc -> hook), and a shared buffer would be cleared/reallocated
+    // out from under the outer call's still-pending bytes.data() pointer.
+    std::vector<unsigned char> bytes;
     bool consistent = false;
     for (int attempt = 0; attempt < 3; ++attempt) {
         LONG before = view->sequence;
