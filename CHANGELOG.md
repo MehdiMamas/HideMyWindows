@@ -3,6 +3,19 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.3] — 2026-10-18
+
+### Fixed
+- **Hidden apps no longer lag or glitch.** HideMyWindows used to reach into
+  every hidden app once a second to re-check its protection. It now checks
+  only when the app's windows change (or every 15 seconds), and the helper
+  inside hidden apps does far less work per window event.
+
+### Added
+- **Settings: turn off the protection checker** if you don't need it.
+- **Settings: Quick Launch only** — hide only apps started from Quick Launch;
+  rules are paused while it is on.
+
 ## [2.3.2] — 2026-10-14
 
 **Save your work before updating.** The update to 2.3.1 could close other
