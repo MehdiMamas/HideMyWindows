@@ -303,15 +303,22 @@ fn inactive_minimize_and_restore_keep_x64_and_x86_windows_protected() {
                 "minimize-async",
                 "minimize-system",
             ] {
-                other_app.send("focus");
-                assert_eq!(
-                    other_app
+                // Windows' foreground lock can refuse a background process, so
+                // focus is best effort: the target is created without
+                // activation, hence inactive either way. Retry briefly.
+                for _ in 0..5 {
+                    other_app.send("focus");
+                    let focused = other_app
                         .output
                         .recv_timeout(Duration::from_secs(10))
-                        .unwrap(),
-                    "HMW_FOCUSED"
-                );
-                other_app.ack();
+                        .unwrap()
+                        == "HMW_FOCUSED";
+                    other_app.ack();
+                    if focused {
+                        break;
+                    }
+                    std::thread::sleep(Duration::from_millis(100));
+                }
                 target.command(minimize);
                 let until = Instant::now() + Duration::from_secs(3);
                 while !unsafe { IsIconic(hwnd) }.as_bool() {
@@ -660,12 +667,14 @@ class FirstShow {
             let arguments = format!("\"{}\"", marker.display());
             let stop = Arc::new(AtomicBool::new(false));
             let leaked = Arc::new(AtomicBool::new(false));
-            let (s, l) = (stop.clone(), leaked.clone());
+            let samples = Arc::new(AtomicUsize::new(0));
+            let (s, l, n) = (stop.clone(), leaked.clone(), samples.clone());
             let recorder = std::thread::spawn(move || {
                 while !s.load(Ordering::SeqCst) {
                     if captured_secret() {
                         l.store(true, Ordering::SeqCst);
                     }
+                    n.fetch_add(1, Ordering::SeqCst);
                     std::thread::sleep(Duration::from_millis(8));
                 }
             });
@@ -679,7 +688,12 @@ class FirstShow {
                 std::thread::sleep(Duration::from_millis(10));
             }
             assert_eq!(std::fs::read_to_string(marker).unwrap(), "protected");
-            std::thread::sleep(Duration::from_millis(150));
+            // Keep recording for a bounded number of samples after first show.
+            let seen = samples.load(Ordering::SeqCst);
+            let until = Instant::now() + Duration::from_secs(5);
+            while samples.load(Ordering::SeqCst) < seen + 20 && Instant::now() < until {
+                std::thread::sleep(Duration::from_millis(5));
+            }
             stop.store(true, Ordering::SeqCst);
             recorder.join().unwrap();
             assert!(
