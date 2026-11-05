@@ -2,7 +2,7 @@
   "name": "hidemywindows",
   "version": "2.3.3",
   "description": "Hide your windows from screen capture, screenshots and recordings.",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE.txt",
   "type": "module",
   "scripts": {
     "test": "vitest run",
