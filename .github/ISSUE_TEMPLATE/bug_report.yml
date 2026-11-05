@@ -1,0 +1,35 @@
+name: Bug report
+description: Something does not work as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you got instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: HideMyWindows version
+      placeholder: "2.3.3"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and architecture
+      placeholder: "Windows 11 23H2, x64"
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: App you were trying to hide
+      placeholder: "Notepad, a game, a browser..."
+  - type: textarea
+    id: capture
+    attributes:
+      label: How you captured the screen
+      description: Screenshot tool, recorder or streaming software, if relevant.
