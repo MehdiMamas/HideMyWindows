@@ -3,6 +3,7 @@ node_modules/
 dist/
 *.log
 npm-debug.log*
+pnpm-debug.log*
 
 # Rust / Tauri
 target/

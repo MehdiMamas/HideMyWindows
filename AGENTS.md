@@ -4,15 +4,15 @@
 HideMyWindows: a Windows-only desktop app (Tauri 2, Rust core, Svelte 5 UI) that hides windows from screen capture, screenshots and recordings. It sets display affinity directly for its own windows and injects a small DLL into other processes for theirs. `README.md`, `BUILDING.md`, `ARCHITECTURE.md` and `CONTRIBUTING.md` hold the details.
 
 ## Setup
-- Rust (stable), Node.js and npm, MSVC C++ Build Tools, WebView2 (see `BUILDING.md`).
-- `npm install` (CI uses `npm ci`).
+- Rust (stable), Node.js and pnpm, MSVC C++ Build Tools, WebView2 (see `BUILDING.md`).
+- `pnpm install` (CI uses `pnpm install --frozen-lockfile`).
 - Build the payload DLL before running the app, then copy it to `src-tauri/resources/`:
   `cargo build -p hmw-payload --profile payload --target x86_64-pc-windows-msvc` and copy `target\x86_64-pc-windows-msvc\payload\hmw_payload.dll` to `src-tauri\resources\hmw_payload.dll`.
 - The x64 app also needs the x86 helper and payload (`hmw-release-x86.exe`, `hmw_payload_x86.dll`); the exact commands are in `BUILDING.md` and `.github/workflows/check.yml`.
 
 ## Commands
-- `npm run tauri dev`: hot-reloading dev build. `npm run tauri build`: release build and installer (under `src-tauri/target/release/bundle/`).
-- `npm run build`: frontend build. `npm test`: Vitest.
+- `pnpm tauri dev`: hot-reloading dev build. `pnpm tauri build`: release build and installer (under `src-tauri/target/release/bundle/`).
+- `pnpm build`: frontend build. `pnpm test`: Vitest.
 - `cargo test --locked -p hmw-core -- --test-threads=1`: core tests (run on Windows).
 - `cargo fmt --all -- --check` and `cargo clippy --workspace --all-targets -- -D warnings`: must be clean.
 
