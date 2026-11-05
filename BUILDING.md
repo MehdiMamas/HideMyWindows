@@ -6,7 +6,7 @@ frontend. These steps build it on **Windows** (the only supported runtime OS).
 ## Prerequisites
 
 - **Rust** (stable) — <https://rustup.rs>
-- **Node.js** 18+ and npm
+- **Node.js** 18+ and pnpm
 - **Microsoft C++ Build Tools** (MSVC) + the **WebView2 runtime** (preinstalled
   on Windows 10/11). Tauri's prerequisites guide covers these:
   <https://tauri.app/start/prerequisites/>
@@ -14,7 +14,7 @@ frontend. These steps build it on **Windows** (the only supported runtime OS).
 ## 1. Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## 2. Build the injected payload
@@ -57,10 +57,10 @@ ensures the helper exits with the controller.
 
 ```bash
 # Hot-reloading dev build
-npm run tauri dev
+pnpm tauri dev
 
 # Release build + installer (output under src-tauri/target/release/bundle/)
-npm run tauri build
+pnpm tauri build
 ```
 
 The installer lands in `src-tauri/target/release/bundle/nsis/`.
@@ -77,7 +77,7 @@ connection that can create branches but cannot push tags. You do not need every
 toolchain locally.
 
 Installed copies check that release for updates. Signing uses a minisign key
-generated with `npm run tauri signer generate` and kept outside the repo. The
+generated with `pnpm tauri signer generate` and kept outside the repo. The
 public key lives in `src-tauri/tauri.conf.json`. The private key and its
 password are GitHub Actions secrets named `TAURI_SIGNING_PRIVATE_KEY` and
 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. A release built without those secrets

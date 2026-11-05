@@ -30,6 +30,6 @@ are very welcome.
 ## Commit / PR
 
 - One logical change per PR, with a clear description.
-- Make sure `cargo build` (on Windows) and `npm run build` succeed.
+- Make sure `cargo build` (on Windows) and `pnpm build` succeed.
 - By contributing, you agree your work is licensed under the project's
   MIT + Commons Clause license.

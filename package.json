@@ -25,5 +25,6 @@
     "svelte": "^5",
     "vite": "^6",
     "vitest": "^3.2.7"
-  }
+  },
+  "packageManager": "pnpm@10.34.9"
 }
