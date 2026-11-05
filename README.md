@@ -1,8 +1,14 @@
+Hide your windows from screenshots, screen recordings and streaming software on Windows.
+
 # 🪟 HideMyWindows
 
 > 🌐 Available in: [English](README.md) | [Français](README.fr.md) | [Italiano](README.it.md) | [Română](README.ro.md) | [Polski](README.pl.md)
 
 ![Banner](Assets/Banner.png)
+
+![What you see on your screen, and what a screen share shows](docs/images/demo.png)
+
+*Illustration: the left side is your screen, the right side is what a screen share shows.*
 
 **HideMyWindows** is a Windows app that **hides your windows from screen capture** — screenshots, screen recordings and streaming software like OBS.
 It's built for **privacy-minded users, streamers and students** who want control over what others see when they share their screen.
@@ -34,11 +40,13 @@ Download the latest installer for your architecture from the [**Releases page**]
 
 | Your PC | Download |
 | --- | --- |
-| 64-bit Intel/AMD (most PCs) | `HideMyWindows_x64-setup.exe` |
-| 32-bit Windows | `HideMyWindows_x86-setup.exe` |
-| ARM64 (e.g. Surface Pro X) | `HideMyWindows_arm64-setup.exe` |
+| 64-bit Intel/AMD (most PCs) | `HideMyWindows_<version>_x64-setup.exe` |
+| 32-bit Windows | `HideMyWindows_<version>_x86-setup.exe` |
+| ARM64 (e.g. Surface Pro X) | `HideMyWindows_<version>_arm64-setup.exe` |
 
-Run the installer and launch HideMyWindows. No admin rights required.
+1. Open the [latest release](../../releases/latest) and download the installer for your PC from the table above.
+2. Double-click the downloaded `.exe` and follow the installer. No admin rights required.
+3. Start **HideMyWindows** from the Start menu.
 
 > **Note on architecture:** install the x64 build on a 64-bit Intel/AMD PC. It handles both 64-bit and 32-bit apps automatically using its bundled x86 helper. The x86 build is for 32-bit Windows; the ARM64 build handles native ARM64 apps.
 
