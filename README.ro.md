@@ -32,9 +32,9 @@ Descarcă cel mai recent instalator pentru arhitectura ta de pe [**pagina de ver
 
 | PC-ul tău | Descărcare |
 | --- | --- |
-| Intel/AMD pe 64 de biți (majoritatea PC-urilor) | `HideMyWindows_x64-setup.exe` |
-| Windows pe 32 de biți | `HideMyWindows_x86-setup.exe` |
-| ARM64 (ex. Surface Pro X) | `HideMyWindows_arm64-setup.exe` |
+| Intel/AMD pe 64 de biți (majoritatea PC-urilor) | `HideMyWindows_<version>_x64-setup.exe` |
+| Windows pe 32 de biți | `HideMyWindows_<version>_x86-setup.exe` |
+| ARM64 (ex. Surface Pro X) | `HideMyWindows_<version>_arm64-setup.exe` |
 
 Rulează instalatorul și pornește HideMyWindows. Nu sunt necesare drepturi de administrator.
 

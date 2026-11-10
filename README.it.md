@@ -32,9 +32,9 @@ Scarica l'installer più recente per la tua architettura dalla [**pagina delle r
 
 | Il tuo PC | Download |
 | --- | --- |
-| Intel/AMD a 64 bit (la maggior parte dei PC) | `HideMyWindows_x64-setup.exe` |
-| Windows a 32 bit | `HideMyWindows_x86-setup.exe` |
-| ARM64 (es. Surface Pro X) | `HideMyWindows_arm64-setup.exe` |
+| Intel/AMD a 64 bit (la maggior parte dei PC) | `HideMyWindows_<version>_x64-setup.exe` |
+| Windows a 32 bit | `HideMyWindows_<version>_x86-setup.exe` |
+| ARM64 (es. Surface Pro X) | `HideMyWindows_<version>_arm64-setup.exe` |
 
 Esegui l'installer e avvia HideMyWindows. Non servono diritti di amministratore.
 
