@@ -48,7 +48,8 @@
     "hideTray": "Ascunde butonul din bara de activități",
     "unhideTray": "Afișează butonul din bara de activități",
     "done": "Gata — {name} este acum ascuns de la capturare.",
-    "undone": "{name} este din nou vizibil la capturare."
+    "undone": "{name} este din nou vizibil la capturare.",
+    "hidden": "Ascuns de captură"
   },
   "quickLaunch": {
     "title": "Lansare rapidă",
@@ -112,7 +113,8 @@
     "resultCounts": "{hidden} din {matched} ferestre potrivite ascunse de captură",
     "resultUnknown": "Nu s-au putut verifica {count} ferestre.",
     "resultIssues": "{count} probleme — arată detaliile",
-    "issueNotice": "Reguli ferestre: {count} probleme. Vezi rezultatul și detaliile în reguli."
+    "issueNotice": "Reguli ferestre: {count} probleme. Vezi rezultatul și detaliile în reguli.",
+    "quickLaunchOnlyPaused": "Reguli suspendate: modul doar Lansare rapidă"
   },
   "settings": {
     "title": "Setări",
@@ -139,7 +141,11 @@
     "resetConfirm": "Revine la setările implicite și șterge setările rămase de la versiunile mai vechi ale HideMyWindows. Regulile și lansările rapide sunt eliminate.",
     "resetDone": "Setările au fost resetate.",
     "saved": "Setări salvate.",
-    "restartHint": "Unele opțiuni se aplică imediat, altele la următoarea pornire."
+    "restartHint": "Unele opțiuni se aplică imediat, altele la următoarea pornire.",
+    "protectionChecker": "Reverifică periodic aplicațiile ascunse",
+    "protectionCheckerHint": "Când este dezactivat, controlerul nu mai reverifică în fundal aplicațiile deja ascunse. Ascunderea la lansare și din aplicație funcționează în continuare.",
+    "quickLaunchOnly": "Doar Lansare rapidă",
+    "quickLaunchOnlyHint": "Dezactivează complet regulile ferestrelor și injectarea; sunt ascunse doar intrările din Lansare rapidă. Eliberează tot ce ascund în prezent regulile ferestrelor."
   },
   "about": {
     "title": "Despre HideMyWindows",
@@ -196,5 +202,9 @@
     "disable": "Dezactivează protecția înainte de afișare",
     "pause": "Suspendă protecția înainte de afișare",
     "remaining": "({minutes} min rămase)"
+  },
+  "errors": {
+    "generic": "Ceva nu a mers bine",
+    "ruleFailures": "{count} acțiuni ale regulilor au eșuat."
   }
 }
