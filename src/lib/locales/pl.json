@@ -48,7 +48,8 @@
     "hideTray": "Ukryj przycisk na pasku zadań",
     "unhideTray": "Pokaż przycisk na pasku zadań",
     "done": "Gotowe — {name} jest teraz ukryty przed przechwytywaniem.",
-    "undone": "{name} jest znów widoczny przy przechwytywaniu."
+    "undone": "{name} jest znów widoczny przy przechwytywaniu.",
+    "hidden": "Ukryte przed przechwytywaniem"
   },
   "quickLaunch": {
     "title": "Szybkie uruchamianie",
@@ -112,7 +113,8 @@
     "resultCounts": "{hidden} z {matched} pasujących okien ukrytych przed przechwytywaniem",
     "resultUnknown": "Nie można zweryfikować {count} okien.",
     "resultIssues": "{count} problemów — pokaż szczegóły",
-    "issueNotice": "Reguły okien: {count} problemów. Zobacz wynik i szczegóły w regułach okien."
+    "issueNotice": "Reguły okien: {count} problemów. Zobacz wynik i szczegóły w regułach okien.",
+    "quickLaunchOnlyPaused": "Reguły wstrzymane: tylko tryb szybkiego uruchamiania"
   },
   "settings": {
     "title": "Ustawienia",
@@ -139,7 +141,11 @@
     "resetConfirm": "Przywraca ustawienia fabryczne i usuwa ustawienia pozostawione przez starsze wersje HideMyWindows. Reguły i szybkie uruchamianie zostaną usunięte.",
     "resetDone": "Zresetowano ustawienia.",
     "saved": "Zapisano ustawienia.",
-    "restartHint": "Niektóre opcje działają od razu, inne po następnym uruchomieniu."
+    "restartHint": "Niektóre opcje działają od razu, inne po następnym uruchomieniu.",
+    "protectionChecker": "Okresowo weryfikuj ukryte aplikacje",
+    "protectionCheckerHint": "Wyłączenie zatrzymuje kontroler przed ponownym sprawdzaniem już ukrytych aplikacji w tle. Ukrywanie przy uruchamianiu i w aplikacji nadal działa.",
+    "quickLaunchOnly": "Tylko szybkie uruchamianie",
+    "quickLaunchOnlyHint": "Wyłącza reguły okien i wstrzykiwanie; ukrywane są tylko wpisy szybkiego uruchamiania. Zwalnia wszystko, co aktualnie ukrywają reguły okien."
   },
   "about": {
     "title": "O programie HideMyWindows",
@@ -196,5 +202,9 @@
     "disable": "Wyłącz ochronę przed pojawieniem się aplikacji",
     "pause": "Wstrzymaj ochronę przed pojawieniem się aplikacji",
     "remaining": "(pozostało {minutes} min)"
+  },
+  "errors": {
+    "generic": "Coś poszło nie tak",
+    "ruleFailures": "{count} akcji reguł nie powiodło się."
   }
 }
